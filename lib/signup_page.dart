@@ -18,6 +18,13 @@ class _SignupPageState extends State<SignupPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Image.asset(
+          'assets/images/logo.png',
+          height: 80,
+        ),
+        centerTitle: true,
+      ),
       backgroundColor: Colors.white,
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -27,15 +34,7 @@ class _SignupPageState extends State<SignupPage> {
           // crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Logo
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Image.asset(
-                  'assets/images/logo.png',
-                  height: 80,
-                ),
-              ),
-            ),
+
             SizedBox(height: 20),
 
             // Title
@@ -49,10 +48,9 @@ class _SignupPageState extends State<SignupPage> {
             ),
             SizedBox(height: 8),
 
-            // Decorative Line
             Container(
               height: 8,
-              width: 20,
+              width: 100,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
@@ -161,7 +159,7 @@ class _SignupPageState extends State<SignupPage> {
             ),
 
             // To track if "Remember me" is checked
-
+            const SizedBox(height: 10),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -276,7 +274,7 @@ class _SignupPageState extends State<SignupPage> {
               },
             ),
 
-            SizedBox(height: 40),
+            SizedBox(height: 10),
             Center(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 50),

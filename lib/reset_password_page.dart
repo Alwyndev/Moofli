@@ -7,6 +7,14 @@ class ResetPasswordPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // App Logo
+      appBar: AppBar(
+        title: Image.asset(
+          'assets/images/logo.png',
+          height: 80,
+        ),
+        centerTitle: true,
+      ),
       backgroundColor: Colors.white,
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -14,13 +22,6 @@ class ResetPasswordPage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Logo
-            Image.asset(
-              'assets/images/logo.png',
-              height: 80,
-            ),
-            SizedBox(height: 20),
-
             // Title
             Text(
               'RESET PASSWORD',

@@ -13,6 +13,13 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Image.asset(
+          'assets/images/logo.png',
+          height: 80,
+        ),
+        centerTitle: true,
+      ),
       backgroundColor: Colors.white,
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -20,16 +27,6 @@ class _LoginPageState extends State<LoginPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Logo
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Image.asset(
-                  'assets/images/logo.png',
-                  height: 80,
-                ),
-              ),
-            ),
             SizedBox(height: 20),
 
             // Title
