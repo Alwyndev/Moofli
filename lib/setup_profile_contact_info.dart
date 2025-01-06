@@ -127,10 +127,25 @@ class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
             const SizedBox(height: 20),
             TextField(
               decoration: InputDecoration(
-                prefix: Text('+91     |'),
-                prefixStyle: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
+                prefix: RichText(
+                  text: TextSpan(
+                    text: '   +91   ',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: '|    ',
+                        style: TextStyle(
+                          color: const Color.fromARGB(255, 87, 87, 87),
+                          fontSize: 30,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 labelText: 'Phone Number',
                 labelStyle: TextStyle(
