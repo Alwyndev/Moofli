@@ -20,13 +20,13 @@ class _SetupProfileSkillsState extends State<SetupProfileSkills> {
     "Product Engineering"
   ];
 
-  void _addSkill(String newSkill) {
-    if (newSkill.isNotEmpty && !skills.contains(newSkill)) {
-      setState(() {
-        skills.add(newSkill);
-      });
-    }
-  }
+  // void _addSkill(String newSkill) {
+  //   if (newSkill.isNotEmpty && !skills.contains(newSkill)) {
+  //     setState(() {
+  //       skills.add(newSkill);
+  //     });
+  //   }
+  // }
 
   void _showAddSkillModal(BuildContext context) {
     TextEditingController skillController =
