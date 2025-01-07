@@ -272,6 +272,8 @@ class _SignupPageState extends State<SignupPage> {
                 // Add your functionality
                 print('Login Button Pressed');
               },
+              border: 20,
+              padding: 16,
             ),
 
             SizedBox(height: 10),

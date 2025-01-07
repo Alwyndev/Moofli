@@ -73,6 +73,8 @@ class ResetPasswordPage extends StatelessWidget {
                 // Add your functionality
                 print('Send Mail button pressed!');
               },
+              border: 20,
+              padding: 6,
             ),
           ],
         ),

@@ -3,9 +3,16 @@ import 'package:flutter/material.dart';
 class GradientButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
+  final double border;
+  final double padding;
 
-  const GradientButton(
-      {super.key, required this.text, required this.onPressed});
+  const GradientButton({
+    super.key,
+    required this.text,
+    required this.onPressed,
+    required this.border,
+    required this.padding,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +20,7 @@ class GradientButton extends StatelessWidget {
       onTap: onPressed,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(4.0),
+        padding: const EdgeInsets.all(3.0),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
@@ -26,7 +33,7 @@ class GradientButton extends StatelessWidget {
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
           ),
-          borderRadius: BorderRadius.circular(20.0),
+          borderRadius: BorderRadius.circular(border), //20
           border: Border.all(
             color: Colors.white,
             width: 1.5,
@@ -35,10 +42,10 @@ class GradientButton extends StatelessWidget {
         child: Center(
           child: Container(
             alignment: Alignment.center, // Center the white box
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(padding), // default 16
             decoration: BoxDecoration(
               color: Colors.white, // White background inside the button
-              borderRadius: BorderRadius.circular(16.0),
+              borderRadius: BorderRadius.circular(border - 4), //16
             ),
             child: Text(
               text,
@@ -48,11 +55,10 @@ class GradientButton extends StatelessWidget {
                 foreground: Paint()
                   ..shader = LinearGradient(
                     colors: [
-                      Colors.orange,
+                      Colors.deepOrange,
                       Colors.green,
-                      Colors.lightBlue,
                     ],
-                  ).createShader(Rect.fromLTWH(0.0, 0.0, 200.0, 40.0)),
+                  ).createShader(Rect.fromLTWH(0.0, 0.0, 100.0, 40.0)),
               ),
             ),
           ),
