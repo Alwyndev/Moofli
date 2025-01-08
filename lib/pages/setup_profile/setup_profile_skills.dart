@@ -126,8 +126,8 @@ class _SetupProfileSkillsState extends State<SetupProfileSkills> {
       backgroundColor: Colors.white,
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: ListView(
+          scrollDirection: Axis.vertical,
           children: [
             SizedBox(height: 100),
 
@@ -260,9 +260,6 @@ class _SetupProfileSkillsState extends State<SetupProfileSkills> {
               padding: 4,
             ),
 
-            Spacer(),
-
-            // Bottom Navigation Buttons
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 40.0),
               child: Row(
