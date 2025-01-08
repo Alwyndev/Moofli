@@ -326,7 +326,12 @@ class _SetupProfileProfesionalInfoState
                   children: [
                     // Back Button (Circular)
                     InkWell(
-                      onTap: () {}, // Add your onTap logic here
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          '/setup_profile_skills',
+                        );
+                      }, // Add your onTap logic here
                       child: Container(
                         width: 48,
                         height: 48,
@@ -341,7 +346,12 @@ class _SetupProfileProfesionalInfoState
 
                     // Next Button (Rounded Rectangle)
                     InkWell(
-                      onTap: () {}, // Add your onTap logic here
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          '/setup_profile_socials',
+                        );
+                      }, // Add your onTap logic here
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 12),

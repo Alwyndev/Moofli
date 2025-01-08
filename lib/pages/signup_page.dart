@@ -253,11 +253,17 @@ class _SignupPageState extends State<SignupPage> {
                     padding: const EdgeInsets.all(8.0),
                     child: Text('Already a member?'),
                   ),
-                  Text(
-                    'LOG IN',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
+                  TextButton(
+                    onPressed: () {
+                      // Add your functionality
+                      Navigator.pushNamed(context, '/');
+                    },
+                    child: Text(
+                      'LOG IN',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
                     ),
                   ),
                 ],
@@ -267,10 +273,10 @@ class _SignupPageState extends State<SignupPage> {
             SizedBox(height: 20),
             // Gradient Button
             GradientButton(
-              text: 'Log In',
+              text: 'Setup Your Profile',
               onPressed: () {
                 // Add your functionality
-                print('Login Button Pressed');
+                Navigator.pushNamed(context, '/setup_profile_1');
               },
               border: 20,
               padding: 16,

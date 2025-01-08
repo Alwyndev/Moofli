@@ -98,7 +98,7 @@ class _SetupProfileSocialsState extends State<SetupProfileSocials> {
             ),
             SizedBox(height: 20),
             Text(
-              'Contact Information',
+              'Social Handles',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w600,
@@ -144,7 +144,10 @@ class _SetupProfileSocialsState extends State<SetupProfileSocials> {
                     // Back Button (Circular)
                     InkWell(
                       onTap: () {
-                        // Add navigation logic here
+                        Navigator.pushNamed(
+                          context,
+                          '/setup_profile_professional_info',
+                        );
                       },
                       child: Container(
                         width: 48,
@@ -161,7 +164,10 @@ class _SetupProfileSocialsState extends State<SetupProfileSocials> {
                     // Next Button (Rounded Rectangle)
                     InkWell(
                       onTap: () {
-                        // Add navigation logic here
+                        Navigator.pushNamed(
+                          context,
+                          '/home',
+                        );
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(

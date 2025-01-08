@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:moofli_app/gradient_button.dart'; // Assuming you have this custom widget implemented.
+import 'package:moofli_app/gradient_button.dart';
+
+// Assuming you have this custom widget implemented.
 
 class SetupProfileSkills extends StatefulWidget {
   const SetupProfileSkills({super.key});
@@ -269,7 +271,10 @@ class _SetupProfileSkillsState extends State<SetupProfileSkills> {
                   // Back Button (Circular)
                   InkWell(
                     onTap: () {
-                      // Add navigation logic here
+                      Navigator.pushNamed(
+                        context,
+                        '/setup_profile_contact_info',
+                      );
                     },
                     child: Container(
                       width: 48,
@@ -286,7 +291,10 @@ class _SetupProfileSkillsState extends State<SetupProfileSkills> {
                   // Next Button (Rounded Rectangle)
                   InkWell(
                     onTap: () {
-                      // Add navigation logic here
+                      Navigator.pushNamed(
+                        context,
+                        '/setup_profile_professional_info',
+                      );
                     },
                     child: Container(
                       padding: const EdgeInsets.symmetric(

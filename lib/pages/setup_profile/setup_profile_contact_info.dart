@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
-class SetupProfile1 extends StatefulWidget {
-  const SetupProfile1({super.key});
+class SetupProfileContactInfo extends StatefulWidget {
+  const SetupProfileContactInfo({super.key});
 
   @override
-  State<SetupProfile1> createState() => _SetupProfile1State();
+  State<SetupProfileContactInfo> createState() =>
+      _SetupProfileContactInfoState();
 }
 
-class _SetupProfile1State extends State<SetupProfile1> {
-  List<bool> isSelected = [true, false, false];
+class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,9 +22,8 @@ class _SetupProfile1State extends State<SetupProfile1> {
       backgroundColor: Colors.white,
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: Column(
-          // mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: ListView(
+          scrollDirection: Axis.vertical,
           children: [
             SizedBox(height: 100),
 
@@ -56,7 +55,7 @@ class _SetupProfile1State extends State<SetupProfile1> {
                 // Progress bar
                 Container(
                   height: 8,
-                  width: 15,
+                  width: 75,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
@@ -96,7 +95,7 @@ class _SetupProfile1State extends State<SetupProfile1> {
                   ),
                   children: [
                     TextSpan(
-                      text: '0%', // Bold percentage
+                      text: '20%', // Bold percentage
                       style: TextStyle(
                         color: const Color.fromARGB(255, 90, 90, 90),
                         fontSize: 22,
@@ -116,13 +115,38 @@ class _SetupProfile1State extends State<SetupProfile1> {
             ),
             SizedBox(height: 20),
             Text(
-              'Personal Information',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
+              'Contact Information',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w600,
+              ),
             ),
 
+            // Phone Number
+            const SizedBox(height: 20),
             TextField(
               decoration: InputDecoration(
-                labelText: 'Name',
+                prefix: RichText(
+                  text: TextSpan(
+                    text: '   +91   ',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: '|    ',
+                        style: TextStyle(
+                          color: const Color.fromARGB(255, 87, 87, 87),
+                          fontSize: 30,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                labelText: 'Phone Number',
                 labelStyle: TextStyle(
                     color: Colors.black,
                     // fontWeight: FontWeight.w500,
@@ -133,14 +157,14 @@ class _SetupProfile1State extends State<SetupProfile1> {
               ),
             ),
 
-            SizedBox(height: 25),
+            SizedBox(height: 20),
             TextField(
               decoration: InputDecoration(
-                hintText: 'dd-mm-yyy',
+                hintText: 'something@example.com',
                 hintStyle: TextStyle(
                   fontSize: 20,
                 ),
-                labelText: 'DOB',
+                labelText: 'Email',
                 labelStyle: TextStyle(
                     color: Colors.black,
                     // fontWeight: FontWeight.w500,
@@ -151,45 +175,20 @@ class _SetupProfile1State extends State<SetupProfile1> {
               ),
             ),
 
-            SizedBox(height: 10),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                'Gender',
-                style: TextStyle(fontSize: 20),
+            SizedBox(height: 20),
+            TextField(
+              decoration: InputDecoration(
+                labelText: 'City',
+                labelStyle: TextStyle(
+                    color: Colors.black,
+                    // fontWeight: FontWeight.w500,
+                    fontSize: 24),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20.0),
+                ),
               ),
             ),
 
-            ToggleButtons(
-              borderRadius: BorderRadius.circular(8.0),
-              selectedBorderColor: Colors.black,
-              selectedColor: Colors.black,
-              fillColor: Colors.transparent,
-              borderColor: Colors.grey,
-              textStyle: TextStyle(fontSize: 14),
-              isSelected: isSelected,
-              onPressed: (int index) {
-                setState(() {
-                  for (int i = 0; i < isSelected.length; i++) {
-                    isSelected[i] = i == index;
-                  }
-                });
-              },
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Text('Male'),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Text('Female'),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Text('Rather Not Say'),
-                ),
-              ],
-            ),
             const SizedBox(height: 20),
             Center(
               child: Padding(
@@ -200,7 +199,9 @@ class _SetupProfile1State extends State<SetupProfile1> {
                   children: [
                     // Back Button (Circular)
                     InkWell(
-                      onTap: () {}, // Add your onTap logic here
+                      onTap: () {
+                        Navigator.pushNamed(context, '/setup_profile_1');
+                      },
                       child: Container(
                         width: 48,
                         height: 48,
@@ -215,7 +216,9 @@ class _SetupProfile1State extends State<SetupProfile1> {
 
                     // Next Button (Rounded Rectangle)
                     InkWell(
-                      onTap: () {}, // Add your onTap logic here
+                      onTap: () {
+                        Navigator.pushNamed(context, '/setup_profile_skills');
+                      }, // Add your onTap logic here
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 12),

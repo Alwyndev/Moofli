@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
-class SetupProfileContactInfo extends StatefulWidget {
-  const SetupProfileContactInfo({super.key});
+class SetupProfile1 extends StatefulWidget {
+  const SetupProfile1({super.key});
 
   @override
-  State<SetupProfileContactInfo> createState() =>
-      _SetupProfileContactInfoState();
+  State<SetupProfile1> createState() => _SetupProfile1State();
 }
 
-class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
+class _SetupProfile1State extends State<SetupProfile1> {
+  List<bool> isSelected = [true, false, false];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,9 +22,9 @@ class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
       backgroundColor: Colors.white,
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: Column(
+        child: ListView(
           // mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          scrollDirection: Axis.vertical,
           children: [
             SizedBox(height: 100),
 
@@ -56,7 +56,7 @@ class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
                 // Progress bar
                 Container(
                   height: 8,
-                  width: 75,
+                  width: 15,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
@@ -96,7 +96,7 @@ class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
                   ),
                   children: [
                     TextSpan(
-                      text: '20%', // Bold percentage
+                      text: '0%', // Bold percentage
                       style: TextStyle(
                         color: const Color.fromARGB(255, 90, 90, 90),
                         fontSize: 22,
@@ -116,38 +116,13 @@ class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
             ),
             SizedBox(height: 20),
             Text(
-              'Contact Information',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w600,
-              ),
+              'Personal Information',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
             ),
 
-            // Phone Number
-            const SizedBox(height: 20),
             TextField(
               decoration: InputDecoration(
-                prefix: RichText(
-                  text: TextSpan(
-                    text: '   +91   ',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    children: [
-                      TextSpan(
-                        text: '|    ',
-                        style: TextStyle(
-                          color: const Color.fromARGB(255, 87, 87, 87),
-                          fontSize: 30,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                labelText: 'Phone Number',
+                labelText: 'Name',
                 labelStyle: TextStyle(
                     color: Colors.black,
                     // fontWeight: FontWeight.w500,
@@ -158,14 +133,14 @@ class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
               ),
             ),
 
-            SizedBox(height: 20),
+            SizedBox(height: 25),
             TextField(
               decoration: InputDecoration(
-                hintText: 'something@example.com',
+                hintText: 'dd-mm-yyy',
                 hintStyle: TextStyle(
                   fontSize: 20,
                 ),
-                labelText: 'Email',
+                labelText: 'DOB',
                 labelStyle: TextStyle(
                     color: Colors.black,
                     // fontWeight: FontWeight.w500,
@@ -176,72 +151,77 @@ class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
               ),
             ),
 
-            SizedBox(height: 20),
-            TextField(
-              decoration: InputDecoration(
-                labelText: 'City',
-                labelStyle: TextStyle(
-                    color: Colors.black,
-                    // fontWeight: FontWeight.w500,
-                    fontSize: 24),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20.0),
-                ),
+            SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                'Gender',
+                style: TextStyle(fontSize: 20),
               ),
             ),
 
+            ToggleButtons(
+              borderRadius: BorderRadius.circular(8.0),
+              selectedBorderColor: Colors.black,
+              selectedColor: Colors.black,
+              fillColor: Colors.transparent,
+              borderColor: Colors.grey,
+              textStyle: TextStyle(fontSize: 14),
+              isSelected: isSelected,
+              onPressed: (int index) {
+                setState(() {
+                  for (int i = 0; i < isSelected.length; i++) {
+                    isSelected[i] = i == index;
+                  }
+                });
+              },
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Text('Male'),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Text('Female'),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Text('Rather Not Say'),
+                ),
+              ],
+            ),
             const SizedBox(height: 20),
             Center(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment
-                      .spaceBetween, // Spreads the buttons apart
-                  children: [
-                    // Back Button (Circular)
-                    InkWell(
-                      onTap: () {}, // Add your onTap logic here
-                      child: Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.black, width: 1.5),
+                child: InkWell(
+                  onTap: () {
+                    Navigator.pushNamed(context, '/setup_profile_contact_info');
+                  }, // Add your onTap logic here
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.black, width: 1.5),
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          "NEXT",
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.black,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                        child: Icon(Icons.arrow_back,
+                        SizedBox(width: 8), // Space between text and icon
+                        Icon(Icons.arrow_forward,
                             size: 24, color: Colors.black),
-                      ),
+                      ],
                     ),
-
-                    // Next Button (Rounded Rectangle)
-                    InkWell(
-                      onTap: () {}, // Add your onTap logic here
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 12),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.black, width: 1.5),
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              "NEXT",
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.black,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            SizedBox(width: 8), // Space between text and icon
-                            Icon(Icons.arrow_forward,
-                                size: 24, color: Colors.black),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),

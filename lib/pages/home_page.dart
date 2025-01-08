@@ -35,8 +35,17 @@ class _HomePageState extends State<HomePage> {
         elevation: 1,
         title: Row(
           children: [
-            CircleAvatar(
-              backgroundImage: AssetImage('assets/images/logo.png'),
+            Builder(
+              builder: (context) {
+                return GestureDetector(
+                  onTap: () {
+                    Scaffold.of(context).openDrawer();
+                  },
+                  child: CircleAvatar(
+                    backgroundImage: AssetImage('assets/images/logo.png'),
+                  ),
+                );
+              },
             ),
             SizedBox(width: 8),
             Spacer(),
@@ -48,6 +57,41 @@ class _HomePageState extends State<HomePage> {
             Icon(Icons.local_fire_department, color: Colors.black),
             SizedBox(width: 4),
             Text('3', style: TextStyle(color: Colors.black)),
+          ],
+        ),
+      ),
+      drawer: Drawer(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            UserAccountsDrawerHeader(
+              accountName: Text('France Leaphart'),
+              accountEmail: Text('10 Friends'),
+              currentAccountPicture: CircleAvatar(
+                backgroundImage: NetworkImage(
+                  'https://via.placeholder.com/150',
+                ),
+              ),
+            ),
+            ListTile(
+              leading: Icon(Icons.person),
+              title: Text('Profile'),
+              onTap: () {},
+            ),
+            ListTile(
+              leading: Icon(Icons.settings),
+              title: Text('Settings'),
+              onTap: () {},
+            ),
+            Spacer(),
+            ListTile(
+              leading: Icon(Icons.logout, color: Colors.red),
+              title: Text(
+                'Logout Account',
+                style: TextStyle(color: Colors.red),
+              ),
+              onTap: () {},
+            ),
           ],
         ),
       ),
@@ -99,50 +143,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
-          Expanded(
-            child: Column(
-              children: [
-                for (int i = 0; i < 3; i++) ...[
-                  Card(
-                    color: const Color.fromARGB(255, 119, 155, 255),
-                    margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            [
-                              '$_today',
-                              '$_yesterday.day',
-                              '$_dayBeforeYesterday'
-                            ][i],
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'This is your Moofli',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-                            style: TextStyle(color: Colors.grey.shade700),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
+          // Your other widgets here
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -154,12 +155,9 @@ class _HomePageState extends State<HomePage> {
       bottomNavigationBar: BottomNavigationBar(
         items: [
           BottomNavigationBarItem(
-              icon: Icon(
-                Icons.home,
-                color: Colors.black,
-                size: 40,
-              ),
-              label: ''),
+            icon: Icon(Icons.home, color: Colors.black, size: 40),
+            label: '',
+          ),
           BottomNavigationBarItem(
             icon: CircleAvatar(
               backgroundImage: AssetImage('assets/images/logo.png'),

@@ -102,8 +102,7 @@ class _LoginPageState extends State<LoginPage> {
             GradientButton(
               text: 'Log In',
               onPressed: () {
-                // Add your functionality
-                print('Login Button Pressed');
+                Navigator.pushNamed(context, '/home');
               },
               border: 20,
               padding: 16,
@@ -115,11 +114,16 @@ class _LoginPageState extends State<LoginPage> {
             // SizedBox(height: 10),
 
             Center(
-              child: Text(
-                'SIGN UP',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
+              child: TextButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/signup');
+                },
+                child: Text(
+                  'SIGN UP',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
                 ),
               ),
             ),
