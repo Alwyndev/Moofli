@@ -200,40 +200,38 @@ class _SetupProfileProfesionalInfoState
             ),
 
             SizedBox(height: 20),
-            Expanded(
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      decoration: InputDecoration(
-                        labelText: 'Start Year',
-                        labelStyle: TextStyle(
-                          color: Colors.black,
-                          fontSize: 18, // Adjusted font size for better fit
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20.0),
-                        ),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    decoration: InputDecoration(
+                      labelText: 'Start Year',
+                      labelStyle: TextStyle(
+                        color: Colors.black,
+                        fontSize: 18,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20.0),
                       ),
                     ),
                   ),
-                  SizedBox(width: 16), // Adds space between the TextFields
-                  Expanded(
-                    child: TextField(
-                      decoration: InputDecoration(
-                        labelText: 'End Year',
-                        labelStyle: TextStyle(
-                          color: Colors.black,
-                          fontSize: 18, // Adjusted font size for better fit
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20.0),
-                        ),
+                ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: TextField(
+                    decoration: InputDecoration(
+                      labelText: 'End Year',
+                      labelStyle: TextStyle(
+                        color: Colors.black,
+                        fontSize: 18,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20.0),
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
 
             const SizedBox(height: 20),

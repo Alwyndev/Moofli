@@ -10,6 +10,25 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   bool status = true;
+  late String username;
+  late String password;
+  final TextEditingController usernameEditingController =
+      TextEditingController();
+  final TextEditingController passwordEditingController =
+      TextEditingController();
+
+  String getUsername() {
+    username = usernameEditingController.text;
+    setState(() {});
+    return username;
+  }
+
+  String getPassword() {
+    password = passwordEditingController.text;
+    setState(() {});
+    return password;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -60,6 +79,7 @@ class _LoginPageState extends State<LoginPage> {
 
             // Input Field
             TextField(
+              controller: usernameEditingController,
               decoration: InputDecoration(
                 labelText: 'Username',
                 labelStyle: TextStyle(
@@ -73,6 +93,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
             SizedBox(height: 20),
             TextField(
+              controller: passwordEditingController,
               obscureText: status, // Controls whether the text is obscured
               decoration: InputDecoration(
                 labelText: 'Password',
@@ -102,7 +123,10 @@ class _LoginPageState extends State<LoginPage> {
             GradientButton(
               text: 'Log In',
               onPressed: () {
+                getUsername();
+                getPassword();
                 Navigator.pushNamed(context, '/home');
+                print("$username, $password");
               },
               border: 20,
               padding: 16,
