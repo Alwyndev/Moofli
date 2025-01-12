@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:moofli_app/google_login_button.dart';
 import 'package:moofli_app/gradient_button.dart';
 
 class LoginPage extends StatefulWidget {
@@ -9,24 +11,24 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final GoogleSignIn _googleSignIn = GoogleSignIn(); // Google Sign-In instance
+
   bool status = true;
-  late String username;
-  late String password;
-  final TextEditingController usernameEditingController =
-      TextEditingController();
-  final TextEditingController passwordEditingController =
-      TextEditingController();
 
-  String getUsername() {
-    username = usernameEditingController.text;
-    setState(() {});
-    return username;
-  }
-
-  String getPassword() {
-    password = passwordEditingController.text;
-    setState(() {});
-    return password;
+  Future<void> _handleGoogleLogin() async {
+    try {
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser != null) {
+        print("Google User: ${googleUser.displayName}");
+        print("Email: ${googleUser.email}");
+        print("Photo URL: ${googleUser.photoUrl}");
+        // Additional actions can be performed here
+      } else {
+        print("User canceled the sign-in process.");
+      }
+    } catch (error) {
+      print("Error during Google Sign-In: $error");
+    }
   }
 
   @override
@@ -47,8 +49,6 @@ class _LoginPageState extends State<LoginPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(height: 20),
-
-            // Title
             Text(
               'LOGIN',
               style: TextStyle(
@@ -58,8 +58,6 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
             SizedBox(height: 8),
-
-            // Decorative Line
             Container(
               height: 8,
               width: 100,
@@ -69,23 +67,20 @@ class _LoginPageState extends State<LoginPage> {
                     Colors.red,
                     Colors.yellow,
                     Colors.green,
-                    Colors.blue,
+                    Colors.blue
                   ],
                 ),
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
             SizedBox(height: 40),
-
-            // Input Field
             TextField(
-              controller: usernameEditingController,
               decoration: InputDecoration(
                 labelText: 'Username',
                 labelStyle: TextStyle(
-                    color: Colors.black,
-                    // fontWeight: FontWeight.w500,
-                    fontSize: 24),
+                  color: Colors.black,
+                  fontSize: 24,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.0),
                 ),
@@ -93,8 +88,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
             SizedBox(height: 20),
             TextField(
-              controller: passwordEditingController,
-              obscureText: status, // Controls whether the text is obscured
+              obscureText: status,
               decoration: InputDecoration(
                 labelText: 'Password',
                 labelStyle: TextStyle(
@@ -104,13 +98,11 @@ class _LoginPageState extends State<LoginPage> {
                 suffixIcon: IconButton(
                   onPressed: () {
                     setState(() {
-                      status = !status; // Toggle the visibility status
+                      status = !status;
                     });
                   },
                   icon: Icon(
-                    status
-                        ? Icons.visibility_off
-                        : Icons.visibility, // Change icon dynamically
+                    status ? Icons.visibility_off : Icons.visibility,
                   ),
                 ),
                 border: OutlineInputBorder(
@@ -119,24 +111,16 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
             SizedBox(height: 20),
-            // Gradient Button
             GradientButton(
               text: 'Log In',
               onPressed: () {
-                getUsername();
-                getPassword();
                 Navigator.pushNamed(context, '/home');
-                print("$username, $password");
               },
               border: 20,
               padding: 16,
             ),
-
             SizedBox(height: 10),
             Center(child: Text('Not Registered Yet?')),
-
-            // SizedBox(height: 10),
-
             Center(
               child: TextButton(
                 onPressed: () {
@@ -155,40 +139,8 @@ class _LoginPageState extends State<LoginPage> {
             Center(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 50),
-                child: SizedBox(
-                  height: 60,
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      print('Login With Google Pressed');
-                    },
-                    style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.all(8.0),
-                      shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(8.0), // Rounded corners
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize
-                          .min, // Ensures the button width matches its content
-                      children: [
-                        Image.asset(
-                          'assets/images/google_logo.png', // Replace with the path to your Google logo
-                          height: 24.0,
-                          width: 24.0,
-                        ),
-                        SizedBox(width: 12.0), // Space between logo and text
-                        Text(
-                          'Login With Google',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                child: GoogleLoginButton(
+                  onPressed: _handleGoogleLogin, // Pass the callback function
                 ),
               ),
             ),

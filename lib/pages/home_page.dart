@@ -15,17 +15,17 @@ class _HomePageState extends State<HomePage> {
     return DateTime(_focusedDay.year, _focusedDay.month, 1);
   }
 
-  int get _today {
-    return DateTime.now().day;
-  }
+  // int get _today {
+  //   return DateTime.now().day;
+  // }
 
   DateTime get _yesterday {
     return DateTime.now().subtract(Duration(days: 1));
   }
 
-  int get _dayBeforeYesterday {
-    return DateTime.now().subtract(Duration(days: 2)).day;
-  }
+  // int get _dayBeforeYesterday {
+  //   return DateTime.now().subtract(Duration(days: 2)).day;
+  // }
 
   @override
   Widget build(BuildContext context) {
