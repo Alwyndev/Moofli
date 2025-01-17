@@ -11,7 +11,12 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final GoogleSignIn _googleSignIn = GoogleSignIn(); // Google Sign-In instance
+  // Google Sign-In instance
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
+
+  // Text Editing Controllers
+  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController passwdController = TextEditingController();
 
   bool status = true;
 
@@ -75,6 +80,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
             SizedBox(height: 40),
             TextField(
+              controller: usernameController,
               decoration: InputDecoration(
                 labelText: 'Username',
                 labelStyle: TextStyle(
@@ -88,6 +94,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
             SizedBox(height: 20),
             TextField(
+              controller: passwdController,
               obscureText: status,
               decoration: InputDecoration(
                 labelText: 'Password',
@@ -107,6 +114,20 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.0),
+                ),
+              ),
+            ),
+            Center(
+              child: TextButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/reset_password');
+                },
+                child: Text(
+                  'Forgot Password?',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
                 ),
               ),
             ),

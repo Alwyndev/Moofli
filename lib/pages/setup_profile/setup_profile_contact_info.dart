@@ -9,6 +9,11 @@ class SetupProfileContactInfo extends StatefulWidget {
 }
 
 class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
+  // TextEditingControllers
+  final TextEditingController phoneController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController cityController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -125,6 +130,7 @@ class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
             // Phone Number
             const SizedBox(height: 20),
             TextField(
+              controller: phoneController,
               decoration: InputDecoration(
                 prefix: RichText(
                   text: TextSpan(
@@ -159,6 +165,7 @@ class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
 
             SizedBox(height: 20),
             TextField(
+              controller: emailController,
               decoration: InputDecoration(
                 hintText: 'something@example.com',
                 hintStyle: TextStyle(
@@ -177,6 +184,7 @@ class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
 
             SizedBox(height: 20),
             TextField(
+              controller: cityController,
               decoration: InputDecoration(
                 labelText: 'City',
                 labelStyle: TextStyle(

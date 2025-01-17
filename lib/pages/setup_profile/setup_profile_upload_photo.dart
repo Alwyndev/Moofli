@@ -1,7 +1,41 @@
-import 'package:flutter/material.dart';
+import 'dart:io';
 
-class SetupProfileUploadPhoto extends StatelessWidget {
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+
+class SetupProfileUploadPhoto extends StatefulWidget {
   const SetupProfileUploadPhoto({super.key});
+
+  @override
+  State<SetupProfileUploadPhoto> createState() =>
+      _SetupProfileUploadPhotoState();
+}
+
+class _SetupProfileUploadPhotoState extends State<SetupProfileUploadPhoto> {
+  XFile? coverPhoto;
+  XFile? profilePhoto;
+
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> pickCoverPhoto() async {
+    final XFile? pickedImage =
+        await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedImage != null) {
+      setState(() {
+        coverPhoto = pickedImage;
+      });
+    }
+  }
+
+  Future<void> pickProfilePhoto() async {
+    final XFile? pickedImage =
+        await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedImage != null) {
+      setState(() {
+        profilePhoto = pickedImage;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,8 +52,6 @@ class SetupProfileUploadPhoto extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
         children: [
           const SizedBox(height: 100),
-
-          // Subtitle
           const Text(
             'Complete your',
             style: TextStyle(
@@ -28,8 +60,6 @@ class SetupProfileUploadPhoto extends StatelessWidget {
               color: Colors.black,
             ),
           ),
-
-          // Title
           const Text(
             'Profile',
             style: TextStyle(
@@ -38,8 +68,6 @@ class SetupProfileUploadPhoto extends StatelessWidget {
               color: Colors.black,
             ),
           ),
-
-          // Decorative Line
           const SizedBox(height: 8),
           Row(
             children: [
@@ -94,11 +122,8 @@ class SetupProfileUploadPhoto extends StatelessWidget {
               ),
             ),
           ),
-
-          // Cover and Profile Photo Section
           const SizedBox(height: 20),
-          SizedBox(height: 20),
-          Text(
+          const Text(
             'Cover Photo',
             style: TextStyle(
               fontSize: 24,
@@ -107,9 +132,7 @@ class SetupProfileUploadPhoto extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           GestureDetector(
-            onTap: () {
-              // Handle cover photo upload
-            },
+            onTap: pickCoverPhoto,
             child: Container(
               height: 150,
               decoration: BoxDecoration(
@@ -117,21 +140,24 @@ class SetupProfileUploadPhoto extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
                 color: Colors.grey[200],
               ),
-              child: const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.upload, size: 32, color: Colors.black),
-                    Text('UPLOAD'),
-                  ],
-                ),
-              ),
+              child: coverPhoto == null
+                  ? const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.upload, size: 32, color: Colors.black),
+                          Text('UPLOAD'),
+                        ],
+                      ),
+                    )
+                  : Image.file(
+                      File(coverPhoto!.path),
+                      fit: BoxFit.cover,
+                    ),
             ),
           ),
-
           const SizedBox(height: 20),
-          SizedBox(height: 20),
-          Text(
+          const Text(
             'Profile Photo',
             style: TextStyle(
               fontSize: 24,
@@ -140,9 +166,7 @@ class SetupProfileUploadPhoto extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           GestureDetector(
-            onTap: () {
-              // Handle profile photo upload
-            },
+            onTap: pickProfilePhoto,
             child: Container(
               height: 100,
               width: 100,
@@ -151,19 +175,24 @@ class SetupProfileUploadPhoto extends StatelessWidget {
                 border: Border.all(color: Colors.grey),
                 color: Colors.grey[200],
               ),
-              child: const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.upload, size: 32, color: Colors.black),
-                    Text('UPLOAD'),
-                  ],
-                ),
-              ),
+              child: profilePhoto == null
+                  ? const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.upload, size: 32, color: Colors.black),
+                          Text('UPLOAD'),
+                        ],
+                      ),
+                    )
+                  : ClipOval(
+                      child: Image.file(
+                        File(profilePhoto!.path),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
             ),
           ),
-
-          // Back and Next Buttons
           const SizedBox(height: 40),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,

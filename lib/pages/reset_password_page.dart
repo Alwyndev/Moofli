@@ -58,6 +58,7 @@ class ResetPasswordPage extends StatelessWidget {
                 labelStyle: TextStyle(
                   color: Colors.black,
                   fontWeight: FontWeight.w500,
+                  fontSize: 24,
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.0),

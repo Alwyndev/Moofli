@@ -9,6 +9,11 @@ class SetupProfile1 extends StatefulWidget {
 
 class _SetupProfile1State extends State<SetupProfile1> {
   List<bool> isSelected = [true, false, false];
+  late String gender;
+  // TextEditingControllers
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController dobController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -121,6 +126,7 @@ class _SetupProfile1State extends State<SetupProfile1> {
             ),
 
             TextField(
+              controller: nameController,
               decoration: InputDecoration(
                 labelText: 'Name',
                 labelStyle: TextStyle(
@@ -135,8 +141,9 @@ class _SetupProfile1State extends State<SetupProfile1> {
 
             SizedBox(height: 25),
             TextField(
+              controller: dobController,
               decoration: InputDecoration(
-                hintText: 'dd-mm-yyy',
+                hintText: 'dd-mm-yyyy',
                 hintStyle: TextStyle(
                   fontSize: 20,
                 ),

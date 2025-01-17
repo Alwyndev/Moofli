@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class GoogleLoginButton extends StatelessWidget {
   final VoidCallback onPressed;
 
-  GoogleLoginButton({required this.onPressed});
+  const GoogleLoginButton({required this.onPressed});
 
   @override
   Widget build(BuildContext context) {

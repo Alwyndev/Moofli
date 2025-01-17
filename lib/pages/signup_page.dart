@@ -1,5 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:moofli_app/google_login_button.dart';
 import 'package:moofli_app/gradient_button.dart';
 
 class SignupPage extends StatefulWidget {
@@ -10,11 +12,37 @@ class SignupPage extends StatefulWidget {
 }
 
 class _SignupPageState extends State<SignupPage> {
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
+
   bool status1 = true;
   bool status2 = true;
   bool termsAccepted =
       false; // To track if Terms and Privacy Policy are accepted
   bool rememberMe = false;
+
+  Future<void> _handleGoogleLogin() async {
+    try {
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser != null) {
+        print("Google User: ${googleUser.displayName}");
+        print("Email: ${googleUser.email}");
+        print("Photo URL: ${googleUser.photoUrl}");
+        // Additional actions can be performed here
+      } else {
+        print("User canceled the sign-in process.");
+      }
+    } catch (error) {
+      print("Error during Google Sign-In: $error");
+    }
+  }
+
+  // Text Editing Controllers
+  final TextEditingController fNameController = TextEditingController();
+  final TextEditingController lNameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwdController = TextEditingController();
+  final TextEditingController rePasswdController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -67,6 +95,7 @@ class _SignupPageState extends State<SignupPage> {
 
             // Input Field
             TextField(
+              controller: fNameController,
               decoration: InputDecoration(
                 labelText: 'First Name',
                 labelStyle: TextStyle(
@@ -80,6 +109,7 @@ class _SignupPageState extends State<SignupPage> {
             ),
             SizedBox(height: 20),
             TextField(
+              controller: lNameController,
               decoration: InputDecoration(
                 labelText: 'Last Name',
                 labelStyle: TextStyle(
@@ -93,6 +123,7 @@ class _SignupPageState extends State<SignupPage> {
             ),
             SizedBox(height: 20),
             TextField(
+              controller: emailController,
               decoration: InputDecoration(
                 labelText: 'Email',
                 labelStyle: TextStyle(
@@ -106,6 +137,7 @@ class _SignupPageState extends State<SignupPage> {
             ),
             SizedBox(height: 20),
             TextField(
+              controller: passwdController,
               obscureText: status1, // Controls whether the text is obscured
               decoration: InputDecoration(
                 labelText: 'Password',
@@ -133,6 +165,7 @@ class _SignupPageState extends State<SignupPage> {
 
             SizedBox(height: 20),
             TextField(
+              controller: rePasswdController,
               obscureText: status2, // Controls whether the text is obscured
               decoration: InputDecoration(
                 labelText: 'Re-enter Password',
@@ -275,7 +308,28 @@ class _SignupPageState extends State<SignupPage> {
             GradientButton(
               text: 'Setup Your Profile',
               onPressed: () {
-                // Add your functionality
+                if (!termsAccepted) {
+                  // Show an alert dialog if Terms and Privacy Policy are not accepted
+                  showDialog(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: Text('Terms and Privacy Policy'),
+                        content: Text(
+                            'Please accept the Terms of Use and Privacy Policy to continue.'),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                            child: Text('OK'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                  return;
+                }
                 Navigator.pushNamed(context, '/setup_profile_1');
               },
               border: 20,
@@ -283,43 +337,12 @@ class _SignupPageState extends State<SignupPage> {
             ),
 
             SizedBox(height: 10),
+
             Center(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 50),
-                child: SizedBox(
-                  height: 60,
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      print('Sign Up With Google Pressed');
-                    },
-                    style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.all(8.0),
-                      shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(8.0), // Rounded corners
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize
-                          .min, // Ensures the button width matches its content
-                      children: [
-                        Image.asset(
-                          'assets/images/google_logo.png', // Replace with the path to your Google logo
-                          height: 24.0,
-                          width: 24.0,
-                        ),
-                        SizedBox(width: 12.0), // Space between logo and text
-                        Text(
-                          'Sign Up With Google',
-                          style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w300,
-                              color: Colors.black),
-                        ),
-                      ],
-                    ),
-                  ),
+                child: GoogleLoginButton(
+                  onPressed: _handleGoogleLogin, // Pass the callback function
                 ),
               ),
             ),

@@ -8,7 +8,10 @@ class SetupProfileSocials extends StatefulWidget {
 }
 
 class _SetupProfileSocialsState extends State<SetupProfileSocials> {
-  @override
+  // text editing controllers
+  final TextEditingController linkedInController = TextEditingController();
+  final TextEditingController upiController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -108,6 +111,7 @@ class _SetupProfileSocialsState extends State<SetupProfileSocials> {
             // Phone Number
             const SizedBox(height: 20),
             TextField(
+              controller: linkedInController,
               decoration: InputDecoration(
                 labelText: 'LinkedIn Profile',
                 labelStyle: TextStyle(
@@ -122,6 +126,7 @@ class _SetupProfileSocialsState extends State<SetupProfileSocials> {
 
             SizedBox(height: 20),
             TextField(
+              controller: upiController,
               decoration: InputDecoration(
                 labelText: 'UPI ID',
                 labelStyle: TextStyle(

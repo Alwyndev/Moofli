@@ -11,6 +11,20 @@ class SetupProfileProfesionalInfo extends StatefulWidget {
 class _SetupProfileProfesionalInfoState
     extends State<SetupProfileProfesionalInfo> {
   List<bool> isSelected = [true, false];
+
+  // TextEditingControllers
+  final TextEditingController collegeController = TextEditingController();
+  final TextEditingController degreeController = TextEditingController();
+  final TextEditingController fieldOfStudyController = TextEditingController();
+  final TextEditingController startYearController = TextEditingController();
+  final TextEditingController endYearController = TextEditingController();
+  final TextEditingController jobTitleController = TextEditingController();
+  final TextEditingController companyNameController = TextEditingController();
+  final TextEditingController jobDescriptionController =
+      TextEditingController();
+  final TextEditingController jobStartYearController = TextEditingController();
+  final TextEditingController jobEndYearController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -156,6 +170,7 @@ class _SetupProfileProfesionalInfoState
             // Phone Number
             const SizedBox(height: 20),
             TextField(
+              controller: collegeController,
               decoration: InputDecoration(
                 labelText: 'College/Institution',
                 labelStyle: TextStyle(
@@ -171,6 +186,7 @@ class _SetupProfileProfesionalInfoState
 
             const SizedBox(height: 20),
             TextField(
+              controller: degreeController,
               decoration: InputDecoration(
                 labelText: 'Degree',
                 labelStyle: TextStyle(
@@ -186,6 +202,7 @@ class _SetupProfileProfesionalInfoState
 
             const SizedBox(height: 20),
             TextField(
+              controller: fieldOfStudyController,
               decoration: InputDecoration(
                 labelText: 'Field of Study/Branch',
                 labelStyle: TextStyle(
@@ -204,6 +221,7 @@ class _SetupProfileProfesionalInfoState
               children: [
                 Expanded(
                   child: TextField(
+                    controller: startYearController,
                     decoration: InputDecoration(
                       labelText: 'Start Year',
                       labelStyle: TextStyle(
@@ -219,6 +237,7 @@ class _SetupProfileProfesionalInfoState
                 SizedBox(width: 16),
                 Expanded(
                   child: TextField(
+                    controller: endYearController,
                     decoration: InputDecoration(
                       labelText: 'End Year',
                       labelStyle: TextStyle(
@@ -236,6 +255,7 @@ class _SetupProfileProfesionalInfoState
 
             const SizedBox(height: 20),
             TextField(
+              controller: jobTitleController,
               decoration: InputDecoration(
                 labelText: 'Job Title',
                 labelStyle: TextStyle(
@@ -251,6 +271,7 @@ class _SetupProfileProfesionalInfoState
 
             const SizedBox(height: 20),
             TextField(
+              controller: companyNameController,
               decoration: InputDecoration(
                 labelText: 'Company Name',
                 labelStyle: TextStyle(
@@ -266,6 +287,7 @@ class _SetupProfileProfesionalInfoState
 
             const SizedBox(height: 20),
             TextField(
+              controller: jobDescriptionController,
               decoration: InputDecoration(
                 labelText: 'Job Description',
                 labelStyle: TextStyle(
@@ -285,6 +307,7 @@ class _SetupProfileProfesionalInfoState
               children: [
                 Expanded(
                   child: TextField(
+                    controller: jobStartYearController,
                     decoration: InputDecoration(
                       labelText: 'Start Year',
                       labelStyle: TextStyle(
@@ -300,6 +323,7 @@ class _SetupProfileProfesionalInfoState
                 SizedBox(width: 16), // Adds space between the TextFields
                 Expanded(
                   child: TextField(
+                    controller: jobEndYearController,
                     decoration: InputDecoration(
                       labelText: 'End Year',
                       labelStyle: TextStyle(
