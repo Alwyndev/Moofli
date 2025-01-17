@@ -146,7 +146,7 @@ class _SetupProfileSocialsState extends State<SetupProfileSocials> {
                       onTap: () {
                         Navigator.pushNamed(
                           context,
-                          '/setup_profile_professional_info',
+                          '/setup_profile_photo',
                         );
                       },
                       child: Container(

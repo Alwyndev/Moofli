@@ -1,5 +1,6 @@
 // File: main.dart
 import 'package:flutter/material.dart';
+import 'package:moofli_app/pages/setup_profile/setup_profile_upload_photo.dart';
 import 'pages/home_page.dart';
 import 'pages/login_page.dart';
 import 'pages/reset_password_page.dart';
@@ -32,6 +33,7 @@ class MyApp extends StatelessWidget {
         '/setup_profile_professional_info': (context) =>
             const SetupProfileProfesionalInfo(),
         '/setup_profile_skills': (context) => const SetupProfileSkills(),
+        '/setup_profile_photo': (context) => const SetupProfileUploadPhoto(),
         '/setup_profile_socials': (context) => const SetupProfileSocials(),
       },
       theme: ThemeData(
@@ -42,5 +44,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-// Additional files will follow the same pattern with appropriate updates for navigation.

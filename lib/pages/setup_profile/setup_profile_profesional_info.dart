@@ -345,7 +345,7 @@ class _SetupProfileProfesionalInfoState
                     onTap: () {
                       Navigator.pushNamed(
                         context,
-                        '/setup_profile_socials',
+                        '/setup_profile_photo',
                       );
                     }, // Add your onTap logic here
                     child: Container(
