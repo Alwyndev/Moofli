@@ -201,7 +201,7 @@ class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
             const SizedBox(height: 20),
             Center(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                padding: const EdgeInsets.symmetric(horizontal: 5.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment
                       .spaceBetween, // Spreads the buttons apart

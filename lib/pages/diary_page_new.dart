@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:moofli_app/components/icon_helpers.dart';
+import 'package:moofli_app/components/icons_list.dart';
 
 class DiaryPageNew extends StatefulWidget {
   const DiaryPageNew({super.key});
@@ -8,8 +11,23 @@ class DiaryPageNew extends StatefulWidget {
 }
 
 class _DiaryPageNewState extends State<DiaryPageNew> {
+  TextEditingController dairyEntryController = TextEditingController();
+
+  // Map to track selected icons
+  Map<IconData, bool> iconStates = {
+    for (var icon in toolbarIcons) icon: false,
+  };
+
   @override
   Widget build(BuildContext context) {
+    // Get the current date
+    DateTime now = DateTime.now();
+
+    // Format the date
+    String formattedDate = DateFormat('dd MMMM').format(now); // date and month
+    String formattedDay = DateFormat('EEEE').format(now); // day
+    String formattedYear = now.year.toString(); // year
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -17,11 +35,11 @@ class _DiaryPageNewState extends State<DiaryPageNew> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "19 JANUARY",
+              formattedDate.toUpperCase(),
               style: TextStyle(color: Colors.green, fontSize: 16),
             ),
             Text(
-              "2025, Sunday",
+              "$formattedYear, $formattedDay",
               style: TextStyle(color: Colors.black, fontSize: 14),
             ),
           ],
@@ -37,13 +55,65 @@ class _DiaryPageNewState extends State<DiaryPageNew> {
               child: Wrap(
                 spacing: 10,
                 runSpacing: 10,
-                children: List.generate(
-                  20, // Number of icons
-                  (index) => Icon(
-                    Icons.widgets,
-                    size: 30,
-                  ),
-                ),
+                children: toolbarIcons
+                    .map(
+                      (icon) => GestureDetector(
+                        onTap: () {
+                          // Update the state of the selected icon
+                          setState(() {
+                            iconStates[icon] = !iconStates[icon]!;
+
+                            // Perform icon-specific actions
+                            switch (icon) {
+                              case Icons.format_bold:
+                                toggleBold(() => setState(() {}));
+                                break;
+                              case Icons.format_italic:
+                                toggleItalic(() => setState(() {}));
+                                break;
+                              case Icons.format_underline:
+                                toggleUnderline(() => setState(() {}));
+                                break;
+                              case Icons.format_strikethrough:
+                                toggleStrikethrough(() => setState(() {}));
+                                break;
+                              case Icons.format_align_left:
+                                setAlignment(
+                                    TextAlign.left, () => setState(() {}));
+                                break;
+                              case Icons.format_align_center:
+                                setAlignment(
+                                    TextAlign.center, () => setState(() {}));
+                                break;
+                              case Icons.format_align_right:
+                                setAlignment(
+                                    TextAlign.right, () => setState(() {}));
+                                break;
+                              case Icons.copy:
+                                copyToClipboard(dairyEntryController, context);
+                                break;
+                              case Icons.paste:
+                                pasteFromClipboard(dairyEntryController,
+                                    () => setState(() {}));
+                                break;
+                              default:
+                                print("Pressed $icon");
+                            }
+                          });
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: iconStates[icon]!
+                                ? Colors.grey[300]
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.all(4),
+                          child: Icon(icon, size: 30),
+                        ),
+                      ),
+                    )
+                    .toList(),
               ),
             ),
           ),
@@ -51,11 +121,22 @@ class _DiaryPageNewState extends State<DiaryPageNew> {
             flex: 4,
             child: Card(
               margin: EdgeInsets.all(16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(25.0),
+              ),
               color: Colors.blue[300],
-              child: Center(
-                child: Text(
-                  "What's on your mind?",
-                  style: TextStyle(color: Colors.white, fontSize: 20),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: TextField(
+                  controller: dairyEntryController,
+                  maxLines: null, // Allows multiple lines
+                  textAlign: alignment,
+                  style: getTextStyle(),
+                  decoration: InputDecoration(
+                    hintText: "What's on your mind?",
+                    hintStyle: TextStyle(color: Colors.white),
+                    border: InputBorder.none,
+                  ),
                 ),
               ),
             ),
@@ -73,18 +154,14 @@ class _DiaryPageNewState extends State<DiaryPageNew> {
       bottomNavigationBar: BottomNavigationBar(
         items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home, color: Colors.black, size: 40),
-            label: '',
+            icon: Icon(Icons.home),
+            label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: CircleAvatar(
-              backgroundImage: AssetImage('assets/images/logo.png'),
-            ),
+            icon: Icon(Icons.circle, color: Colors.purple),
             label: '',
           ),
         ],
-        currentIndex: 0,
-        onTap: (index) {},
       ),
     );
   }

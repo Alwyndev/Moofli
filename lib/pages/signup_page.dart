@@ -63,7 +63,7 @@ class _SignupPageState extends State<SignupPage> {
           children: [
             // Logo
 
-            SizedBox(height: 20),
+            SizedBox(height: 10),
 
             // Title
             Text(
@@ -78,7 +78,7 @@ class _SignupPageState extends State<SignupPage> {
 
             Container(
               height: 8,
-              width: 100,
+              width: 50,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
@@ -91,7 +91,7 @@ class _SignupPageState extends State<SignupPage> {
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 40),
 
             // Input Field
             TextField(
@@ -101,13 +101,13 @@ class _SignupPageState extends State<SignupPage> {
                 labelStyle: TextStyle(
                     color: Colors.black,
                     // fontWeight: FontWeight.w500,
-                    fontSize: 24),
+                    fontSize: 18),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.0),
                 ),
               ),
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 10),
             TextField(
               controller: lNameController,
               decoration: InputDecoration(
@@ -115,13 +115,13 @@ class _SignupPageState extends State<SignupPage> {
                 labelStyle: TextStyle(
                     color: Colors.black,
                     // fontWeight: FontWeight.w500,
-                    fontSize: 24),
+                    fontSize: 18),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.0),
                 ),
               ),
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 10),
             TextField(
               controller: emailController,
               decoration: InputDecoration(
@@ -129,13 +129,13 @@ class _SignupPageState extends State<SignupPage> {
                 labelStyle: TextStyle(
                     color: Colors.black,
                     // fontWeight: FontWeight.w500,
-                    fontSize: 24),
+                    fontSize: 18),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.0),
                 ),
               ),
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 10),
             TextField(
               controller: passwdController,
               obscureText: status1, // Controls whether the text is obscured
@@ -143,7 +143,7 @@ class _SignupPageState extends State<SignupPage> {
                 labelText: 'Password',
                 labelStyle: TextStyle(
                   color: Colors.black,
-                  fontSize: 24,
+                  fontSize: 18,
                 ),
                 suffixIcon: IconButton(
                   onPressed: () {
@@ -163,7 +163,7 @@ class _SignupPageState extends State<SignupPage> {
               ),
             ),
 
-            SizedBox(height: 20),
+            SizedBox(height: 10),
             TextField(
               controller: rePasswdController,
               obscureText: status2, // Controls whether the text is obscured
@@ -171,7 +171,7 @@ class _SignupPageState extends State<SignupPage> {
                 labelText: 'Re-enter Password',
                 labelStyle: TextStyle(
                   color: Colors.black,
-                  fontSize: 22,
+                  fontSize: 16,
                 ),
                 suffixIcon: IconButton(
                   onPressed: () {

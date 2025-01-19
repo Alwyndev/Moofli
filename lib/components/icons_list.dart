@@ -1,0 +1,25 @@
+import 'package:flutter/material.dart';
+
+const List<IconData> toolbarIcons = [
+  Icons.format_bold,
+  Icons.format_italic,
+  Icons.format_underline,
+  Icons.format_strikethrough,
+  Icons.superscript,
+  Icons.color_lens,
+  Icons.brush,
+  Icons.format_clear,
+  Icons.format_list_numbered,
+  Icons.format_list_bulleted,
+  Icons.check_box,
+  Icons.code,
+  Icons.format_quote,
+  Icons.format_align_left,
+  Icons.format_align_center,
+  Icons.format_align_right,
+  Icons.link,
+  Icons.search,
+  Icons.cut,
+  Icons.copy,
+  Icons.paste,
+];

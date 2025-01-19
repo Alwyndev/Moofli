@@ -60,7 +60,7 @@ class _SetupProfile1State extends State<SetupProfile1> {
               children: [
                 // Filled Progress
                 Expanded(
-                  flex: (0 * 100 ~/ 5), // First page, 0/6 progress
+                  flex: (0.2 * 100 ~/ 5), // First page, 0/6 progress
                   child: Container(
                     height: 8,
                     decoration: BoxDecoration(

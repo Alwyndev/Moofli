@@ -147,31 +147,31 @@ class _HomePageState extends State<HomePage> {
           ),
 
           // const SizedBox(20),
-          Container(
-            padding: EdgeInsets.all(16.0),
-            child: TextField(
-              maxLines: null, // Allows multi-line input
-              decoration: InputDecoration(
-                hintText: "Enter text here...",
-                hintStyle: TextStyle(
-                  color: Colors.grey,
-                ),
-                contentPadding: EdgeInsets.only(
-                    top: 12.0, left: 12.0), // Align hint text to top-left
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25.0), // Curved borders
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25.0),
-                  borderSide: BorderSide(color: Colors.blue, width: 2.0),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25.0),
-                  borderSide: BorderSide(color: Colors.grey, width: 1.0),
-                ),
-              ),
-            ),
-          ),
+          // Container(
+          //   padding: EdgeInsets.all(16.0),
+          //   child: TextField(
+          //     maxLines: null, // Allows multi-line input
+          //     decoration: InputDecoration(
+          //       hintText: "Enter text here...",
+          //       hintStyle: TextStyle(
+          //         color: Colors.grey,
+          //       ),
+          //       contentPadding: EdgeInsets.only(
+          //           top: 12.0, left: 12.0), // Align hint text to top-left
+          //       border: OutlineInputBorder(
+          //         borderRadius: BorderRadius.circular(25.0), // Curved borders
+          //       ),
+          //       focusedBorder: OutlineInputBorder(
+          //         borderRadius: BorderRadius.circular(25.0),
+          //         borderSide: BorderSide(color: Colors.blue, width: 2.0),
+          //       ),
+          //       enabledBorder: OutlineInputBorder(
+          //         borderRadius: BorderRadius.circular(25.0),
+          //         borderSide: BorderSide(color: Colors.grey, width: 1.0),
+          //       ),
+          //     ),
+          //   ),
+          // ),
         ],
       ),
       floatingActionButton: FloatingActionButton(

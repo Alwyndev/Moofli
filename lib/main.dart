@@ -1,4 +1,3 @@
-// File: main.dart
 import 'package:flutter/material.dart';
 import 'package:moofli_app/pages/diary_entry_page.dart';
 import 'package:moofli_app/pages/diary_page_new.dart';
