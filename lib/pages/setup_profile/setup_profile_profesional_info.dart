@@ -70,32 +70,33 @@ class _SetupProfileProfesionalInfoState
             // Decorative Line
             Row(
               children: [
-                // Progress bar
-                Container(
-                  height: 8,
-                  width: 225,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.red,
-                        Colors.yellow,
-                        Colors.green,
-                        Colors.blue,
-                      ],
+                // Filled Progress
+                Expanded(
+                  flex: (3 * 100 ~/ 5),
+                  child: Container(
+                    height: 8,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.red,
+                          Colors.yellow,
+                          Colors.green,
+                          Colors.blue,
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    borderRadius: BorderRadius.circular(4),
                   ),
                 ),
 
                 // Remaining Progress
                 Expanded(
+                  flex: (2 * 100 ~/ 5), // Remaining 4/5
                   child: Container(
                     height: 8,
-                    width: double.infinity,
                     decoration: BoxDecoration(
-                      borderRadius:
-                          BorderRadius.only(topRight: Radius.circular(4)),
                       color: Color.fromRGBO(224, 217, 217, 1),
+                      borderRadius: BorderRadius.circular(20),
                     ),
                   ),
                 ),
@@ -135,34 +136,79 @@ class _SetupProfileProfesionalInfoState
             Text(
               'Professional Information',
               style: TextStyle(
-                fontSize: 24,
+                fontSize: 20,
                 fontWeight: FontWeight.w600,
               ),
             ),
-
-            ToggleButtons(
-              borderRadius: BorderRadius.circular(8.0),
-              selectedBorderColor: Colors.black,
-              selectedColor: Colors.black,
-              fillColor: Colors.transparent,
-              borderColor: Colors.grey,
-              textStyle: TextStyle(fontSize: 14),
-              isSelected: isSelected,
-              onPressed: (int index) {
-                setState(() {
-                  for (int i = 0; i < isSelected.length; i++) {
-                    isSelected[i] = i == index;
-                  }
-                });
-              },
+            Row(
+              mainAxisAlignment:
+                  MainAxisAlignment.start, // Align buttons to the left
               children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Text('Student'),
+                // Student Button
+                InkWell(
+                  onTap: () {
+                    setState(() {
+                      isSelected[0] = true;
+                      isSelected[1] = false;
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0, vertical: 8.0),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: isSelected[0]
+                            ? Colors.black
+                            : Colors.grey, // Highlight border
+                        width: isSelected[0]
+                            ? 2.0
+                            : 1.0, // Slightly thicker when selected
+                      ),
+                      borderRadius: BorderRadius.circular(16.0),
+                      color: Colors.transparent, // No background color change
+                    ),
+                    child: Text(
+                      'Student',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.black, // Keep text color static
+                      ),
+                    ),
+                  ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Text('Professional'),
+                const SizedBox(width: 16), // Space between buttons
+
+                // Professional Button
+                InkWell(
+                  onTap: () {
+                    setState(() {
+                      isSelected[0] = false;
+                      isSelected[1] = true;
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0, vertical: 8.0),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: isSelected[1]
+                            ? Colors.black
+                            : Colors.grey, // Highlight border
+                        width: isSelected[1]
+                            ? 2.0
+                            : 1.0, // Slightly thicker when selected
+                      ),
+                      borderRadius: BorderRadius.circular(16.0),
+                      color: Colors.transparent, // No background color change
+                    ),
+                    child: Text(
+                      'Professional',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.black, // Keep text color static
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -176,7 +222,7 @@ class _SetupProfileProfesionalInfoState
                 labelStyle: TextStyle(
                   color: Colors.black,
                   // fontWeight: FontWeight.w500,
-                  fontSize: 24,
+                  fontSize: 20,
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20.0),
@@ -192,7 +238,7 @@ class _SetupProfileProfesionalInfoState
                 labelStyle: TextStyle(
                   color: Colors.black,
                   // fontWeight: FontWeight.w500,
-                  fontSize: 24,
+                  fontSize: 20,
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20.0),
@@ -208,7 +254,7 @@ class _SetupProfileProfesionalInfoState
                 labelStyle: TextStyle(
                   color: Colors.black,
                   // fontWeight: FontWeight.w500,
-                  fontSize: 24,
+                  fontSize: 20,
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20.0),
@@ -261,7 +307,7 @@ class _SetupProfileProfesionalInfoState
                 labelStyle: TextStyle(
                   color: Colors.black,
                   // fontWeight: FontWeight.w500,
-                  fontSize: 24,
+                  fontSize: 20,
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20.0),
@@ -277,7 +323,7 @@ class _SetupProfileProfesionalInfoState
                 labelStyle: TextStyle(
                   color: Colors.black,
                   // fontWeight: FontWeight.w500,
-                  fontSize: 24,
+                  fontSize: 20,
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20.0),
@@ -293,7 +339,7 @@ class _SetupProfileProfesionalInfoState
                 labelStyle: TextStyle(
                   color: Colors.black,
                   // fontWeight: FontWeight.w500,
-                  fontSize: 24,
+                  fontSize: 20,
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20.0),

@@ -173,7 +173,9 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {
+          Navigator.pushNamed(context, '/dairy_entry_new');
+        },
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
         backgroundColor: Color.fromRGBO(0, 119, 255, 0.6),
         child: Icon(Icons.add),

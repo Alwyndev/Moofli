@@ -71,28 +71,33 @@ class _SetupProfileUploadPhotoState extends State<SetupProfileUploadPhoto> {
           const SizedBox(height: 8),
           Row(
             children: [
-              Container(
-                height: 8,
-                width: 325,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [
-                      Colors.red,
-                      Colors.yellow,
-                      Colors.green,
-                      Colors.blue
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
+              // Filled Progress
               Expanded(
+                flex: (4 * 100 ~/ 5),
                 child: Container(
                   height: 8,
-                  decoration: const BoxDecoration(
-                    borderRadius:
-                        BorderRadius.only(topRight: Radius.circular(4)),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.red,
+                        Colors.yellow,
+                        Colors.green,
+                        Colors.blue,
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+              ),
+
+              // Remaining Progress
+              Expanded(
+                flex: (1 * 100 ~/ 5), // Remaining 4/5
+                child: Container(
+                  height: 8,
+                  decoration: BoxDecoration(
                     color: Color.fromRGBO(224, 217, 217, 1),
+                    borderRadius: BorderRadius.circular(20),
                   ),
                 ),
               ),

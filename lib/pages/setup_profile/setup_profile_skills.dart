@@ -151,36 +151,40 @@ class _SetupProfileSkillsState extends State<SetupProfileSkills> {
               ),
             ),
 
-            // Decorative Line
             Row(
               children: [
-                Container(
-                  height: 8,
-                  width: 125,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.red,
-                        Colors.yellow,
-                        Colors.green,
-                        Colors.blue,
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
+                // Filled Progress
                 Expanded(
+                  flex: (2 * 100 ~/ 5),
                   child: Container(
                     height: 8,
                     decoration: BoxDecoration(
-                      borderRadius:
-                          BorderRadius.only(topRight: Radius.circular(4)),
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.red,
+                          Colors.yellow,
+                          Colors.green,
+                          Colors.blue,
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                ),
+                // Remaining Progress
+                Expanded(
+                  flex: (3 * 100 ~/ 5), // Remaining 3/6
+                  child: Container(
+                    height: 8,
+                    decoration: BoxDecoration(
                       color: Color.fromRGBO(224, 217, 217, 1),
+                      borderRadius: BorderRadius.circular(20),
                     ),
                   ),
                 ),
               ],
             ),
+
             SizedBox(height: 20),
 
             Center(

@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:moofli_app/gradient_button.dart';
 
-class ResetPasswordPage extends StatelessWidget {
+class ResetPasswordPage extends StatefulWidget {
   const ResetPasswordPage({super.key});
+
+  @override
+  State<ResetPasswordPage> createState() => _ResetPasswordPageState();
+}
+
+class _ResetPasswordPageState extends State<ResetPasswordPage> {
+  final TextEditingController _usernameController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +60,7 @@ class ResetPasswordPage extends StatelessWidget {
 
             // Input Field
             TextField(
+              controller: _usernameController,
               decoration: InputDecoration(
                 labelText: 'Username',
                 labelStyle: TextStyle(
@@ -71,11 +79,10 @@ class ResetPasswordPage extends StatelessWidget {
             GradientButton(
               text: 'Send Mail',
               onPressed: () {
-                // Add your functionality
-                print('Send Mail button pressed!');
+                // Navigator.pushNamed();
               },
               border: 20,
-              padding: 6,
+              padding: 13,
             ),
           ],
         ),

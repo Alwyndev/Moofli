@@ -78,7 +78,7 @@ class _SignupPageState extends State<SignupPage> {
 
             Container(
               height: 8,
-              width: 100,
+              width: 10,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
@@ -91,7 +91,7 @@ class _SignupPageState extends State<SignupPage> {
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
-            SizedBox(height: 40),
+            SizedBox(height: 20),
 
             // Input Field
             TextField(
@@ -192,7 +192,7 @@ class _SignupPageState extends State<SignupPage> {
             ),
 
             // To track if "Remember me" is checked
-            const SizedBox(height: 10),
+            const SizedBox(height: 5),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -214,12 +214,12 @@ class _SignupPageState extends State<SignupPage> {
                             TextSpan(
                               text:
                                   'By signing up, you are creating a SKILLOP account, and you agree to ',
-                              style: TextStyle(fontSize: 14),
+                              style: TextStyle(fontSize: 12),
                             ),
                             TextSpan(
                               text: 'SKILLOP\'s Terms of Use',
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 12,
                                 color: Colors.blue, // Link color
                                 decoration: TextDecoration
                                     .underline, // Underline the text
@@ -232,12 +232,12 @@ class _SignupPageState extends State<SignupPage> {
                             ),
                             TextSpan(
                               text: ' and ',
-                              style: TextStyle(fontSize: 14),
+                              style: TextStyle(fontSize: 12),
                             ),
                             TextSpan(
                               text: 'Privacy Policy.',
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 12,
                                 color: Colors.blue, // Link color
                                 decoration: TextDecoration
                                     .underline, // Underline the text
@@ -254,7 +254,7 @@ class _SignupPageState extends State<SignupPage> {
                     ),
                   ],
                 ),
-                SizedBox(height: 10),
+                SizedBox(height: 2),
 
                 // Remember Me Checkbox
                 Row(
@@ -269,14 +269,14 @@ class _SignupPageState extends State<SignupPage> {
                     ),
                     Text(
                       'Remember me as a Member of SKILLOP Community',
-                      style: TextStyle(fontSize: 14),
+                      style: TextStyle(fontSize: 12),
                     ),
                   ],
                 ),
               ],
             ),
 
-            SizedBox(height: 10),
+            // SizedBox(height: 2),
             Center(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -303,7 +303,7 @@ class _SignupPageState extends State<SignupPage> {
               ),
             ),
 
-            SizedBox(height: 20),
+            // SizedBox(height: 10),
             // Gradient Button
             GradientButton(
               text: 'Setup Your Profile',
@@ -333,10 +333,48 @@ class _SignupPageState extends State<SignupPage> {
                 Navigator.pushNamed(context, '/setup_profile_1');
               },
               border: 20,
-              padding: 16,
+              padding: 12,
             ),
 
             SizedBox(height: 10),
+            Row(
+              children: [
+                // Progress bar on the left
+                Expanded(
+                  child: Container(
+                    height: 4,
+                    decoration: BoxDecoration(
+                      borderRadius:
+                          BorderRadius.only(topRight: Radius.circular(4)),
+                      color: Color.fromRGBO(167, 166, 166, 1),
+                    ),
+                  ),
+                ),
+                // "OR" text
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Text(
+                    "OR",
+                    style: TextStyle(
+                      color: Color.fromRGBO(87, 87, 87, 1),
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                // Progress bar on the right
+                Expanded(
+                  child: Container(
+                    height: 4,
+                    decoration: BoxDecoration(
+                      borderRadius:
+                          BorderRadius.only(topRight: Radius.circular(4)),
+                      color: Color.fromRGBO(167, 166, 166, 1),
+                    ),
+                  ),
+                ),
+              ],
+            ),
 
             Center(
               child: Padding(

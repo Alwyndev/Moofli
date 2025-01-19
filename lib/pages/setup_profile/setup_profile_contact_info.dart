@@ -57,37 +57,38 @@ class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
             // Decorative Line
             Row(
               children: [
-                // Progress bar
-                Container(
-                  height: 8,
-                  width: 75,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.red,
-                        Colors.yellow,
-                        Colors.green,
-                        Colors.blue,
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-
-                // Remaining Progress
+                // Filled Progress
                 Expanded(
+                  flex: (1 * 100 ~/ 5), // 2/6 progress
                   child: Container(
                     height: 8,
-                    width: double.infinity,
                     decoration: BoxDecoration(
-                      borderRadius:
-                          BorderRadius.only(topRight: Radius.circular(4)),
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.red,
+                          Colors.yellow,
+                          Colors.green,
+                          Colors.blue,
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                ),
+                // Remaining Progress
+                Expanded(
+                  flex: (4 * 100 ~/ 5), // Remaining 4/6
+                  child: Container(
+                    height: 8,
+                    decoration: BoxDecoration(
                       color: Color.fromRGBO(224, 217, 217, 1),
+                      borderRadius: BorderRadius.circular(20),
                     ),
                   ),
                 ),
               ],
             ),
+
             SizedBox(height: 20),
             Center(
               child: RichText(

@@ -1,5 +1,7 @@
 // File: main.dart
 import 'package:flutter/material.dart';
+import 'package:moofli_app/pages/diary_entry_page.dart';
+import 'package:moofli_app/pages/diary_page_new.dart';
 import 'package:moofli_app/pages/setup_profile/setup_profile_upload_photo.dart';
 import 'pages/home_page.dart';
 import 'pages/login_page.dart';
@@ -26,6 +28,8 @@ class MyApp extends StatelessWidget {
         '/': (context) => const LoginPage(),
         '/signup': (context) => const SignupPage(),
         '/home': (context) => const HomePage(),
+        '/diary_entry': (context) => const DiaryEntryPage(),
+        '/dairy_entry_new': (context) => const DiaryPageNew(),
         '/reset_password': (context) => const ResetPasswordPage(),
         '/setup_profile_1': (context) => const SetupProfile1(),
         '/setup_profile_contact_info': (context) =>

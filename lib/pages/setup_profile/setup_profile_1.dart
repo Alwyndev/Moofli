@@ -58,37 +58,38 @@ class _SetupProfile1State extends State<SetupProfile1> {
             // Decorative Line
             Row(
               children: [
-                // Progress bar
-                Container(
-                  height: 8,
-                  width: 15,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.red,
-                        Colors.yellow,
-                        Colors.green,
-                        Colors.blue,
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-
-                // Remaining Progress
+                // Filled Progress
                 Expanded(
+                  flex: (0 * 100 ~/ 5), // First page, 0/6 progress
                   child: Container(
                     height: 8,
-                    width: double.infinity,
                     decoration: BoxDecoration(
-                      borderRadius:
-                          BorderRadius.only(topRight: Radius.circular(4)),
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.red,
+                          Colors.yellow,
+                          Colors.green,
+                          Colors.blue,
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                ),
+                // Remaining Progress
+                Expanded(
+                  flex: (4 * 100 ~/ 5), // Remaining 5/6
+                  child: Container(
+                    height: 8,
+                    decoration: BoxDecoration(
                       color: Color.fromRGBO(224, 217, 217, 1),
+                      borderRadius: BorderRadius.circular(20),
                     ),
                   ),
                 ),
               ],
             ),
+
             SizedBox(height: 20),
             Center(
               child: RichText(
@@ -122,7 +123,7 @@ class _SetupProfile1State extends State<SetupProfile1> {
             SizedBox(height: 20),
             Text(
               'Personal Information',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
             ),
 
             TextField(
@@ -132,7 +133,7 @@ class _SetupProfile1State extends State<SetupProfile1> {
                 labelStyle: TextStyle(
                     color: Colors.black,
                     // fontWeight: FontWeight.w500,
-                    fontSize: 24),
+                    fontSize: 20),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20.0),
                 ),
@@ -151,7 +152,7 @@ class _SetupProfile1State extends State<SetupProfile1> {
                 labelStyle: TextStyle(
                     color: Colors.black,
                     // fontWeight: FontWeight.w500,
-                    fontSize: 24),
+                    fontSize: 20),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20.0),
                 ),
@@ -167,36 +168,112 @@ class _SetupProfile1State extends State<SetupProfile1> {
               ),
             ),
 
-            ToggleButtons(
-              borderRadius: BorderRadius.circular(8.0),
-              selectedBorderColor: Colors.black,
-              selectedColor: Colors.black,
-              fillColor: Colors.transparent,
-              borderColor: Colors.grey,
-              textStyle: TextStyle(fontSize: 14),
-              isSelected: isSelected,
-              onPressed: (int index) {
-                setState(() {
-                  for (int i = 0; i < isSelected.length; i++) {
-                    isSelected[i] = i == index;
-                  }
-                });
-              },
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start, // Align to the left
               children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Text('Male'),
+                // Male Button
+                InkWell(
+                  onTap: () {
+                    setState(() {
+                      for (int i = 0; i < isSelected.length; i++) {
+                        isSelected[i] = (i == 0); // Select Male
+                      }
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0, vertical: 8.0),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: isSelected[0]
+                            ? Colors.black
+                            : Colors.grey, // Highlight border
+                        width:
+                            isSelected[0] ? 2.0 : 1.0, // Thicker for selected
+                      ),
+                      borderRadius: BorderRadius.circular(16.0),
+                      color: Colors.transparent, // No background color
+                    ),
+                    child: Text(
+                      'Male',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.black, // Keep text color static
+                      ),
+                    ),
+                  ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Text('Female'),
+                const SizedBox(width: 16), // Space between buttons
+
+                // Female Button
+                InkWell(
+                  onTap: () {
+                    setState(() {
+                      for (int i = 0; i < isSelected.length; i++) {
+                        isSelected[i] = (i == 1); // Select Female
+                      }
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0, vertical: 8.0),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: isSelected[1]
+                            ? Colors.black
+                            : Colors.grey, // Highlight border
+                        width:
+                            isSelected[1] ? 2.0 : 1.0, // Thicker for selected
+                      ),
+                      borderRadius: BorderRadius.circular(16.0),
+                      color: Colors.transparent, // No background color
+                    ),
+                    child: Text(
+                      'Female',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.black, // Keep text color static
+                      ),
+                    ),
+                  ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Text('Rather Not Say'),
+                const SizedBox(width: 16), // Space between buttons
+
+                // Rather Not Say Button
+                InkWell(
+                  onTap: () {
+                    setState(() {
+                      for (int i = 0; i < isSelected.length; i++) {
+                        isSelected[i] = (i == 2); // Select Rather Not Say
+                      }
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0, vertical: 8.0),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: isSelected[2]
+                            ? Colors.black
+                            : Colors.grey, // Highlight border
+                        width:
+                            isSelected[2] ? 2.0 : 1.0, // Thicker for selected
+                      ),
+                      borderRadius: BorderRadius.circular(16.0),
+                      color: Colors.transparent, // No background color
+                    ),
+                    child: Text(
+                      'Rather Not Say',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.black, // Keep text color static
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
+
             const SizedBox(height: 20),
             Center(
               child: Padding(
