@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:moofli_app/gradient_button.dart';
+import 'package:moofli_app/components/gradient_button.dart';
 
 // Assuming you have this custom widget implemented.
 

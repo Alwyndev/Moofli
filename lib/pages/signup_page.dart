@@ -1,8 +1,8 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:moofli_app/google_login_button.dart';
-import 'package:moofli_app/gradient_button.dart';
+import 'package:moofli_app/components/google_login_button.dart';
+import 'package:moofli_app/components/gradient_button.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
