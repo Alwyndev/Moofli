@@ -31,7 +31,7 @@ class _SetupProfile1State extends State<SetupProfile1> {
           // mainAxisAlignment: MainAxisAlignment.center,
           scrollDirection: Axis.vertical,
           children: [
-            SizedBox(height: 100),
+            SizedBox(height: 20),
 
             // Subtitle
             Text(

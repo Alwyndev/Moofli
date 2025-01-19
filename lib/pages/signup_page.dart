@@ -78,7 +78,7 @@ class _SignupPageState extends State<SignupPage> {
 
             Container(
               height: 8,
-              width: 10,
+              width: 100,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [

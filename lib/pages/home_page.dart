@@ -34,19 +34,20 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Colors.white,
         elevation: 1,
         title: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Builder(
-              builder: (context) {
-                return GestureDetector(
-                  onTap: () {
-                    Scaffold.of(context).openDrawer();
-                  },
-                  child: CircleAvatar(
-                    backgroundImage: AssetImage('assets/images/logo.png'),
-                  ),
-                );
-              },
-            ),
+            // Builder(
+            //   builder: (context) {
+            //     return GestureDetector(
+            //       onTap: () {
+            //         Scaffold.of(context).openDrawer();
+            //       },
+            //       child: CircleAvatar(
+            //         backgroundImage: AssetImage('assets/images/logo.png'),
+            //       ),
+            //     );
+            //   },
+            // ),
             SizedBox(width: 8),
             Spacer(),
             Image.asset(
@@ -54,8 +55,9 @@ class _HomePageState extends State<HomePage> {
               height: 40,
             ),
             Spacer(),
+            SizedBox(width: 25),
             Icon(Icons.local_fire_department, color: Colors.black),
-            SizedBox(width: 4),
+
             Text('3', style: TextStyle(color: Colors.black)),
           ],
         ),

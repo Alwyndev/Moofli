@@ -29,7 +29,7 @@ class _SetupProfileSocialsState extends State<SetupProfileSocials> {
           // mainAxisAlignment: MainAxisAlignment.center,
           scrollDirection: Axis.vertical,
           children: [
-            SizedBox(height: 100),
+            SizedBox(height: 20),
 
             // Subtitle
             Text(

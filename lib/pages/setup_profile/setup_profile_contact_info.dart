@@ -30,7 +30,7 @@ class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
         child: ListView(
           scrollDirection: Axis.vertical,
           children: [
-            SizedBox(height: 100),
+            SizedBox(height: 20),
 
             // Subtitle
             Text(

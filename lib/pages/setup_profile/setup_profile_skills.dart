@@ -129,7 +129,7 @@ class _SetupProfileSkillsState extends State<SetupProfileSkills> {
         child: ListView(
           scrollDirection: Axis.vertical,
           children: [
-            SizedBox(height: 100),
+            SizedBox(height: 20),
 
             // Subtitle
             Text(

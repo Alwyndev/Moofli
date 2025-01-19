@@ -51,7 +51,7 @@ class _SetupProfileUploadPhotoState extends State<SetupProfileUploadPhoto> {
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
         children: [
-          const SizedBox(height: 100),
+          const SizedBox(height: 20),
           const Text(
             'Complete your',
             style: TextStyle(

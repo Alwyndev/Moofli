@@ -43,7 +43,7 @@ class _SetupProfileProfesionalInfoState
           // crossAxisAlignment: CrossAxisAlignment.start,
           scrollDirection: Axis.vertical,
           children: [
-            SizedBox(height: 100),
+            SizedBox(height: 20),
 
             // Subtitle
             Text(
