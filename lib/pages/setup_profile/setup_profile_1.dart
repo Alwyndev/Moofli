@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:moofli_app/components/nav_buttons.dart';
 
 class SetupProfile1 extends StatefulWidget {
   const SetupProfile1({super.key});
@@ -150,15 +152,40 @@ class _SetupProfile1State extends State<SetupProfile1> {
                 ),
                 labelText: 'DOB',
                 labelStyle: TextStyle(
-                    color: Colors.black,
-                    // fontWeight: FontWeight.w500,
-                    fontSize: 20),
+                  color: Colors.black,
+                  fontSize: 20,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20.0),
                 ),
               ),
-            ),
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(
+                    RegExp(r'[0-9\-]')), // Allows only numbers and hyphens
+                LengthLimitingTextInputFormatter(
+                    10), // Limits input to 10 characters
+                TextInputFormatter.withFunction((oldValue, newValue) {
+                  // Automatically formats the input as dd-mm-yyyy
+                  final text = newValue.text;
+                  if (text.length > 10) return oldValue;
 
+                  String formatted = text;
+                  if (text.length > 2 && !text.contains('-')) {
+                    formatted = '${text.substring(0, 2)}-${text.substring(2)}';
+                  }
+                  if (text.length > 5 && text.split('-').length == 2) {
+                    formatted =
+                        '${formatted.substring(0, 5)}-${text.substring(5)}';
+                  }
+                  return TextEditingValue(
+                    text: formatted,
+                    selection:
+                        TextSelection.collapsed(offset: formatted.length),
+                  );
+                }),
+              ],
+            ),
             SizedBox(height: 10),
             Padding(
               padding: const EdgeInsets.all(8.0),
@@ -275,40 +302,7 @@ class _SetupProfile1State extends State<SetupProfile1> {
             ),
 
             const SizedBox(height: 20),
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child: InkWell(
-                  onTap: () {
-                    Navigator.pushNamed(context, '/setup_profile_contact_info');
-                  }, // Add your onTap logic here
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.black, width: 1.5),
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          "NEXT",
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.black,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        SizedBox(width: 8), // Space between text and icon
-                        Icon(Icons.arrow_forward,
-                            size: 24, color: Colors.black),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            NavButtons(prev: '/signup', next: '/setup_profile_contact_info'),
           ],
         ),
       ),

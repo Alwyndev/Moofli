@@ -55,7 +55,7 @@ class _SignupPageState extends State<SignupPage> {
       ),
       backgroundColor: Colors.white,
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: ListView(
           scrollDirection: Axis.vertical,
           // mainAxisAlignment: MainAxisAlignment.center,
@@ -384,6 +384,8 @@ class _SignupPageState extends State<SignupPage> {
                 ),
               ),
             ),
+
+            SizedBox(height: 10),
           ],
         ),
       ),

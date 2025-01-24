@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:moofli_app/components/nav_buttons.dart';
 
 class SetupProfileSocials extends StatefulWidget {
   const SetupProfileSocials({super.key});
@@ -140,68 +141,9 @@ class _SetupProfileSocialsState extends State<SetupProfileSocials> {
             ),
 
             const SizedBox(height: 20),
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 40.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Back Button (Circular)
-                    InkWell(
-                      onTap: () {
-                        Navigator.pushNamed(
-                          context,
-                          '/setup_profile_photo',
-                        );
-                      },
-                      child: Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.black, width: 1.5),
-                        ),
-                        child: Icon(Icons.arrow_back,
-                            size: 24, color: Colors.black),
-                      ),
-                    ),
-
-                    // Next Button (Rounded Rectangle)
-                    InkWell(
-                      onTap: () {
-                        Navigator.pushNamed(
-                          context,
-                          '/home',
-                        );
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 12),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.black, width: 1.5),
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              "NEXT",
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.black,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Icon(Icons.arrow_forward,
-                                size: 24, color: Colors.black),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            NavButtons(
+              prev: 'setup_profile_photo',
+              next: '/home',
             ),
           ],
         ),

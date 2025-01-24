@@ -167,8 +167,7 @@ class _LoginPageState extends State<LoginPage> {
                       child: Container(
                         height: 4,
                         decoration: BoxDecoration(
-                          borderRadius:
-                              BorderRadius.only(topRight: Radius.circular(4)),
+                          borderRadius: BorderRadius.circular(4),
                           color: Color.fromRGBO(167, 166, 166, 1),
                         ),
                       ),
@@ -190,8 +189,7 @@ class _LoginPageState extends State<LoginPage> {
                       child: Container(
                         height: 4,
                         decoration: BoxDecoration(
-                          borderRadius:
-                              BorderRadius.only(topRight: Radius.circular(4)),
+                          borderRadius: BorderRadius.circular(4),
                           color: Color.fromRGBO(167, 166, 166, 1),
                         ),
                       ),

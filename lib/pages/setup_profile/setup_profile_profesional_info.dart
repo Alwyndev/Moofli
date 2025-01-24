@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:moofli_app/components/nav_buttons.dart';
 
 class SetupProfileProfesionalInfo extends StatefulWidget {
   const SetupProfileProfesionalInfo({super.key});
@@ -24,6 +25,43 @@ class _SetupProfileProfesionalInfoState
       TextEditingController();
   final TextEditingController jobStartYearController = TextEditingController();
   final TextEditingController jobEndYearController = TextEditingController();
+
+  // Error messages for year fields
+  String startYearError = '';
+  String endYearError = '';
+  String jobStartYearError = '';
+  String jobEndYearError = '';
+
+  // Function to validate if a year is a 4-digit number
+  bool isValidYear(String input) {
+    int? year = int.tryParse(input);
+    return year != null && year >= 1000 && year <= 9999;
+  }
+
+  // Function to validate all year fields
+  void validateYearFields() {
+    setState(() {
+      // Validate start year
+      startYearError = isValidYear(startYearController.text)
+          ? ''
+          : 'Start year must be a valid 4-digit year';
+
+      // Validate end year
+      endYearError = isValidYear(endYearController.text)
+          ? ''
+          : 'End year must be a valid 4-digit year';
+
+      // Validate job start year
+      jobStartYearError = isValidYear(jobStartYearController.text)
+          ? ''
+          : 'Job start year must be a valid 4-digit year';
+
+      // Validate job end year
+      jobEndYearError = isValidYear(jobEndYearController.text)
+          ? ''
+          : 'Job end year must be a valid 4-digit year';
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -136,15 +174,15 @@ class _SetupProfileProfesionalInfoState
             Text(
               'Professional Information',
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 22,
                 fontWeight: FontWeight.w600,
               ),
             ),
+
+            SizedBox(height: 20),
             Row(
-              mainAxisAlignment:
-                  MainAxisAlignment.start, // Align buttons to the left
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                // Student Button
                 InkWell(
                   onTap: () {
                     setState(() {
@@ -157,28 +195,18 @@ class _SetupProfileProfesionalInfoState
                         horizontal: 16.0, vertical: 8.0),
                     decoration: BoxDecoration(
                       border: Border.all(
-                        color: isSelected[0]
-                            ? Colors.black
-                            : Colors.grey, // Highlight border
-                        width: isSelected[0]
-                            ? 2.0
-                            : 1.0, // Slightly thicker when selected
+                        color: isSelected[0] ? Colors.black : Colors.grey,
+                        width: isSelected[0] ? 2.0 : 1.0,
                       ),
                       borderRadius: BorderRadius.circular(16.0),
-                      color: Colors.transparent, // No background color change
                     ),
                     child: Text(
                       'Student',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.black, // Keep text color static
-                      ),
+                      style: TextStyle(fontSize: 16, color: Colors.black),
                     ),
                   ),
                 ),
-                const SizedBox(width: 16), // Space between buttons
-
-                // Professional Button
+                SizedBox(width: 16),
                 InkWell(
                   onTap: () {
                     setState(() {
@@ -191,260 +219,159 @@ class _SetupProfileProfesionalInfoState
                         horizontal: 16.0, vertical: 8.0),
                     decoration: BoxDecoration(
                       border: Border.all(
-                        color: isSelected[1]
-                            ? Colors.black
-                            : Colors.grey, // Highlight border
-                        width: isSelected[1]
-                            ? 2.0
-                            : 1.0, // Slightly thicker when selected
+                        color: isSelected[1] ? Colors.black : Colors.grey,
+                        width: isSelected[1] ? 2.0 : 1.0,
                       ),
                       borderRadius: BorderRadius.circular(16.0),
-                      color: Colors.transparent, // No background color change
                     ),
                     child: Text(
                       'Professional',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.black, // Keep text color static
-                      ),
+                      style: TextStyle(fontSize: 16, color: Colors.black),
                     ),
                   ),
                 ),
               ],
             ),
-
-            // Phone Number
-            const SizedBox(height: 20),
-            TextField(
-              controller: collegeController,
-              decoration: InputDecoration(
-                labelText: 'College/Institution',
-                labelStyle: TextStyle(
-                  color: Colors.black,
-                  // fontWeight: FontWeight.w500,
-                  fontSize: 20,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20.0),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-            TextField(
-              controller: degreeController,
-              decoration: InputDecoration(
-                labelText: 'Degree',
-                labelStyle: TextStyle(
-                  color: Colors.black,
-                  // fontWeight: FontWeight.w500,
-                  fontSize: 20,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20.0),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-            TextField(
-              controller: fieldOfStudyController,
-              decoration: InputDecoration(
-                labelText: 'Field of Study/Branch',
-                labelStyle: TextStyle(
-                  color: Colors.black,
-                  // fontWeight: FontWeight.w500,
-                  fontSize: 20,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20.0),
-                ),
-              ),
-            ),
-
             SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: startYearController,
-                    decoration: InputDecoration(
-                      labelText: 'Start Year',
-                      labelStyle: TextStyle(
-                        color: Colors.black,
-                        fontSize: 18,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20.0),
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 16),
-                Expanded(
-                  child: TextField(
-                    controller: endYearController,
-                    decoration: InputDecoration(
-                      labelText: 'End Year',
-                      labelStyle: TextStyle(
-                        color: Colors.black,
-                        fontSize: 18,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20.0),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
 
-            const SizedBox(height: 20),
-            TextField(
-              controller: jobTitleController,
-              decoration: InputDecoration(
-                labelText: 'Job Title',
-                labelStyle: TextStyle(
-                  color: Colors.black,
-                  // fontWeight: FontWeight.w500,
-                  fontSize: 20,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20.0),
+            // Student Fields
+            if (isSelected[0]) ...[
+              TextField(
+                controller: collegeController,
+                decoration: InputDecoration(
+                  labelText: 'College/Institution',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20.0),
+                  ),
                 ),
               ),
-            ),
-
-            const SizedBox(height: 20),
-            TextField(
-              controller: companyNameController,
-              decoration: InputDecoration(
-                labelText: 'Company Name',
-                labelStyle: TextStyle(
-                  color: Colors.black,
-                  // fontWeight: FontWeight.w500,
-                  fontSize: 20,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20.0),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-            TextField(
-              controller: jobDescriptionController,
-              decoration: InputDecoration(
-                labelText: 'Job Description',
-                labelStyle: TextStyle(
-                  color: Colors.black,
-                  // fontWeight: FontWeight.w500,
-                  fontSize: 20,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20.0),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: jobStartYearController,
-                    decoration: InputDecoration(
-                      labelText: 'Start Year',
-                      labelStyle: TextStyle(
-                        color: Colors.black,
-                        fontSize: 18, // Adjusted font size for better fit
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20.0),
-                      ),
-                    ),
+              SizedBox(height: 20),
+              TextField(
+                controller: degreeController,
+                decoration: InputDecoration(
+                  labelText: 'Degree',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20.0),
                   ),
                 ),
-                SizedBox(width: 16), // Adds space between the TextFields
-                Expanded(
-                  child: TextField(
-                    controller: jobEndYearController,
-                    decoration: InputDecoration(
-                      labelText: 'End Year',
-                      labelStyle: TextStyle(
-                        color: Colors.black,
-                        fontSize: 18, // Adjusted font size for better fit
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20.0),
-                      ),
-                    ),
+              ),
+              SizedBox(height: 20),
+              TextField(
+                controller: fieldOfStudyController,
+                decoration: InputDecoration(
+                  labelText: 'Field of Study/Branch',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20.0),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Center(
-              child: Row(
-                mainAxisAlignment:
-                    MainAxisAlignment.spaceBetween, // Spreads the buttons apart
+              ),
+              SizedBox(height: 20),
+              Row(
                 children: [
-                  // Back Button (Circular)
-                  InkWell(
-                    onTap: () {
-                      Navigator.pushNamed(
-                        context,
-                        '/setup_profile_skills',
-                      );
-                    }, // Add your onTap logic here
-                    child: Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.black, width: 1.5),
+                  Expanded(
+                    child: TextField(
+                      controller: startYearController,
+                      decoration: InputDecoration(
+                        labelText: 'Start Year',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20.0),
+                        ),
+                        errorText:
+                            startYearError.isNotEmpty ? startYearError : null,
                       ),
-                      child:
-                          Icon(Icons.arrow_back, size: 24, color: Colors.black),
+                      onChanged: (_) => validateYearFields(),
                     ),
                   ),
-
-                  // Next Button (Rounded Rectangle)
-                  InkWell(
-                    onTap: () {
-                      Navigator.pushNamed(
-                        context,
-                        '/setup_profile_photo',
-                      );
-                    }, // Add your onTap logic here
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 12),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.black, width: 1.5),
-                        borderRadius: BorderRadius.circular(24),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: TextField(
+                      controller: endYearController,
+                      decoration: InputDecoration(
+                        labelText: 'End Year',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20.0),
+                        ),
+                        errorText:
+                            endYearError.isNotEmpty ? endYearError : null,
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            "NEXT",
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.black,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          SizedBox(width: 8), // Space between text and icon
-                          Icon(Icons.arrow_forward,
-                              size: 24, color: Colors.black),
-                        ],
-                      ),
+                      onChanged: (_) => validateYearFields(),
                     ),
                   ),
                 ],
               ),
+            ],
+
+            // Professional Fields
+            if (isSelected[1]) ...[
+              TextField(
+                controller: jobTitleController,
+                decoration: InputDecoration(
+                  labelText: 'Job Title',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20.0),
+                  ),
+                ),
+              ),
+              SizedBox(height: 20),
+              TextField(
+                controller: companyNameController,
+                decoration: InputDecoration(
+                  labelText: 'Company Name',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20.0),
+                  ),
+                ),
+              ),
+              SizedBox(height: 20),
+              TextField(
+                controller: jobDescriptionController,
+                decoration: InputDecoration(
+                  labelText: 'Job Description',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20.0),
+                  ),
+                ),
+              ),
+              SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: jobStartYearController,
+                      decoration: InputDecoration(
+                        labelText: 'Job Start Year',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20.0),
+                        ),
+                        errorText: jobStartYearError.isNotEmpty
+                            ? jobStartYearError
+                            : null,
+                      ),
+                      onChanged: (_) => validateYearFields(),
+                    ),
+                  ),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: TextField(
+                      controller: jobEndYearController,
+                      decoration: InputDecoration(
+                        labelText: 'Job End Year',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20.0),
+                        ),
+                        errorText:
+                            jobEndYearError.isNotEmpty ? jobEndYearError : null,
+                      ),
+                      onChanged: (_) => validateYearFields(),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            const SizedBox(height: 20),
+            NavButtons(
+              prev: 'setup_profile_skills',
+              next: '/setup_profile_photo',
             ),
           ],
         ),

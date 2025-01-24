@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:moofli_app/components/nav_buttons.dart';
 
 class SetupProfileUploadPhoto extends StatefulWidget {
   const SetupProfileUploadPhoto({super.key});
@@ -190,7 +191,8 @@ class _SetupProfileUploadPhotoState extends State<SetupProfileUploadPhoto> {
                         ],
                       ),
                     )
-                  : ClipOval(
+                  : ClipRRect(
+                      borderRadius: BorderRadius.circular(100),
                       child: Image.file(
                         File(profilePhoto!.path),
                         fit: BoxFit.cover,
@@ -198,56 +200,10 @@ class _SetupProfileUploadPhotoState extends State<SetupProfileUploadPhoto> {
                     ),
             ),
           ),
-          const SizedBox(height: 40),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              InkWell(
-                onTap: () {
-                  Navigator.pushNamed(
-                      context, '/setup_profile_professional_info');
-                },
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.black, width: 1.5),
-                  ),
-                  child: const Icon(Icons.arrow_back,
-                      size: 24, color: Colors.black),
-                ),
-              ),
-              InkWell(
-                onTap: () {
-                  Navigator.pushNamed(context, '/setup_profile_socials');
-                },
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.black, width: 1.5),
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      Text(
-                        "NEXT",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      Icon(Icons.arrow_forward, size: 24, color: Colors.black),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
           const SizedBox(height: 20),
+          NavButtons(
+              prev: 'setup_profile_professional_info',
+              next: '/setup_profile_socials'),
         ],
       ),
     );

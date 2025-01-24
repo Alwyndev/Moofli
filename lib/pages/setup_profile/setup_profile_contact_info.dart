@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:moofli_app/components/nav_buttons.dart';
 
 class SetupProfileContactInfo extends StatefulWidget {
   const SetupProfileContactInfo({super.key});
@@ -13,6 +15,7 @@ class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController cityController = TextEditingController();
+  String? emailError;
 
   @override
   Widget build(BuildContext context) {
@@ -129,7 +132,6 @@ class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
             ),
 
             // Phone Number
-            const SizedBox(height: 20),
             TextField(
               controller: phoneController,
               decoration: InputDecoration(
@@ -155,16 +157,20 @@ class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
                 ),
                 labelText: 'Phone Number',
                 labelStyle: TextStyle(
-                    color: Colors.black,
-                    // fontWeight: FontWeight.w500,
-                    fontSize: 24),
+                  color: Colors.black,
+                  fontSize: 24,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20.0),
                 ),
               ),
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly, // Only allows numbers
+                LengthLimitingTextInputFormatter(10), // Limits to 10 digits
+              ],
             ),
-
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             TextField(
               controller: emailController,
               decoration: InputDecoration(
@@ -174,14 +180,43 @@ class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
                 ),
                 labelText: 'Email',
                 labelStyle: TextStyle(
-                    color: Colors.black,
-                    // fontWeight: FontWeight.w500,
-                    fontSize: 24),
+                  color: Colors.black,
+                  fontSize: 24,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20.0),
                 ),
+                // errorText: emailError, // Displays the error text dynamically
               ),
+              keyboardType: TextInputType.emailAddress,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(
+                    r'[a-zA-Z0-9@._\-]')), // Allows only valid email characters
+              ],
+              onChanged: (value) {
+                setState(() {
+                  if (!RegExp(
+                          r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+                      .hasMatch(value)) {
+                    emailError = 'Invalid email format';
+                  } else {
+                    emailError = null; // Clear the error if valid
+                  }
+                });
+              },
             ),
+            if (emailError !=
+                null) // Optionally show the warning below the field
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0, left: 12.0),
+                child: Text(
+                  emailError!,
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
 
             SizedBox(height: 20),
             TextField(
@@ -199,64 +234,7 @@ class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
             ),
 
             const SizedBox(height: 20),
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 5.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment
-                      .spaceBetween, // Spreads the buttons apart
-                  children: [
-                    // Back Button (Circular)
-                    InkWell(
-                      onTap: () {
-                        Navigator.pushNamed(context, '/setup_profile_1');
-                      },
-                      child: Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.black, width: 1.5),
-                        ),
-                        child: Icon(Icons.arrow_back,
-                            size: 24, color: Colors.black),
-                      ),
-                    ),
-
-                    // Next Button (Rounded Rectangle)
-                    InkWell(
-                      onTap: () {
-                        Navigator.pushNamed(context, '/setup_profile_skills');
-                      }, // Add your onTap logic here
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 12),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.black, width: 1.5),
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              "NEXT",
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.black,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            SizedBox(width: 8), // Space between text and icon
-                            Icon(Icons.arrow_forward,
-                                size: 24, color: Colors.black),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            NavButtons(prev: '/setup_profile_1', next: '/setup_profile_skills'),
           ],
         ),
       ),

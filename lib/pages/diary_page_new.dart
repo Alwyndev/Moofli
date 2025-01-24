@@ -154,14 +154,30 @@ class _DiaryPageNewState extends State<DiaryPageNew> {
       bottomNavigationBar: BottomNavigationBar(
         items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
+            icon: GestureDetector(
+              onTap: () {
+                Navigator.pushNamed(context, "/home");
+              },
+              child: Icon(Icons.home, color: Colors.black, size: 40),
+            ),
+            label: '',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.circle, color: Colors.purple),
+            icon: GestureDetector(
+              onTap: () {
+                // Add desired functionality for the second icon tap here
+              },
+              child: CircleAvatar(
+                backgroundImage: AssetImage('assets/images/logo.png'),
+              ),
+            ),
             label: '',
           ),
         ],
+        currentIndex: 0,
+        onTap: (index) {
+          // Handle tap for BottomNavigationBar if needed
+        },
       ),
     );
   }
