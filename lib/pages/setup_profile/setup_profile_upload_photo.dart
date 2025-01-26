@@ -72,7 +72,6 @@ class _SetupProfileUploadPhotoState extends State<SetupProfileUploadPhoto> {
           const SizedBox(height: 8),
           Row(
             children: [
-              // Filled Progress
               Expanded(
                 flex: (4 * 100 ~/ 5),
                 child: Container(
@@ -90,14 +89,12 @@ class _SetupProfileUploadPhotoState extends State<SetupProfileUploadPhoto> {
                   ),
                 ),
               ),
-
-              // Remaining Progress
               Expanded(
-                flex: (1 * 100 ~/ 5), // Remaining 4/5
+                flex: (1 * 100 ~/ 5),
                 child: Container(
                   height: 8,
                   decoration: BoxDecoration(
-                    color: Color.fromRGBO(224, 217, 217, 1),
+                    color: const Color.fromRGBO(224, 217, 217, 1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                 ),
@@ -171,33 +168,39 @@ class _SetupProfileUploadPhotoState extends State<SetupProfileUploadPhoto> {
             ),
           ),
           const SizedBox(height: 16),
-          GestureDetector(
-            onTap: pickProfilePhoto,
-            child: Container(
-              height: 100,
-              width: 100,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.grey),
-                color: Colors.grey[200],
-              ),
-              child: profilePhoto == null
-                  ? const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.upload, size: 32, color: Colors.black),
-                          Text('UPLOAD'),
-                        ],
-                      ),
-                    )
-                  : ClipRRect(
-                      borderRadius: BorderRadius.circular(100),
-                      child: Image.file(
-                        File(profilePhoto!.path),
-                        fit: BoxFit.cover,
-                      ),
+          Center(
+            child: GestureDetector(
+              onTap: pickProfilePhoto,
+              child: Container(
+                height: 120, // Make height and width equal
+                width: 120,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle, // Ensures the container is circular
+                  border: Border.all(color: Colors.grey, width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 5,
+                      offset: const Offset(0, 2),
                     ),
+                  ],
+                  color: Colors.grey[200],
+                ),
+                child: profilePhoto == null
+                    ? const Center(
+                        child:
+                            Icon(Icons.person, size: 60, color: Colors.black),
+                      )
+                    : ClipOval(
+                        // Properly clip the image in a circle
+                        child: Image.file(
+                          File(profilePhoto!.path),
+                          fit: BoxFit.cover,
+                          height: 120, // Match container dimensions
+                          width: 120,
+                        ),
+                      ),
+              ),
             ),
           ),
           const SizedBox(height: 20),

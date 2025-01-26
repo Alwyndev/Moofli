@@ -135,13 +135,6 @@ class _HomePageState extends State<HomePage> {
                   color: Colors.orange,
                   shape: BoxShape.circle,
                 ),
-                defaultDecoration: BoxDecoration(
-                  color: _focusedDay.isAfter(_firstDayOfMonth) &&
-                          _focusedDay.isBefore(_yesterday)
-                      ? Colors.green
-                      : Colors.transparent,
-                  shape: BoxShape.circle,
-                ),
               ),
             ),
           ),
