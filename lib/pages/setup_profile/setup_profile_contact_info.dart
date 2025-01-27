@@ -130,7 +130,7 @@ class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
                 fontWeight: FontWeight.w600,
               ),
             ),
-
+            const SizedBox(height: 20),
             // Phone Number
             TextField(
               controller: phoneController,
@@ -158,7 +158,7 @@ class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
                 labelText: 'Phone Number',
                 labelStyle: TextStyle(
                   color: Colors.black,
-                  fontSize: 24,
+                  fontSize: 18,
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20.0),
@@ -170,7 +170,7 @@ class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
                 LengthLimitingTextInputFormatter(10), // Limits to 10 digits
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 10),
             TextField(
               controller: emailController,
               decoration: InputDecoration(
@@ -181,7 +181,7 @@ class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
                 labelText: 'Email',
                 labelStyle: TextStyle(
                   color: Colors.black,
-                  fontSize: 24,
+                  fontSize: 18,
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20.0),
@@ -218,7 +218,7 @@ class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
                 ),
               ),
 
-            SizedBox(height: 20),
+            SizedBox(height: 10),
             TextField(
               controller: cityController,
               decoration: InputDecoration(
@@ -226,7 +226,7 @@ class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
                 labelStyle: TextStyle(
                     color: Colors.black,
                     // fontWeight: FontWeight.w500,
-                    fontSize: 24),
+                    fontSize: 18),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20.0),
                 ),

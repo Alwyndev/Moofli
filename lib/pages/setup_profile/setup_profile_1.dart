@@ -135,14 +135,14 @@ class _SetupProfile1State extends State<SetupProfile1> {
                 labelStyle: TextStyle(
                     color: Colors.black,
                     // fontWeight: FontWeight.w500,
-                    fontSize: 20),
+                    fontSize: 18),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20.0),
                 ),
               ),
             ),
 
-            SizedBox(height: 25),
+            SizedBox(height: 10),
             TextField(
               controller: dobController,
               decoration: InputDecoration(
@@ -153,7 +153,7 @@ class _SetupProfile1State extends State<SetupProfile1> {
                 labelText: 'DOB',
                 labelStyle: TextStyle(
                   color: Colors.black,
-                  fontSize: 20,
+                  fontSize: 18,
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20.0),

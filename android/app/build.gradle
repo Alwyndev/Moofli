@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.example.moofli_app" // Update to match your app's package
-    compileSdk = 34 // Update to 34 or 35 as needed
+    compileSdk = 35 // Update to 34 or 35 as needed
     ndkVersion = flutter.ndkVersion
 
     defaultConfig {

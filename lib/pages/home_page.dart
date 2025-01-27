@@ -52,7 +52,7 @@ class _HomePageState extends State<HomePage> {
             Spacer(),
             Image.asset(
               'assets/images/logo.png',
-              height: 40,
+              height: 80,
             ),
             Spacer(),
             SizedBox(width: 25),

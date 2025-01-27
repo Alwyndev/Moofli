@@ -245,7 +245,7 @@ class _SetupProfileProfesionalInfoState
                   ),
                 ),
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 10),
               TextField(
                 controller: degreeController,
                 decoration: InputDecoration(
@@ -255,7 +255,7 @@ class _SetupProfileProfesionalInfoState
                   ),
                 ),
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 10),
               TextField(
                 controller: fieldOfStudyController,
                 decoration: InputDecoration(
@@ -265,7 +265,7 @@ class _SetupProfileProfesionalInfoState
                   ),
                 ),
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 10),
               Row(
                 children: [
                   Expanded(
@@ -304,6 +304,70 @@ class _SetupProfileProfesionalInfoState
             // Professional Fields
             if (isSelected[1]) ...[
               TextField(
+                controller: collegeController,
+                decoration: InputDecoration(
+                  labelText: 'College/Institution',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20.0),
+                  ),
+                ),
+              ),
+              SizedBox(height: 10),
+              TextField(
+                controller: degreeController,
+                decoration: InputDecoration(
+                  labelText: 'Degree',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20.0),
+                  ),
+                ),
+              ),
+              SizedBox(height: 10),
+              TextField(
+                controller: fieldOfStudyController,
+                decoration: InputDecoration(
+                  labelText: 'Field of Study/Branch',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20.0),
+                  ),
+                ),
+              ),
+              SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: startYearController,
+                      decoration: InputDecoration(
+                        labelText: 'Start Year',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20.0),
+                        ),
+                        errorText:
+                            startYearError.isNotEmpty ? startYearError : null,
+                      ),
+                      onChanged: (_) => validateYearFields(),
+                    ),
+                  ),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: TextField(
+                      controller: endYearController,
+                      decoration: InputDecoration(
+                        labelText: 'End Year',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20.0),
+                        ),
+                        errorText:
+                            endYearError.isNotEmpty ? endYearError : null,
+                      ),
+                      onChanged: (_) => validateYearFields(),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              TextField(
                 controller: jobTitleController,
                 decoration: InputDecoration(
                   labelText: 'Job Title',
@@ -312,7 +376,7 @@ class _SetupProfileProfesionalInfoState
                   ),
                 ),
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 10),
               TextField(
                 controller: companyNameController,
                 decoration: InputDecoration(
@@ -322,7 +386,7 @@ class _SetupProfileProfesionalInfoState
                   ),
                 ),
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 10),
               TextField(
                 controller: jobDescriptionController,
                 decoration: InputDecoration(
@@ -332,7 +396,7 @@ class _SetupProfileProfesionalInfoState
                   ),
                 ),
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 10),
               Row(
                 children: [
                   Expanded(
@@ -370,7 +434,7 @@ class _SetupProfileProfesionalInfoState
             ],
             const SizedBox(height: 20),
             NavButtons(
-              prev: 'setup_profile_skills',
+              prev: '/setup_profile_skills',
               next: '/setup_profile_photo',
             ),
           ],

@@ -39,7 +39,9 @@ class MyApp extends StatelessWidget {
         '/setup_profile_photo': (context) => const SetupProfileUploadPhoto(),
         '/setup_profile_socials': (context) => const SetupProfileSocials(),
       },
+      title: 'Moofli App',
       theme: ThemeData(
+        // brightness: Brightness.dark,
         primarySwatch: Colors.blue,
         fontFamily: 'Roboto',
         useMaterial3: true,

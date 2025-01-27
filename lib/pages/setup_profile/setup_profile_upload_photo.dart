@@ -140,7 +140,14 @@ class _SetupProfileUploadPhotoState extends State<SetupProfileUploadPhoto> {
               height: 150,
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.grey),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.5),
+                    blurRadius: 5,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
                 color: Colors.grey[200],
               ),
               child: coverPhoto == null
@@ -148,14 +155,22 @@ class _SetupProfileUploadPhotoState extends State<SetupProfileUploadPhoto> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.upload, size: 32, color: Colors.black),
+                          Icon(Icons.image, size: 32, color: Colors.black),
                           Text('UPLOAD'),
                         ],
                       ),
                     )
-                  : Image.file(
-                      File(coverPhoto!.path),
-                      fit: BoxFit.cover,
+                  : ClipRRect(
+                      borderRadius: BorderRadius.circular(
+                          16), // Match the container's border radius
+                      child: Image.file(
+                        File(coverPhoto!.path),
+                        fit: BoxFit.cover,
+                        height:
+                            150, // Ensure the image height matches the container height
+                        width: double
+                            .infinity, // Ensure the image width matches the container width
+                      ),
                     ),
             ),
           ),
@@ -179,7 +194,7 @@ class _SetupProfileUploadPhotoState extends State<SetupProfileUploadPhoto> {
                   border: Border.all(color: Colors.grey, width: 2),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
+                      color: Colors.black.withValues(alpha: 0.5),
                       blurRadius: 5,
                       offset: const Offset(0, 2),
                     ),
@@ -187,9 +202,12 @@ class _SetupProfileUploadPhotoState extends State<SetupProfileUploadPhoto> {
                   color: Colors.grey[200],
                 ),
                 child: profilePhoto == null
-                    ? const Center(
-                        child:
-                            Icon(Icons.person, size: 60, color: Colors.black),
+                    ? const Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.person, size: 48, color: Colors.black),
+                          Text('UPLOAD'),
+                        ],
                       )
                     : ClipOval(
                         // Properly clip the image in a circle
@@ -205,7 +223,7 @@ class _SetupProfileUploadPhotoState extends State<SetupProfileUploadPhoto> {
           ),
           const SizedBox(height: 20),
           NavButtons(
-              prev: 'setup_profile_professional_info',
+              prev: '/setup_profile_professional_info',
               next: '/setup_profile_socials'),
         ],
       ),

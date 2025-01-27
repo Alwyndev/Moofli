@@ -118,14 +118,14 @@ class _SetupProfileSocialsState extends State<SetupProfileSocials> {
                 labelStyle: TextStyle(
                     color: Colors.black,
                     // fontWeight: FontWeight.w500,
-                    fontSize: 24),
+                    fontSize: 18),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20.0),
                 ),
               ),
             ),
 
-            SizedBox(height: 20),
+            SizedBox(height: 10),
             TextField(
               controller: upiController,
               decoration: InputDecoration(
@@ -133,7 +133,7 @@ class _SetupProfileSocialsState extends State<SetupProfileSocials> {
                 labelStyle: TextStyle(
                     color: Colors.black,
                     // fontWeight: FontWeight.w500,
-                    fontSize: 24),
+                    fontSize: 18),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20.0),
                 ),
@@ -142,7 +142,7 @@ class _SetupProfileSocialsState extends State<SetupProfileSocials> {
 
             const SizedBox(height: 20),
             NavButtons(
-              prev: 'setup_profile_photo',
+              prev: '/setup_profile_photo',
               next: '/home',
             ),
           ],
