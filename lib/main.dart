@@ -1,28 +1,40 @@
 import 'package:flutter/material.dart';
-import 'package:moofli_app/pages/diary_entry_page.dart';
-import 'package:moofli_app/pages/diary_page_new.dart';
+import 'package:moofli_app/pages/setup_profile/setup_profile_1.dart';
+import 'package:moofli_app/pages/setup_profile/setup_profile_contact_info.dart';
+import 'package:moofli_app/pages/setup_profile/setup_profile_profesional_info.dart';
+import 'package:moofli_app/pages/setup_profile/setup_profile_skills.dart';
+import 'package:moofli_app/pages/setup_profile/setup_profile_socials.dart';
 import 'package:moofli_app/pages/setup_profile/setup_profile_upload_photo.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'pages/home_page.dart';
 import 'pages/login_page.dart';
-import 'pages/reset_password_page.dart';
 import 'pages/signup_page.dart';
-import 'pages/setup_profile/setup_profile_1.dart';
-import 'pages/setup_profile/setup_profile_contact_info.dart';
-import 'pages/setup_profile/setup_profile_profesional_info.dart';
-import 'pages/setup_profile/setup_profile_skills.dart';
-import 'pages/setup_profile/setup_profile_socials.dart';
+import 'pages/reset_password_page.dart';
+import 'pages/settings_page.dart';
+import 'pages/diary_entry_page.dart';
+import 'pages/diary_page_new.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  bool isLoggedIn = await getLoginStatus();
+  runApp(MyApp(isLoggedIn: isLoggedIn));
+}
+
+// Function to check login status from SharedPreferences
+Future<bool> getLoginStatus() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  return prefs.getBool('isLoggedIn') ?? false;
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final bool isLoggedIn;
+  const MyApp({super.key, required this.isLoggedIn});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      initialRoute: '/',
+      debugShowCheckedModeBanner: false,
+      initialRoute: isLoggedIn ? '/home' : '/',
       routes: {
         '/': (context) => const LoginPage(),
         '/signup': (context) => const SignupPage(),
@@ -38,10 +50,10 @@ class MyApp extends StatelessWidget {
         '/setup_profile_skills': (context) => const SetupProfileSkills(),
         '/setup_profile_photo': (context) => const SetupProfileUploadPhoto(),
         '/setup_profile_socials': (context) => const SetupProfileSocials(),
+        '/settings': (context) => const SettingsPage(),
       },
       title: 'Moofli App',
       theme: ThemeData(
-        // brightness: Brightness.dark,
         primarySwatch: Colors.blue,
         fontFamily: 'Roboto',
         useMaterial3: true,

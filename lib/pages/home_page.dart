@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'login_page.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class HomePage extends StatefulWidget {
@@ -11,21 +13,18 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
-  DateTime get _firstDayOfMonth {
-    return DateTime(_focusedDay.year, _focusedDay.month, 1);
+
+  Future<void> logout(BuildContext context) async {
+    // Clear login status
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isLoggedIn', false);
+
+    // Navigate back to LoginPage
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginPage()),
+    );
   }
-
-  // int get _today {
-  //   return DateTime.now().day;
-  // }
-
-  DateTime get _yesterday {
-    return DateTime.now().subtract(Duration(days: 1));
-  }
-
-  // int get _dayBeforeYesterday {
-  //   return DateTime.now().subtract(Duration(days: 2)).day;
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -36,19 +35,6 @@ class _HomePageState extends State<HomePage> {
         title: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Builder(
-            //   builder: (context) {
-            //     return GestureDetector(
-            //       onTap: () {
-            //         Scaffold.of(context).openDrawer();
-            //       },
-            //       child: CircleAvatar(
-            //         backgroundImage: AssetImage('assets/images/logo.png'),
-            //       ),
-            //     );
-            //   },
-            // ),
-            SizedBox(width: 8),
             Spacer(),
             Image.asset(
               'assets/images/logo.png',
@@ -57,7 +43,6 @@ class _HomePageState extends State<HomePage> {
             Spacer(),
             SizedBox(width: 25),
             Icon(Icons.local_fire_department, color: Colors.black),
-
             Text('3', style: TextStyle(color: Colors.black)),
           ],
         ),
@@ -70,9 +55,7 @@ class _HomePageState extends State<HomePage> {
               accountName: Text('France Leaphart'),
               accountEmail: Text('10 Friends'),
               currentAccountPicture: CircleAvatar(
-                backgroundImage: NetworkImage(
-                  'https://via.placeholder.com/150',
-                ),
+                backgroundImage: AssetImage('assets/images/logo.png'),
               ),
             ),
             ListTile(
@@ -83,7 +66,9 @@ class _HomePageState extends State<HomePage> {
             ListTile(
               leading: Icon(Icons.settings),
               title: Text('Settings'),
-              onTap: () {},
+              onTap: () {
+                Navigator.pushNamed(context, '/settings');
+              },
             ),
             Spacer(),
             ListTile(
@@ -92,16 +77,14 @@ class _HomePageState extends State<HomePage> {
                 'Logout Account',
                 style: TextStyle(color: Colors.red),
               ),
-              onTap: () {},
+              onTap: () => logout(context), // Call logout function
             ),
           ],
         ),
       ),
       body: ListView(
-        scrollDirection: Axis.vertical,
         children: [
           Container(
-            color: Colors.white,
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: TableCalendar(
               firstDay: DateTime.utc(2000, 1, 1),
@@ -114,28 +97,6 @@ class _HomePageState extends State<HomePage> {
                   _focusedDay = focusedDay;
                 });
               },
-              headerStyle: HeaderStyle(
-                titleTextStyle: TextStyle(
-                  fontSize: 24,
-                  color: Colors.grey,
-                ),
-                formatButtonVisible: false,
-                titleCentered: true,
-              ),
-              calendarStyle: CalendarStyle(
-                rangeStartDecoration: BoxDecoration(
-                  color: Colors.green,
-                  shape: BoxShape.circle,
-                ),
-                todayDecoration: BoxDecoration(
-                  color: Colors.blue,
-                  shape: BoxShape.circle,
-                ),
-                selectedDecoration: BoxDecoration(
-                  color: Colors.orange,
-                  shape: BoxShape.circle,
-                ),
-              ),
             ),
           ),
         ],

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:moofli_app/components/google_login_button.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:moofli_app/components/gradient_button.dart';
+import 'home_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -11,13 +13,10 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  // Google Sign-In instance
   final GoogleSignIn _googleSignIn = GoogleSignIn();
 
-  // Text Editing Controllers
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwdController = TextEditingController();
-
   bool status = true;
 
   Future<void> _handleGoogleLogin() async {
@@ -34,6 +33,18 @@ class _LoginPageState extends State<LoginPage> {
     } catch (error) {
       print("Error during Google Sign-In: $error");
     }
+  }
+
+  Future<void> login(BuildContext context) async {
+    // Store login status
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isLoggedIn', true);
+
+    // Navigate to HomePage
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const HomePage()),
+    );
   }
 
   @override
@@ -137,9 +148,7 @@ class _LoginPageState extends State<LoginPage> {
                 SizedBox(height: 10),
                 GradientButton(
                   text: 'Log In',
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/home');
-                  },
+                  onPressed: () => login(context), // Call login function
                   border: 20,
                   padding: 16,
                 ),

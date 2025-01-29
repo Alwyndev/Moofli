@@ -12,11 +12,23 @@ class DiaryPageNew extends StatefulWidget {
 
 class _DiaryPageNewState extends State<DiaryPageNew> {
   TextEditingController dairyEntryController = TextEditingController();
+  TextAlign alignment = TextAlign.left;
+  bool isBold = false;
+  bool isItalic = false;
+  bool isUnderline = false;
 
   // Map to track selected icons
   Map<IconData, bool> iconStates = {
     for (var icon in toolbarIcons) icon: false,
   };
+
+  TextStyle getTextStyle() {
+    return TextStyle(
+      fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+      fontStyle: isItalic ? FontStyle.italic : FontStyle.normal,
+      decoration: isUnderline ? TextDecoration.underline : TextDecoration.none,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,16 +78,16 @@ class _DiaryPageNewState extends State<DiaryPageNew> {
                             // Perform icon-specific actions
                             switch (icon) {
                               case Icons.format_bold:
-                                toggleBold(() => setState(() {}));
+                                isBold = !isBold;
                                 break;
                               case Icons.format_italic:
-                                toggleItalic(() => setState(() {}));
+                                isItalic = !isItalic;
                                 break;
                               case Icons.format_underline:
-                                toggleUnderline(() => setState(() {}));
+                                isUnderline = !isUnderline;
                                 break;
                               case Icons.format_strikethrough:
-                                toggleStrikethrough(() => setState(() {}));
+                                // Handle strikethrough
                                 break;
                               case Icons.format_align_left:
                                 setAlignment(
@@ -131,7 +143,7 @@ class _DiaryPageNewState extends State<DiaryPageNew> {
                   controller: dairyEntryController,
                   maxLines: null, // Allows multiple lines
                   textAlign: alignment,
-                  style: getTextStyle(),
+                  style: getTextStyle(), // Apply the updated TextStyle
                   decoration: InputDecoration(
                     hintText: "What's on your mind?",
                     hintStyle: TextStyle(color: Colors.white),
@@ -180,5 +192,10 @@ class _DiaryPageNewState extends State<DiaryPageNew> {
         },
       ),
     );
+  }
+
+  void setAlignment(TextAlign align, VoidCallback callback) {
+    alignment = align;
+    callback();
   }
 }
