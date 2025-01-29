@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:moofli_app/components/icon_helpers.dart';
 import 'package:moofli_app/components/icons_list.dart';
@@ -30,15 +31,31 @@ class _DiaryPageNewState extends State<DiaryPageNew> {
     );
   }
 
+  void copyToClipboard(TextEditingController controller, BuildContext context) {
+    final text = controller.text;
+    if (text.isNotEmpty) {
+      Clipboard.setData(ClipboardData(text: text));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Copied to clipboard')),
+      );
+    }
+  }
+
+  void pasteFromClipboard(
+      TextEditingController controller, VoidCallback callback) async {
+    final data = await Clipboard.getData('text/plain');
+    if (data != null && data.text != null) {
+      controller.text = data.text!;
+      callback();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Get the current date
     DateTime now = DateTime.now();
-
-    // Format the date
-    String formattedDate = DateFormat('dd MMMM').format(now); // date and month
-    String formattedDay = DateFormat('EEEE').format(now); // day
-    String formattedYear = now.year.toString(); // year
+    String formattedDate = DateFormat('dd MMMM').format(now);
+    String formattedDay = DateFormat('EEEE').format(now);
+    String formattedYear = now.year.toString();
 
     return Scaffold(
       appBar: AppBar(
@@ -71,11 +88,8 @@ class _DiaryPageNewState extends State<DiaryPageNew> {
                     .map(
                       (icon) => GestureDetector(
                         onTap: () {
-                          // Update the state of the selected icon
                           setState(() {
                             iconStates[icon] = !iconStates[icon]!;
-
-                            // Perform icon-specific actions
                             switch (icon) {
                               case Icons.format_bold:
                                 isBold = !isBold;
@@ -90,16 +104,13 @@ class _DiaryPageNewState extends State<DiaryPageNew> {
                                 // Handle strikethrough
                                 break;
                               case Icons.format_align_left:
-                                setAlignment(
-                                    TextAlign.left, () => setState(() {}));
+                                setAlignment(TextAlign.left);
                                 break;
                               case Icons.format_align_center:
-                                setAlignment(
-                                    TextAlign.center, () => setState(() {}));
+                                setAlignment(TextAlign.center);
                                 break;
                               case Icons.format_align_right:
-                                setAlignment(
-                                    TextAlign.right, () => setState(() {}));
+                                setAlignment(TextAlign.right);
                                 break;
                               case Icons.copy:
                                 copyToClipboard(dairyEntryController, context);
@@ -141,9 +152,9 @@ class _DiaryPageNewState extends State<DiaryPageNew> {
                 padding: const EdgeInsets.all(16.0),
                 child: TextField(
                   controller: dairyEntryController,
-                  maxLines: null, // Allows multiple lines
+                  maxLines: null,
                   textAlign: alignment,
-                  style: getTextStyle(), // Apply the updated TextStyle
+                  style: getTextStyle(),
                   decoration: InputDecoration(
                     hintText: "What's on your mind?",
                     hintStyle: TextStyle(color: Colors.white),
@@ -194,8 +205,9 @@ class _DiaryPageNewState extends State<DiaryPageNew> {
     );
   }
 
-  void setAlignment(TextAlign align, VoidCallback callback) {
-    alignment = align;
-    callback();
+  void setAlignment(TextAlign align) {
+    setState(() {
+      alignment = align;
+    });
   }
 }
