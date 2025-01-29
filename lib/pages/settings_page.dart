@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:moofli_app/pages/login_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -13,6 +14,15 @@ class _SettingsPageState extends State<SettingsPage> {
     // Clear login status
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isLoggedIn', false);
+
+    // Navigate back to LoginPage
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+          builder: (context) =>
+              LoginPage()), // Replace with your login page widget
+      (Route<dynamic> route) => false, // Remove all previous routes
+    );
   }
 
   @override

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:moofli_app/pages/profile_page.dart';
 import 'package:moofli_app/pages/setup_profile/setup_profile_1.dart';
 import 'package:moofli_app/pages/setup_profile/setup_profile_contact_info.dart';
 import 'package:moofli_app/pages/setup_profile/setup_profile_profesional_info.dart';
@@ -51,6 +52,7 @@ class MyApp extends StatelessWidget {
         '/setup_profile_photo': (context) => const SetupProfileUploadPhoto(),
         '/setup_profile_socials': (context) => const SetupProfileSocials(),
         '/settings': (context) => const SettingsPage(),
+        '/profile': (context) => const ProfilePage(),
       },
       title: 'Moofli App',
       theme: ThemeData(

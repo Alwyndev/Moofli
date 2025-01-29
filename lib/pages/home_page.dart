@@ -20,9 +20,12 @@ class _HomePageState extends State<HomePage> {
     await prefs.setBool('isLoggedIn', false);
 
     // Navigate back to LoginPage
-    Navigator.pushReplacement(
+    Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (context) => const LoginPage()),
+      MaterialPageRoute(
+          builder: (context) =>
+              LoginPage()), // Replace with your login page widget
+      (Route<dynamic> route) => false, // Remove all previous routes
     );
   }
 
@@ -61,7 +64,9 @@ class _HomePageState extends State<HomePage> {
             ListTile(
               leading: Icon(Icons.person),
               title: Text('Profile'),
-              onTap: () {},
+              onTap: () {
+                Navigator.pushNamed(context, '/profile');
+              },
             ),
             ListTile(
               leading: Icon(Icons.settings),
@@ -123,7 +128,7 @@ class _HomePageState extends State<HomePage> {
           BottomNavigationBarItem(
             icon: GestureDetector(
               onTap: () {
-                // Add desired functionality for the second icon tap here
+                Navigator.pushNamed(context, '/profile');
               },
               child: CircleAvatar(
                 backgroundImage: AssetImage('assets/images/logo.png'),
