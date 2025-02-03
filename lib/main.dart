@@ -12,7 +12,6 @@ import 'pages/login_page.dart';
 import 'pages/signup_page.dart';
 import 'pages/reset_password_page.dart';
 import 'pages/settings_page.dart';
-import 'pages/diary_entry_page.dart';
 import 'pages/diary_page_new.dart';
 
 void main() async {
@@ -40,7 +39,6 @@ class MyApp extends StatelessWidget {
         '/': (context) => const LoginPage(),
         '/signup': (context) => const SignupPage(),
         '/home': (context) => const HomePage(),
-        '/diary_entry': (context) => const DiaryEntryPage(),
         '/dairy_entry_new': (context) => const DiaryPageNew(),
         '/reset_password': (context) => const ResetPasswordPage(),
         '/setup_profile_1': (context) => const SetupProfile1(),

@@ -102,18 +102,23 @@ class _HomePageState extends State<HomePage> {
                   _focusedDay = focusedDay;
                 });
               },
+              headerStyle: HeaderStyle(
+                formatButtonVisible: false,
+                titleCentered: true,
+              ),
             ),
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.pushNamed(context, '/dairy_entry_new');
-        },
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
-        backgroundColor: Color.fromRGBO(0, 119, 255, 0.6),
-        child: Icon(Icons.add),
-      ),
+          onPressed: () {
+            Navigator.pushNamed(context, '/dairy_entry_new');
+          },
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+          backgroundColor: Color.fromRGBO(0, 119, 255, 0.6),
+          splashColor: Colors.blue,
+          child: Icon(Icons.add)),
       bottomNavigationBar: BottomNavigationBar(
         items: [
           BottomNavigationBarItem(

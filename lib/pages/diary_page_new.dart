@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import 'package:moofli_app/components/icon_helpers.dart';
-import 'package:moofli_app/components/icons_list.dart';
 
 class DiaryPageNew extends StatefulWidget {
   const DiaryPageNew({super.key});
@@ -13,40 +11,47 @@ class DiaryPageNew extends StatefulWidget {
 
 class _DiaryPageNewState extends State<DiaryPageNew> {
   TextEditingController dairyEntryController = TextEditingController();
-  TextAlign alignment = TextAlign.left;
+
   bool isBold = false;
   bool isItalic = false;
   bool isUnderline = false;
+  bool isStrikethrough = false;
+  TextAlign alignment = TextAlign.left;
 
-  // Map to track selected icons
-  Map<IconData, bool> iconStates = {
-    for (var icon in toolbarIcons) icon: false,
-  };
+  final List<IconData> toolbarIcons = [
+    Icons.format_bold,
+    Icons.format_italic,
+    Icons.format_underline,
+    Icons.format_strikethrough,
+    Icons.format_align_left,
+    Icons.format_align_center,
+    Icons.format_align_right,
+    Icons.format_align_justify,
+    Icons.copy,
+    Icons.paste,
+  ];
 
-  TextStyle getTextStyle() {
-    return TextStyle(
-      fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-      fontStyle: isItalic ? FontStyle.italic : FontStyle.normal,
-      decoration: isUnderline ? TextDecoration.underline : TextDecoration.none,
+  void updateState() => setState(() {});
+
+  void setAlignment(
+      TextAlign align, Function updateState, TextAlign alignment) {
+    alignment = align;
+    updateState();
+  } // Generic state update function
+
+  void copyToClipboard(TextEditingController controller, BuildContext context) {
+    Clipboard.setData(ClipboardData(text: controller.text));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Copied to clipboard")),
     );
   }
 
-  void copyToClipboard(TextEditingController controller, BuildContext context) {
-    final text = controller.text;
-    if (text.isNotEmpty) {
-      Clipboard.setData(ClipboardData(text: text));
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Copied to clipboard')),
-      );
-    }
-  }
-
   void pasteFromClipboard(
-      TextEditingController controller, VoidCallback callback) async {
-    final data = await Clipboard.getData('text/plain');
-    if (data != null && data.text != null) {
-      controller.text = data.text!;
-      callback();
+      TextEditingController controller, Function updateState) async {
+    ClipboardData? data = await Clipboard.getData('text/plain');
+    if (data != null) {
+      controller.text += data.text!;
+      updateState();
     }
   }
 
@@ -78,69 +83,6 @@ class _DiaryPageNewState extends State<DiaryPageNew> {
       body: Column(
         children: [
           Expanded(
-            flex: 2,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: toolbarIcons
-                    .map(
-                      (icon) => GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            iconStates[icon] = !iconStates[icon]!;
-                            switch (icon) {
-                              case Icons.format_bold:
-                                isBold = !isBold;
-                                break;
-                              case Icons.format_italic:
-                                isItalic = !isItalic;
-                                break;
-                              case Icons.format_underline:
-                                isUnderline = !isUnderline;
-                                break;
-                              case Icons.format_strikethrough:
-                                // Handle strikethrough
-                                break;
-                              case Icons.format_align_left:
-                                setAlignment(TextAlign.left);
-                                break;
-                              case Icons.format_align_center:
-                                setAlignment(TextAlign.center);
-                                break;
-                              case Icons.format_align_right:
-                                setAlignment(TextAlign.right);
-                                break;
-                              case Icons.copy:
-                                copyToClipboard(dairyEntryController, context);
-                                break;
-                              case Icons.paste:
-                                pasteFromClipboard(dairyEntryController,
-                                    () => setState(() {}));
-                                break;
-                              default:
-                                print("Pressed $icon");
-                            }
-                          });
-                        },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: iconStates[icon]!
-                                ? Colors.grey[300]
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          padding: const EdgeInsets.all(4),
-                          child: Icon(icon, size: 30),
-                        ),
-                      ),
-                    )
-                    .toList(),
-              ),
-            ),
-          ),
-          Expanded(
             flex: 4,
             child: Card(
               margin: EdgeInsets.all(16),
@@ -154,7 +96,14 @@ class _DiaryPageNewState extends State<DiaryPageNew> {
                   controller: dairyEntryController,
                   maxLines: null,
                   textAlign: alignment,
-                  style: getTextStyle(),
+                  style: TextStyle(
+                    fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+                    fontStyle: isItalic ? FontStyle.italic : FontStyle.normal,
+                    decoration: TextDecoration.combine([
+                      if (isUnderline) TextDecoration.underline,
+                      if (isStrikethrough) TextDecoration.lineThrough,
+                    ]),
+                  ),
                   decoration: InputDecoration(
                     hintText: "What's on your mind?",
                     hintStyle: TextStyle(color: Colors.white),
@@ -175,39 +124,66 @@ class _DiaryPageNewState extends State<DiaryPageNew> {
         child: Icon(Icons.add),
       ),
       bottomNavigationBar: BottomNavigationBar(
+        selectedItemColor: Colors.grey,
         items: [
-          BottomNavigationBarItem(
-            icon: GestureDetector(
-              onTap: () {
-                Navigator.pushNamed(context, "/home");
-              },
-              child: Icon(Icons.home, color: Colors.black, size: 40),
-            ),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: GestureDetector(
-              onTap: () {
-                // Add desired functionality for the second icon tap here
-              },
-              child: CircleAvatar(
-                backgroundImage: AssetImage('assets/images/logo.png'),
-              ),
-            ),
-            label: '',
-          ),
+          ...toolbarIcons.map((icon) => BottomNavigationBarItem(
+                icon: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      switch (icon) {
+                        case Icons.format_bold:
+                          // toggleBold(updateState, isBold);
+                          isBold = !isBold;
+                          break;
+                        case Icons.format_italic:
+                          // toggleItalic(updateState, isItalic);
+                          isItalic = !isItalic;
+                          break;
+                        case Icons.format_underline:
+                          // toggleUnderline(updateState, isUnderline);
+                          isUnderline = !isUnderline;
+                          break;
+                        case Icons.format_strikethrough:
+                          // toggleStrikethrough(updateState, isStrikethrough);
+                          isStrikethrough = !isStrikethrough;
+                          break;
+                        case Icons.format_align_left:
+                          setAlignment(TextAlign.left, updateState, alignment);
+                          alignment = TextAlign.left;
+                          break;
+                        case Icons.format_align_center:
+                          setAlignment(
+                              TextAlign.center, updateState, alignment);
+                          alignment = TextAlign.center;
+                          break;
+                        case Icons.format_align_right:
+                          setAlignment(TextAlign.right, updateState, alignment);
+                          alignment = TextAlign.right;
+                          break;
+                        case Icons.copy:
+                          copyToClipboard(dairyEntryController, context);
+                          break;
+                        case Icons.paste:
+                          pasteFromClipboard(
+                              dairyEntryController, () => setState(() {}));
+                          break;
+                        default:
+                          print("Pressed $icon");
+                      }
+                    });
+                  },
+                  child: Icon(
+                    icon,
+                    color: Colors.black,
+                    size: 30,
+                  ),
+                ),
+                label: '',
+              ))
         ],
         currentIndex: 0,
-        onTap: (index) {
-          // Handle tap for BottomNavigationBar if needed
-        },
+        onTap: (index) {},
       ),
     );
-  }
-
-  void setAlignment(TextAlign align) {
-    setState(() {
-      alignment = align;
-    });
   }
 }
