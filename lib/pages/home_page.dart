@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'login_page.dart';
 import 'package:table_calendar/table_calendar.dart';
+// import 'package:intl/intl.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -13,6 +14,22 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
+  Map<String, String> savedEntries = {}; // Map to store saved entries
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedEntries(); // Load saved entries when the page is initialized
+  }
+
+  Future<void> _loadSavedEntries() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      prefs.getKeys().forEach((key) {
+        savedEntries[key] = prefs.getString(key) ?? '';
+      });
+    });
+  }
 
   Future<void> logout(BuildContext context) async {
     // Clear login status
@@ -108,6 +125,24 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
+          // Display saved entries as cards
+          // ...savedEntries.entries.map((entry) {
+          //   DateTime entryDate = DateTime.parse(entry.key);
+          //   String formattedDate = DateFormat('dd MMMM yyyy').format(entryDate);
+          //   String previewText =
+          //       entry.value.split('\n').first; // First line of the entry
+
+          //   return Card(
+          //     margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          //     child: ListTile(
+          //       title: Text(formattedDate),
+          //       subtitle: Text(previewText),
+          //       onTap: () {
+          //         // Navigate to a detailed view of the entry if needed
+          //       },
+          //     ),
+          //   );
+          // }).toList(),
         ],
       ),
       floatingActionButton: FloatingActionButton(

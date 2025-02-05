@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DiaryPageNew extends StatefulWidget {
   const DiaryPageNew({super.key});
@@ -29,30 +30,49 @@ class _DiaryPageNewState extends State<DiaryPageNew> {
     Icons.format_align_justify,
     Icons.copy,
     Icons.paste,
+    // Icons.save,
   ];
 
   void updateState() => setState(() {});
 
-  void setAlignment(
-      TextAlign align, Function updateState, TextAlign alignment) {
+  void setAlignment(TextAlign align) {
     alignment = align;
     updateState();
-  } // Generic state update function
+  }
 
-  void copyToClipboard(TextEditingController controller, BuildContext context) {
-    Clipboard.setData(ClipboardData(text: controller.text));
+  void copyToClipboard() {
+    Clipboard.setData(ClipboardData(text: dairyEntryController.text));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text("Copied to clipboard")),
     );
   }
 
-  void pasteFromClipboard(
-      TextEditingController controller, Function updateState) async {
+  void pasteFromClipboard() async {
     ClipboardData? data = await Clipboard.getData('text/plain');
     if (data != null) {
-      controller.text += data.text!;
+      dairyEntryController.text += data.text!;
       updateState();
     }
+  }
+
+  void saveEntry() async {
+    String textToSave = dairyEntryController.text;
+    if (textToSave.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("No text to save")),
+      );
+      return;
+    }
+
+    // Save the text to SharedPreferences
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String key =
+        DateTime.now().toString(); // Use the current date and time as the key
+    await prefs.setString(key, textToSave);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Entry saved successfully")),
+    );
   }
 
   @override
@@ -117,72 +137,54 @@ class _DiaryPageNewState extends State<DiaryPageNew> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.pushNamed(context, '/dairy_entry_new');
+          saveEntry();
         },
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
         backgroundColor: Color.fromRGBO(0, 119, 255, 0.6),
-        child: Icon(Icons.add),
+        child: Icon(Icons.save_outlined, color: Colors.black),
       ),
       bottomNavigationBar: BottomNavigationBar(
         selectedItemColor: Colors.grey,
-        items: [
-          ...toolbarIcons.map((icon) => BottomNavigationBarItem(
-                icon: GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      switch (icon) {
-                        case Icons.format_bold:
-                          // toggleBold(updateState, isBold);
-                          isBold = !isBold;
-                          break;
-                        case Icons.format_italic:
-                          // toggleItalic(updateState, isItalic);
-                          isItalic = !isItalic;
-                          break;
-                        case Icons.format_underline:
-                          // toggleUnderline(updateState, isUnderline);
-                          isUnderline = !isUnderline;
-                          break;
-                        case Icons.format_strikethrough:
-                          // toggleStrikethrough(updateState, isStrikethrough);
-                          isStrikethrough = !isStrikethrough;
-                          break;
-                        case Icons.format_align_left:
-                          setAlignment(TextAlign.left, updateState, alignment);
-                          alignment = TextAlign.left;
-                          break;
-                        case Icons.format_align_center:
-                          setAlignment(
-                              TextAlign.center, updateState, alignment);
-                          alignment = TextAlign.center;
-                          break;
-                        case Icons.format_align_right:
-                          setAlignment(TextAlign.right, updateState, alignment);
-                          alignment = TextAlign.right;
-                          break;
-                        case Icons.copy:
-                          copyToClipboard(dairyEntryController, context);
-                          break;
-                        case Icons.paste:
-                          pasteFromClipboard(
-                              dairyEntryController, () => setState(() {}));
-                          break;
-                        default:
-                          print("Pressed $icon");
-                      }
-                    });
-                  },
-                  child: Icon(
-                    icon,
-                    color: Colors.black,
-                    size: 30,
-                  ),
-                ),
-                label: '',
-              ))
-        ],
+        items: toolbarIcons.map((icon) {
+          return BottomNavigationBarItem(
+            icon: Icon(icon, color: Colors.black, size: 30),
+            label: '',
+          );
+        }).toList(),
         currentIndex: 0,
-        onTap: (index) {},
+        onTap: (index) {
+          switch (toolbarIcons[index]) {
+            case Icons.format_bold:
+              setState(() => isBold = !isBold);
+              break;
+            case Icons.format_italic:
+              setState(() => isItalic = !isItalic);
+              break;
+            case Icons.format_underline:
+              setState(() => isUnderline = !isUnderline);
+              break;
+            case Icons.format_strikethrough:
+              setState(() => isStrikethrough = !isStrikethrough);
+              break;
+            case Icons.format_align_left:
+              setAlignment(TextAlign.left);
+              break;
+            case Icons.format_align_center:
+              setAlignment(TextAlign.center);
+              break;
+            case Icons.format_align_right:
+              setAlignment(TextAlign.right);
+              break;
+            case Icons.copy:
+              copyToClipboard();
+              break;
+            case Icons.paste:
+              pasteFromClipboard();
+              break;
+            default:
+              print("Pressed ${toolbarIcons[index]}");
+          }
+        },
       ),
     );
   }
