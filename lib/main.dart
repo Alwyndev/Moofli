@@ -37,7 +37,7 @@ class MyApp extends StatelessWidget {
       initialRoute: isLoggedIn ? '/home' : '/',
       routes: {
         '/': (context) => const LoginPage(),
-        '/signup': (context) => const SignupPage(),
+        '/signup': (context) => SignupPage(),
         '/home': (context) => const HomePage(),
         '/dairy_entry_new': (context) => const DiaryPageNew(),
         '/reset_password': (context) => const ResetPasswordPage(),
@@ -50,7 +50,7 @@ class MyApp extends StatelessWidget {
         '/setup_profile_photo': (context) => const SetupProfileUploadPhoto(),
         '/setup_profile_socials': (context) => const SetupProfileSocials(),
         '/settings': (context) => const SettingsPage(),
-        '/profile': (context) => const ProfilePage(),
+        '/profile': (context) => ProfilePage(),
       },
       title: 'Moofli App',
       theme: ThemeData(

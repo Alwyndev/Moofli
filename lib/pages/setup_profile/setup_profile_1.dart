@@ -1,6 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:moofli_app/components/nav_buttons.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SetupProfile1 extends StatefulWidget {
   const SetupProfile1({super.key});
@@ -10,6 +14,48 @@ class SetupProfile1 extends StatefulWidget {
 }
 
 class _SetupProfile1State extends State<SetupProfile1> {
+  Map<String, dynamic>? userData;
+
+  Future<void> _loadUserData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? userDataJson = prefs.getString('userDetails');
+    String? token = prefs.getString('token');
+
+    if (userDataJson != null) {
+      setState(() {
+        userData = json.decode(userDataJson);
+        userData?['token'] = token;
+      });
+
+      await _fetchProfile(token);
+    } else {
+      print('User data not found in SharedPreferences');
+    }
+  }
+
+  Future<void> _fetchProfile(String? token) async {
+    if (token == null) {
+      print("Token is null");
+      return;
+    }
+    print(token);
+    try {
+      final response = await http.put(
+        Uri.parse('https://skillop-back.onrender.com/api/user/update/profile'),
+        headers: {'Authorization': token},
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        if (responseData != null) {
+          setState(() {});
+        }
+      }
+    } catch (e) {
+      print('Error fetching profile: $e');
+    }
+  }
+
   List<bool> isSelected = [true, false, false];
   late String gender;
   // TextEditingControllers

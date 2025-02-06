@@ -1,20 +1,87 @@
+import 'dart:convert';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
+  ProfilePage({super.key});
 
   @override
   _ProfilePageState createState() => _ProfilePageState();
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  String name = "";
+  String bio = "";
+  String linkedin = "";
+  String about = "";
+  String pastExperience = "";
+  String futurePlans = "";
+  String profilepic = "";
+  List<String> skills = [];
+  List<Map<String, String>> experienceItems = [];
+  String bgPic = "";
+  Map<String, dynamic>? userData;
+
+  Future<void> _loadUserData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? userDataJson = prefs.getString('userDetails');
+    String? token = prefs.getString('token');
+
+    if (userDataJson != null) {
+      setState(() {
+        userData = json.decode(userDataJson);
+        userData?['token'] = token;
+      });
+
+      await _fetchProfile(token);
+    } else {
+      print('User data not found in SharedPreferences');
+    }
+  }
+
+  Future<void> _fetchProfile(String? token) async {
+    if (token == null) {
+      print("Token is null");
+      return;
+    }
+    print(token);
+    try {
+      final response = await http.get(
+        Uri.parse('http://93.127.172.217:2004/api/user/profile/me'),
+        headers: {'Authorization': token},
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        if (responseData != null) {
+          setState(() {
+            name = responseData['result']['firstname'] ?? "";
+            bio = responseData['result']['about'] ?? "";
+            linkedin = responseData['result']['linkedinId'] ?? "";
+            about = responseData['result']['about'] ?? "";
+            pastExperience = responseData['result']['pastExp'] ?? "";
+            futurePlans = responseData['result']['futurePlans'] ?? "";
+            profilepic = responseData['result']['profilePicUrl'] ?? "";
+            skills = List<String>.from(responseData['result']['skills'] ?? []);
+            bgPic = responseData['result']['bgPicUrl'] ?? "";
+            // experienceItems = List<Map<String, String>>.from(
+            //     responseData['result']['experence'] ?? []);
+          });
+        }
+      }
+    } catch (e) {
+      print('Error fetching profile: $e');
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
   // Editable fields
-  String name = "France Leaphart 🌟";
-  String bio = "B.Tech CSE@DTU | DSA |\nWeb Development";
-  String linkedin = "www.linkedin.com/in/france-leaphart";
-  String about = "Lorem ipsum dolor sit amet...";
-  String pastExperience = "Lorem ipsum dolor sit amet...";
-  String futurePlans = "Lorem ipsum dolor sit amet...";
 
   // Controllers for text fields
   final TextEditingController _nameController = TextEditingController();
@@ -26,40 +93,9 @@ class _ProfilePageState extends State<ProfilePage> {
   final TextEditingController _futurePlansController = TextEditingController();
 
   // Lists for dynamic sections
-  List<Map<String, String>> experienceItems = [
-    {
-      "title": "Software Development Intern",
-      "company": "Flipkart",
-      "duration": "May 23 - Nov 23"
-    },
-    {
-      "title": "DevFest Organizing Team Member",
-      "company": "Google For Developers",
-      "duration": "Oct 23 - Nov 23"
-    },
-  ];
-
-  List<String> skills = [
-    "Web Development",
-    "Technology",
-    "DSA",
-    "UI/UX Design"
-  ];
 
   // Flag to toggle edit mode
   bool isEditing = false;
-
-  @override
-  void initState() {
-    super.initState();
-    // Initialize controllers with current values
-    _nameController.text = name;
-    _bioController.text = bio;
-    _linkedinController.text = linkedin;
-    _aboutController.text = about;
-    _pastExperienceController.text = pastExperience;
-    _futurePlansController.text = futurePlans;
-  }
 
   @override
   void dispose() {
@@ -79,7 +115,8 @@ class _ProfilePageState extends State<ProfilePage> {
     });
   }
 
-  void _saveChanges() {
+  Future<void> _saveChanges() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       name = _nameController.text;
       bio = _bioController.text;
@@ -89,6 +126,17 @@ class _ProfilePageState extends State<ProfilePage> {
       futurePlans = _futurePlansController.text;
       isEditing = false;
     });
+
+    Map<String, dynamic> updatedUserData = {
+      'name': name,
+      'bio': bio,
+      'linkedin': linkedin,
+      'about': about,
+      'pastExperience': pastExperience,
+      'futurePlans': futurePlans,
+    };
+
+    prefs.setString('userDetails', json.encode(updatedUserData));
   }
 
   void _addExperience() async {
@@ -244,9 +292,9 @@ class _ProfilePageState extends State<ProfilePage> {
           children: [
             Container(
               height: 150,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage("assets/images/main_logo.png"),
+                  image: NetworkImage(bgPic),
                   fit: BoxFit.cover,
                 ),
               ),
@@ -258,9 +306,12 @@ class _ProfilePageState extends State<ProfilePage> {
                 children: [
                   Row(
                     children: [
-                      const CircleAvatar(
+                      CircleAvatar(
                         radius: 40,
-                        backgroundImage: AssetImage("assets/images/logo.png"),
+                        backgroundImage: profilepic?.isNotEmpty ?? false
+                            ? NetworkImage(profilepic)
+                            : AssetImage(
+                                'assets/images/default_profile_pic.png'),
                       ),
                       const SizedBox(width: 16),
                       Column(
@@ -367,7 +418,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 Navigator.pushNamed(context, '/profile');
               },
               child: CircleAvatar(
-                backgroundImage: AssetImage('assets/images/logo.png'),
+                backgroundImage: CachedNetworkImageProvider(profilepic),
               ),
             ),
             label: '',

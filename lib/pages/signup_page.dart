@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:moofli_app/components/google_login_button.dart';
 import 'package:moofli_app/components/gradient_button.dart';
+import 'package:http/http.dart' as http;
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -43,6 +46,103 @@ class _SignupPageState extends State<SignupPage> {
   final TextEditingController passwdController = TextEditingController();
   final TextEditingController rePasswdController = TextEditingController();
 
+  void _registerUser() async {
+    if (!termsAccepted) {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('Terms and Privacy Policy'),
+            content: Text(
+                'Please accept the Terms of Use and Privacy Policy to continue.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+      return;
+    }
+    Navigator.pushNamed(context, '/setup_profile_1');
+
+    if (passwdController.text != rePasswdController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Passwords do not match!'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (passwdController.text.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Password must be at least 6 characters long!'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (!RegExp(
+            r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+        .hasMatch(emailController.text)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please enter a valid email address!'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final url = Uri.parse('http://93.127.172.217:2004/api/user/register');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          "email": emailController.text,
+          "password": passwdController.text,
+          "firstname": fNameController.text,
+          "lastname": lNameController.text,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(responseData['message']),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pushNamed(context, '/home'); //'/setup_profile_1'
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${response.body}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Network error: $error'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -58,14 +158,8 @@ class _SignupPageState extends State<SignupPage> {
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: ListView(
           scrollDirection: Axis.vertical,
-          // mainAxisAlignment: MainAxisAlignment.center,
-          // crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Logo
-
             SizedBox(height: 10),
-
-            // Title
             Text(
               'SIGN UP',
               style: TextStyle(
@@ -75,7 +169,6 @@ class _SignupPageState extends State<SignupPage> {
               ),
             ),
             SizedBox(height: 8),
-
             Container(
               height: 8,
               width: 50,
@@ -92,16 +185,11 @@ class _SignupPageState extends State<SignupPage> {
               ),
             ),
             SizedBox(height: 40),
-
-            // Input Field
             TextField(
               controller: fNameController,
               decoration: InputDecoration(
                 labelText: 'First Name',
-                labelStyle: TextStyle(
-                    color: Colors.black,
-                    // fontWeight: FontWeight.w500,
-                    fontSize: 18),
+                labelStyle: TextStyle(color: Colors.black, fontSize: 18),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.0),
                 ),
@@ -112,10 +200,7 @@ class _SignupPageState extends State<SignupPage> {
               controller: lNameController,
               decoration: InputDecoration(
                 labelText: 'Last Name',
-                labelStyle: TextStyle(
-                    color: Colors.black,
-                    // fontWeight: FontWeight.w500,
-                    fontSize: 18),
+                labelStyle: TextStyle(color: Colors.black, fontSize: 18),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.0),
                 ),
@@ -126,10 +211,7 @@ class _SignupPageState extends State<SignupPage> {
               controller: emailController,
               decoration: InputDecoration(
                 labelText: 'Email',
-                labelStyle: TextStyle(
-                    color: Colors.black,
-                    // fontWeight: FontWeight.w500,
-                    fontSize: 18),
+                labelStyle: TextStyle(color: Colors.black, fontSize: 18),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.0),
                 ),
@@ -138,65 +220,47 @@ class _SignupPageState extends State<SignupPage> {
             SizedBox(height: 10),
             TextField(
               controller: passwdController,
-              obscureText: status1, // Controls whether the text is obscured
+              obscureText: status1,
               decoration: InputDecoration(
                 labelText: 'Password',
-                labelStyle: TextStyle(
-                  color: Colors.black,
-                  fontSize: 18,
-                ),
+                labelStyle: TextStyle(color: Colors.black, fontSize: 18),
                 suffixIcon: IconButton(
                   onPressed: () {
                     setState(() {
-                      status1 = !status1; // Toggle the visibility status
+                      status1 = !status1;
                     });
                   },
-                  icon: Icon(
-                    status1
-                        ? Icons.visibility_off
-                        : Icons.visibility, // Change icon dynamically
-                  ),
+                  icon: Icon(status1 ? Icons.visibility_off : Icons.visibility),
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.0),
                 ),
               ),
             ),
-
             SizedBox(height: 10),
             TextField(
               controller: rePasswdController,
-              obscureText: status2, // Controls whether the text is obscured
+              obscureText: status2,
               decoration: InputDecoration(
                 labelText: 'Re-enter Password',
-                labelStyle: TextStyle(
-                  color: Colors.black,
-                  fontSize: 16,
-                ),
+                labelStyle: TextStyle(color: Colors.black, fontSize: 16),
                 suffixIcon: IconButton(
                   onPressed: () {
                     setState(() {
-                      status2 = !status2; // Toggle the visibility status
+                      status2 = !status2;
                     });
                   },
-                  icon: Icon(
-                    status2
-                        ? Icons.visibility_off
-                        : Icons.visibility, // Change icon dynamically
-                  ),
+                  icon: Icon(status2 ? Icons.visibility_off : Icons.visibility),
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.0),
                 ),
               ),
             ),
-
-            // To track if "Remember me" is checked
             const SizedBox(height: 5),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Terms and Privacy Policy Checkbox with hyperlinks
                 Row(
                   children: [
                     Checkbox(
@@ -220,13 +284,11 @@ class _SignupPageState extends State<SignupPage> {
                               text: 'SKILLOP\'s Terms of Use',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.blue, // Link color
-                                decoration: TextDecoration
-                                    .underline, // Underline the text
+                                color: Colors.blue,
+                                decoration: TextDecoration.underline,
                               ),
                               recognizer: TapGestureRecognizer()
                                 ..onTap = () {
-                                  // Add your link opening functionality here
                                   print("Terms of Use clicked");
                                 },
                             ),
@@ -238,13 +300,11 @@ class _SignupPageState extends State<SignupPage> {
                               text: 'Privacy Policy.',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.blue, // Link color
-                                decoration: TextDecoration
-                                    .underline, // Underline the text
+                                color: Colors.blue,
+                                decoration: TextDecoration.underline,
                               ),
                               recognizer: TapGestureRecognizer()
                                 ..onTap = () {
-                                  // Add your link opening functionality here
                                   print("Privacy Policy clicked");
                                 },
                             ),
@@ -255,8 +315,6 @@ class _SignupPageState extends State<SignupPage> {
                   ],
                 ),
                 SizedBox(height: 2),
-
-                // Remember Me Checkbox
                 Row(
                   children: [
                     Checkbox(
@@ -275,8 +333,6 @@ class _SignupPageState extends State<SignupPage> {
                 ),
               ],
             ),
-
-            // SizedBox(height: 2),
             Center(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -288,7 +344,6 @@ class _SignupPageState extends State<SignupPage> {
                   ),
                   TextButton(
                     onPressed: () {
-                      // Add your functionality
                       Navigator.pushNamed(context, '/');
                     },
                     child: Text(
@@ -302,44 +357,15 @@ class _SignupPageState extends State<SignupPage> {
                 ],
               ),
             ),
-
-            // SizedBox(height: 10),
-            // Gradient Button
             GradientButton(
               text: 'Setup Your Profile',
-              onPressed: () {
-                if (!termsAccepted) {
-                  // Show an alert dialog if Terms and Privacy Policy are not accepted
-                  showDialog(
-                    context: context,
-                    builder: (context) {
-                      return AlertDialog(
-                        title: Text('Terms and Privacy Policy'),
-                        content: Text(
-                            'Please accept the Terms of Use and Privacy Policy to continue.'),
-                        actions: [
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                            },
-                            child: Text('OK'),
-                          ),
-                        ],
-                      );
-                    },
-                  );
-                  return;
-                }
-                Navigator.pushNamed(context, '/setup_profile_1');
-              },
+              onPressed: _registerUser,
               border: 20,
               padding: 12,
             ),
-
             SizedBox(height: 10),
             Row(
               children: [
-                // Progress bar on the left
                 Expanded(
                   child: Container(
                     height: 4,
@@ -350,7 +376,6 @@ class _SignupPageState extends State<SignupPage> {
                     ),
                   ),
                 ),
-                // "OR" text
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
                   child: Text(
@@ -362,7 +387,6 @@ class _SignupPageState extends State<SignupPage> {
                     ),
                   ),
                 ),
-                // Progress bar on the right
                 Expanded(
                   child: Container(
                     height: 4,
@@ -375,16 +399,14 @@ class _SignupPageState extends State<SignupPage> {
                 ),
               ],
             ),
-
             Center(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 50),
                 child: GoogleLoginButton(
-                  onPressed: _handleGoogleLogin, // Pass the callback function
+                  onPressed: _handleGoogleLogin,
                 ),
               ),
             ),
-
             SizedBox(height: 10),
           ],
         ),
