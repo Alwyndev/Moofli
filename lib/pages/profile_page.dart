@@ -49,7 +49,7 @@ class _ProfilePageState extends State<ProfilePage> {
     print(token);
     try {
       final response = await http.get(
-        Uri.parse('http://93.127.172.217:2004/api/user/profile/me'),
+        Uri.parse('http://93.127.172.217:2024/api/user/profile/me'),
         headers: {'Authorization': token},
       );
 
@@ -418,7 +418,9 @@ class _ProfilePageState extends State<ProfilePage> {
                 Navigator.pushNamed(context, '/profile');
               },
               child: CircleAvatar(
-                backgroundImage: CachedNetworkImageProvider(profilepic),
+                backgroundImage: profilepic?.isNotEmpty ?? false
+                    ? NetworkImage(profilepic)
+                    : AssetImage('assets/images/default_profile_pic.png'),
               ),
             ),
             label: '',

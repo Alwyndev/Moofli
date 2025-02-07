@@ -46,59 +46,65 @@ class _SignupPageState extends State<SignupPage> {
   final TextEditingController passwdController = TextEditingController();
   final TextEditingController rePasswdController = TextEditingController();
 
+  void _showSnackBar(String message, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: color,
+      ),
+    );
+  }
+
+  void _showDialog(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _registerUser() async {
     if (!termsAccepted) {
-      showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: Text('Terms and Privacy Policy'),
-            content: Text(
-                'Please accept the Terms of Use and Privacy Policy to continue.'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: Text('OK'),
-              ),
-            ],
-          );
-        },
-      );
+      _showDialog('Terms and Privacy Policy',
+          'Please accept the Terms of Use and Privacy Policy to continue.');
       return;
     }
-    Navigator.pushNamed(context, '/setup_profile_1');
+
+    if (fNameController.text.isEmpty || lNameController.text.isEmpty) {
+      _showDialog('Error', 'First and Last name cannot be empty!');
+      return;
+    }
+
+    if (emailController.text.isEmpty ||
+        !emailController.text.contains('@') ||
+        !emailController.text.contains('.')) {
+      _showDialog('Error', 'Please fill in a valid email to continue!');
+      return;
+    }
 
     if (passwdController.text != rePasswdController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Passwords do not match!'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showDialog('Error', 'Passwords do not match!');
       return;
     }
 
     if (passwdController.text.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Password must be at least 6 characters long!'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showDialog('Error', 'Password must be at least 6 characters long!');
       return;
     }
 
-    if (!RegExp(
-            r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+    if (!RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$")
         .hasMatch(emailController.text)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Please enter a valid email address!'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showDialog('Error', 'Please enter a valid email address!');
       return;
     }
 
@@ -116,30 +122,16 @@ class _SignupPageState extends State<SignupPage> {
         }),
       );
 
+      final responseData = jsonDecode(response.body);
+
       if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(responseData['message']),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.pushNamed(context, '/home'); //'/setup_profile_1'
+        _showSnackBar(responseData['message'], Colors.green);
+        Navigator.pushNamed(context, '/setup_profile_1');
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${response.body}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        _showDialog('Error', '${responseData['message']}');
       }
     } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Network error: $error'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showDialog('Network error', 'Please try again later');
     }
   }
 

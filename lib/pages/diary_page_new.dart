@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -12,6 +14,9 @@ class DiaryPageNew extends StatefulWidget {
 
 class _DiaryPageNewState extends State<DiaryPageNew> {
   TextEditingController dairyEntryController = TextEditingController();
+
+  late SharedPreferences prefs;
+  String? token;
 
   bool isBold = false;
   bool isItalic = false;
@@ -30,8 +35,18 @@ class _DiaryPageNewState extends State<DiaryPageNew> {
     Icons.format_align_justify,
     Icons.copy,
     Icons.paste,
-    // Icons.save,
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _initSharedPreferences();
+  }
+
+  Future<void> _initSharedPreferences() async {
+    prefs = await SharedPreferences.getInstance();
+    token = prefs.getString('token');
+  }
 
   void updateState() => setState(() {});
 
@@ -64,15 +79,53 @@ class _DiaryPageNewState extends State<DiaryPageNew> {
       return;
     }
 
-    // Save the text to SharedPreferences
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String key =
-        DateTime.now().toString(); // Use the current date and time as the key
-    await prefs.setString(key, textToSave);
+    Map<String, dynamic> data = {
+      "content": textToSave,
+    };
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Entry saved successfully")),
-    );
+    String body = json.encode(data);
+
+    Map<String, String> headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://93.127.172.217:2024/api/diary/dairyCreate'),
+        headers: headers,
+        body: body,
+      );
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Entry saved successfully: ${response.body}"),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(20)),
+            ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Failed to save entry: ${response.body}"),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(20)),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Error: $e"),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(20)),
+          ),
+        ),
+      );
+    }
   }
 
   @override

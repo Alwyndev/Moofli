@@ -19,45 +19,55 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwdController = TextEditingController();
   bool status = true;
+  bool _isLoading = false;
+
   Future<void> _handleGoogleLogin() async {
     try {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser != null) {
-        print("Google User: ${googleUser.displayName}");
-        print("Email: ${googleUser.email}");
-        print("Photo URL: ${googleUser.photoUrl}");
-        // Additional actions can be performed here
-      } else {
-        print("User canceled the sign-in process.");
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('isLoggedIn', true);
+        await prefs.setString(
+            'googleUser',
+            jsonEncode({
+              'name': googleUser.displayName,
+              'email': googleUser.email,
+              'photoUrl': googleUser.photoUrl,
+            }));
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomePage()),
+        );
       }
     } catch (error) {
-      print("Error during Google Sign-In: $error");
+      _showErrorDialog("Error during Google Sign-In: $error");
     }
   }
 
   Future<void> login(BuildContext context) async {
-    final String email = usernameController.text;
-    final String password = passwdController.text;
+    final String email = usernameController.text.trim();
+    final String password = passwdController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter both email and password')),
-      );
+      _showErrorDialog('Please enter both email and password');
       return;
     }
 
-    final Uri url = Uri.parse('http://93.127.172.217:2004/api/user/login');
-
-    final Map<String, String> headers = {'Content-Type': 'application/json'};
-    final Map<String, String> body = {'email': email, 'password': password};
+    setState(() => _isLoading = true);
+    final Uri url = Uri.parse('http://93.127.172.217:2024/api/user/login');
 
     try {
-      final response =
-          await http.post(url, headers: headers, body: jsonEncode(body));
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'password': password}),
+      );
+
+      setState(() => _isLoading = false);
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = jsonDecode(response.body);
-
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setBool('isLoggedIn', true);
         await prefs.setString('token', responseData['token']);
@@ -70,15 +80,28 @@ class _LoginPageState extends State<LoginPage> {
         );
       } else {
         final errorData = jsonDecode(response.body);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorData['message'] ?? 'Login failed')),
-        );
+        _showErrorDialog(errorData['message'] ?? 'Login failed');
       }
     } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error during login: $error')),
-      );
+      setState(() => _isLoading = false);
+      _showErrorDialog('Error during login: $error');
     }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Login Error"),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text("OK"),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -95,164 +118,128 @@ class _LoginPageState extends State<LoginPage> {
       backgroundColor: Colors.white,
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: ListView(
-          scrollDirection: Axis.vertical,
-          children: [
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 20),
-                const Text(
-                  'LOGIN',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
+        child: SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
+              const Text(
+                'LOGIN',
+                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                height: 8,
+                width: 100,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(colors: [
+                    Colors.red,
+                    Colors.yellow,
+                    Colors.green,
+                    Colors.blue
+                  ]),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              const SizedBox(height: 40),
+              TextField(
+                controller: usernameController,
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
                   ),
                 ),
-                const SizedBox(height: 8),
-                Container(
-                  height: 8,
-                  width: 100,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [
-                        Colors.red,
-                        Colors.yellow,
-                        Colors.green,
-                        Colors.blue
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(4),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: passwdController,
+                obscureText: status,
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  suffixIcon: IconButton(
+                    onPressed: () => setState(() => status = !status),
+                    icon:
+                        Icon(status ? Icons.visibility_off : Icons.visibility),
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
                   ),
                 ),
-                const SizedBox(height: 40),
-                TextField(
-                  controller: usernameController,
-                  decoration: InputDecoration(
-                    labelText: 'Username',
-                    labelStyle: const TextStyle(
-                      color: Colors.black,
-                      fontSize: 18,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.0),
-                    ),
+              ),
+              Center(
+                child: TextButton(
+                  onPressed: () =>
+                      Navigator.pushNamed(context, '/reset_password'),
+                  child: const Text(
+                    'Forgot Password?',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                   ),
                 ),
-                const SizedBox(height: 20),
-                TextField(
-                  controller: passwdController,
-                  obscureText: status,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    labelStyle: const TextStyle(
-                      color: Colors.black,
-                      fontSize: 18,
+              ),
+              const SizedBox(height: 10),
+              _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : GradientButton(
+                      text: 'Log In',
+                      onPressed: () => login(context),
+                      border: 20,
+                      padding: 16,
                     ),
-                    suffixIcon: IconButton(
-                      onPressed: () {
-                        setState(() {
-                          status = !status;
-                        });
-                      },
-                      icon: Icon(
-                        status ? Icons.visibility_off : Icons.visibility,
+              const SizedBox(height: 10),
+              const Center(child: Text('Not Registered Yet?')),
+              Center(
+                child: TextButton(
+                  onPressed: () => Navigator.pushNamed(context, '/signup'),
+                  child: const Text(
+                    'SIGN UP',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      height: 4,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4),
+                        color: const Color.fromRGBO(167, 166, 166, 1),
                       ),
                     ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.0),
-                    ),
                   ),
-                ),
-                Center(
-                  child: TextButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/reset_password');
-                    },
-                    child: const Text(
-                      'Forgot Password?',
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Text(
+                      "OR",
                       style: TextStyle(
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        fontSize: 18,
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 10),
-                GradientButton(
-                  text: 'Log In',
-                  onPressed: () => login(context), // Call login function
-                  border: 20,
-                  padding: 16,
-                ),
-                const SizedBox(height: 10),
-                const Center(child: Text('Not Registered Yet?')),
-                Center(
-                  child: TextButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/signup');
-                    },
-                    child: const Text(
-                      'SIGN UP',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
+                  Expanded(
+                    child: Container(
+                      height: 4,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4),
+                        color: const Color.fromRGBO(167, 166, 166, 1),
                       ),
                     ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 50),
+                  child: GoogleLoginButton(onPressed: _handleGoogleLogin),
                 ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    // Progress bar on the left
-                    Expanded(
-                      child: Container(
-                        height: 4,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(4),
-                          color: const Color.fromRGBO(167, 166, 166, 1),
-                        ),
-                      ),
-                    ),
-                    // "OR" text
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Text(
-                        "OR",
-                        style: TextStyle(
-                          color: Color.fromRGBO(87, 87, 87, 1),
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    // Progress bar on the right
-                    Expanded(
-                      child: Container(
-                        height: 4,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(4),
-                          color: const Color.fromRGBO(167, 166, 166, 1),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 50),
-                    child: GoogleLoginButton(
-                      onPressed:
-                          _handleGoogleLogin, // Pass the callback function
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );
