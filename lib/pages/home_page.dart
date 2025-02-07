@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:moofli_app/components/diary_chips.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // import 'login_page.dart';
 // import 'diary_page_new.dart';
@@ -158,148 +159,93 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  /// Builds a Wrap widget containing a Chip for each diary entry.
-  /// Each Chip displays the content of the diary entry.
+  // Logs the user out by clearing the SharedPreferences and
+  // navigating back to the login page.
+  // Future<void> logout(BuildContext context) async {
+  //   SharedPreferences prefs = await SharedPreferences.getInstance();
+  //   String? token = prefs.getString('token');
 
-  Widget _buildDiaryEntryChips() {
-    // Define the list of colors you want to use.
-    final List<Color> chipColors = [
-      Colors.red,
-      Colors.orange,
-      Colors.yellow,
-      Colors.green,
-      Colors.blue,
-      Colors.purple,
-    ];
+  //   if (token == null) {
+  //     if (kDebugMode) {
+  //       print('No token found');
+  //     }
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(content: Text('No token found. Please log in again.')),
+  //     );
+  //     return;
+  //   }
 
-    // Reverse the diary entries list.
-    final reversedEntries = _diaryEntries.reversed.toList();
+  //   try {
+  //     final response = await http.get(
+  //       Uri.parse('http://93.127.172.217:2024/api/user/logout'),
+  //     );
+  //     if (kDebugMode) {
+  //       print('Response status code: ${response.statusCode}');
+  //       print('Response body: ${response.body}');
+  //     }
+  //     if (response.statusCode == 200) {
+  //       print("I am inside the if block!");
+  //       final Map<String, dynamic> responseData = json.decode(response.body);
+  //       print(responseData);
+  //       if (responseData['result'] == true) {
+  //         await prefs.setBool('isLoggedIn', false);
 
-    return Column(
-      children: reversedEntries.asMap().entries.map<Widget>((entry) {
-        int index = entry.key;
-        final diaryEntry = entry.value;
-        // Cycle through the colors using the modulo operator.
-        final chipColor = chipColors[index % chipColors.length];
+  //         ScaffoldMessenger.of(context).showSnackBar(
+  //           SnackBar(
+  //               content:
+  //                   Text(responseData['message'] ?? "Logged out successfully")),
+  //         );
+  //         await prefs.clear();
+  //         Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+  //       } else {
+  //         ScaffoldMessenger.of(context).showSnackBar(
+  //           SnackBar(content: Text(responseData['message'] ?? "Logout failed")),
+  //         );
+  //       }
+  //     } else {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         const SnackBar(
+  //             content: Text('Logout failed. Please try again later.')),
+  //       );
+  //     }
+  //   } catch (e) {
+  //     if (kDebugMode) {
+  //       print('Error during logout: $e');
+  //     }
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(
+  //         content:
+  //             Text('An error occurred. Please check your internet connection.'),
+  //       ),
+  //     );
+  //   }
+  // }
 
-        // Parse and format the date.
-        DateTime date;
-        try {
-          // Adjust parsing as needed if your API uses a custom format.
-          date = DateTime.parse(diaryEntry['createdAt'] ?? '');
-        } catch (e) {
-          // Fallback if parsing fails.
-          date = DateTime.now();
-        }
-        final formattedDate = DateFormat('MMM d').format(date);
-        final formattedDay = DateFormat('EEEE').format(date);
-        final abbreviatedDay = formattedDay.substring(0, 3);
-
-        return Container(
-          width: double.infinity, // Forces the chip to stretch full width.
-          margin: const EdgeInsets.only(bottom: 8.0), // Adds vertical spacing.
-          child: Chip(
-            backgroundColor: chipColor.withOpacity(0.25),
-            label: Align(
-              alignment: Alignment.centerLeft, // Left-aligns the content.
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Use a Column to display the formatted date above the day.
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        formattedDate,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        abbreviatedDay,
-                        style: const TextStyle(
-                            fontSize: 18.0, fontWeight: FontWeight.w700),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(
-                      width:
-                          8.0), // Spacing between date info and diary content.
-                  Expanded(
-                    child: Text(
-                      diaryEntry['content'] ?? '',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.left,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-              side: BorderSide(color: chipColor, width: 2),
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  /// Logs the user out by clearing the SharedPreferences and
-  /// navigating back to the login page.
   Future<void> logout(BuildContext context) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? token = prefs.getString('token');
-
-    if (token == null) {
-      if (kDebugMode) {
-        print('No token found');
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No token found. Please log in again.')),
-      );
-      return;
-    }
+    // Define the API endpoint URL.
+    final url = Uri.parse('http://93.127.172.217:2024/api/user/logout');
 
     try {
-      final response = await http.get(
-        Uri.parse('http://93.127.172.217:2024/api/user/logout'),
-      );
-      if (kDebugMode) {
-        print('Response status code: ${response.statusCode}');
-        print('Response body: ${response.body}');
-      }
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> responseData = json.decode(response.body);
-        if (responseData['result'] == true) {
-          await prefs.setBool('isLoggedIn', false);
+      // Call the logout endpoint.
+      // Here we're using GET, but change this to POST if your API requires it.
+      final response = await http.get(url);
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content:
-                    Text(responseData['message'] ?? "Logged out successfully")),
-          );
-          await prefs.clear();
-          Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(responseData['message'] ?? "Logout failed")),
-          );
-        }
+      // Check if logout was successful.
+      if (response.statusCode == 200) {
+        // Logout succeeded.
+        // Redirect to the home route and remove all previous routes.
+        Navigator.pushNamedAndRemoveUntil(
+            context, '/', (Route<dynamic> route) => false);
       } else {
+        // If the logout failed, you can show a message.
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Logout failed. Please try again later.')),
+          SnackBar(content: Text('Logout failed: ${response.body}')),
         );
       }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error during logout: $e');
-      }
+    } catch (error) {
+      // Handle any errors (network issues, etc.).
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content:
-              Text('An error occurred. Please check your internet connection.'),
-        ),
+        SnackBar(content: Text('An error occurred: $error')),
       );
     }
   }
@@ -432,9 +378,8 @@ class _HomePageState extends State<HomePage> {
           ),
           // Display the diary entries as Chips using a Wrap widget
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _buildDiaryEntryChips(),
-          ),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: DiaryChips(diaryEntries: _diaryEntries)),
           const SizedBox(height: 16),
         ],
       ),

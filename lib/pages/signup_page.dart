@@ -124,7 +124,7 @@ class _SignupPageState extends State<SignupPage> {
 
       final responseData = jsonDecode(response.body);
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 201) {
         _showSnackBar(responseData['message'], Colors.green);
         Navigator.pushNamed(context, '/setup_profile_1');
       } else {
