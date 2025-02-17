@@ -1,8 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:moofli_app/components/gradient_button.dart';
 import 'package:moofli_app/components/nav_buttons.dart';
-
-// Assuming you have this custom widget implemented.
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SetupProfileSkills extends StatefulWidget {
   const SetupProfileSkills({super.key});
@@ -23,30 +23,18 @@ class _SetupProfileSkillsState extends State<SetupProfileSkills> {
     "Product Engineering"
   ];
 
-  // void _addSkill(String newSkill) {
-  //   if (newSkill.isNotEmpty && !skills.contains(newSkill)) {
-  //     setState(() {
-  //       skills.add(newSkill);
-  //     });
-  //   }
-  // }
-
   void _showAddSkillModal(BuildContext context) {
-    TextEditingController skillController =
-        TextEditingController(); // Controller for the input field
-
+    TextEditingController skillController = TextEditingController();
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Add a Skill/Interest"),
+          title: const Text("Add a Skill/Interest"),
           content: TextField(
-            controller: skillController, // Attach the controller
+            controller: skillController,
             decoration: InputDecoration(
               hintText: 'Add a Skill or Interest',
-              hintStyle: TextStyle(
-                fontSize: 16,
-              ),
+              hintStyle: const TextStyle(fontSize: 16),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(40.0),
               ),
@@ -59,25 +47,24 @@ class _SetupProfileSkillsState extends State<SetupProfileSkills> {
                   child: GradientButton(
                     text: 'Add',
                     onPressed: () {
-                      String newSkill =
-                          skillController.text.trim(); // Get the input value
+                      String newSkill = skillController.text.trim();
                       if (newSkill.isNotEmpty && !skills.contains(newSkill)) {
                         setState(() {
-                          skills.add(newSkill); // Add the skill to the list
+                          skills.add(newSkill);
                         });
                       }
-                      Navigator.pop(context); // Close the dialog
+                      Navigator.pop(context);
                     },
                     border: 14,
                     padding: 4,
                   ),
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 Expanded(
                   child: GradientButton(
                     text: 'Cancel',
                     onPressed: () {
-                      Navigator.pop(context); // Close the dialog
+                      Navigator.pop(context);
                     },
                     border: 14,
                     padding: 4,
@@ -91,8 +78,7 @@ class _SetupProfileSkillsState extends State<SetupProfileSkills> {
     );
   }
 
-  Map<String, Color> selectedSkills =
-      {}; // To track selected skills and their colors
+  Map<String, Color> selected = {};
   List<Color> colors = [
     Colors.red,
     Colors.yellow,
@@ -103,15 +89,22 @@ class _SetupProfileSkillsState extends State<SetupProfileSkills> {
 
   void _toggleSkillSelection(String skill) {
     setState(() {
-      if (selectedSkills.containsKey(skill)) {
-        // Deselect if already selected
-        selectedSkills.remove(skill);
+      if (selected.containsKey(skill)) {
+        selected.remove(skill);
       } else {
-        // Select and assign a color (cyclically)
-        int colorIndex = selectedSkills.length % colors.length;
-        selectedSkills[skill] = colors[colorIndex];
+        int colorIndex = selected.length % colors.length;
+        selected[skill] = colors[colorIndex];
       }
     });
+  }
+
+  List<String> get selectedSkills => selected.keys.toList();
+
+  Future<void> saveSkillDetails() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('selectedSkills', selectedSkills);
+    if (kDebugMode) print(selectedSkills);
+    Navigator.pushNamed(context, '/setup_profile_photo');
   }
 
   @override
@@ -130,10 +123,8 @@ class _SetupProfileSkillsState extends State<SetupProfileSkills> {
         child: ListView(
           scrollDirection: Axis.vertical,
           children: [
-            SizedBox(height: 20),
-
-            // Subtitle
-            Text(
+            const SizedBox(height: 20),
+            const Text(
               'Complete your',
               style: TextStyle(
                 fontSize: 28,
@@ -141,9 +132,7 @@ class _SetupProfileSkillsState extends State<SetupProfileSkills> {
                 color: Colors.black,
               ),
             ),
-
-            // Title
-            Text(
+            const Text(
               'Profile',
               style: TextStyle(
                 fontSize: 48,
@@ -151,16 +140,14 @@ class _SetupProfileSkillsState extends State<SetupProfileSkills> {
                 color: Colors.black,
               ),
             ),
-
             Row(
               children: [
-                // Filled Progress
                 Expanded(
                   flex: (2 * 100 ~/ 5),
                   child: Container(
                     height: 8,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
+                      gradient: const LinearGradient(
                         colors: [
                           Colors.red,
                           Colors.yellow,
@@ -172,25 +159,22 @@ class _SetupProfileSkillsState extends State<SetupProfileSkills> {
                     ),
                   ),
                 ),
-                // Remaining Progress
                 Expanded(
-                  flex: (3 * 100 ~/ 5), // Remaining 3/6
+                  flex: (3 * 100 ~/ 5),
                   child: Container(
                     height: 8,
                     decoration: BoxDecoration(
-                      color: Color.fromRGBO(224, 217, 217, 1),
+                      color: const Color.fromRGBO(224, 217, 217, 1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                   ),
                 ),
               ],
             ),
-
-            SizedBox(height: 20),
-
+            const SizedBox(height: 20),
             Center(
               child: RichText(
-                text: TextSpan(
+                text: const TextSpan(
                   text: 'You are ',
                   style: TextStyle(
                     fontSize: 20,
@@ -213,49 +197,43 @@ class _SetupProfileSkillsState extends State<SetupProfileSkills> {
                 ),
               ),
             ),
-            SizedBox(height: 20),
-            Text(
+            const SizedBox(height: 20),
+            const Text(
               'Skill / Internship',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w600,
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Wrap(
               spacing: 8.0,
               runSpacing: 8.0,
               children: skills.map((skill) {
-                bool isSelected = selectedSkills.containsKey(skill);
+                bool isSkillSelected = selected.containsKey(skill);
                 Color borderColor =
-                    isSelected ? selectedSkills[skill]! : Colors.grey;
-
+                    isSkillSelected ? selected[skill]! : Colors.grey;
                 return GestureDetector(
                   onTap: () => _toggleSkillSelection(skill),
                   child: Chip(
                     label: Text(skill),
                     backgroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                          color: borderColor,
-                          width: 3.0), // Dynamic border color
-                      borderRadius:
-                          BorderRadius.circular(20), // Circular border
+                      side: BorderSide(color: borderColor, width: 3.0),
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    deleteIcon: Icon(Icons.close, size: 18),
+                    deleteIcon: const Icon(Icons.close, size: 18),
                     onDeleted: () {
                       setState(() {
-                        skills.remove(skill); // Enables skill deletion
-                        selectedSkills
-                            .remove(skill); // Also remove from selected map
+                        skills.remove(skill);
+                        selected.remove(skill);
                       });
                     },
                   ),
                 );
               }).toList(),
             ),
-            SizedBox(height: 20),
-
+            const SizedBox(height: 20),
             GradientButton(
               text: 'Add a Skill/Interest',
               onPressed: () {
@@ -264,11 +242,9 @@ class _SetupProfileSkillsState extends State<SetupProfileSkills> {
               border: 20,
               padding: 4,
             ),
-
             const SizedBox(height: 20),
             NavButtons(
-                prev: '/setup_profile_contact_info',
-                next: '/setup_profile_professional_info'),
+                prev: '/setup_profile_profesional_info', next: saveSkillDetails)
           ],
         ),
       ),

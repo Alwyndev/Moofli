@@ -49,7 +49,7 @@ class _ProfilePageState extends State<ProfilePage> {
     print(token);
     try {
       final response = await http.get(
-        Uri.parse('http://93.127.172.217:2024/api/user/profile/me'),
+        Uri.parse('http://93.127.172.217:2004/api/user/profile/me'),
         headers: {'Authorization': token},
       );
 
@@ -81,6 +81,7 @@ class _ProfilePageState extends State<ProfilePage> {
     super.initState();
     _loadUserData();
   }
+
   // Editable fields
 
   // Controllers for text fields
@@ -91,8 +92,6 @@ class _ProfilePageState extends State<ProfilePage> {
   final TextEditingController _pastExperienceController =
       TextEditingController();
   final TextEditingController _futurePlansController = TextEditingController();
-
-  // Lists for dynamic sections
 
   // Flag to toggle edit mode
   bool isEditing = false;
@@ -290,14 +289,37 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              height: 150,
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: NetworkImage(bgPic),
-                  fit: BoxFit.cover,
+            // Stack to allow an overlay button for editing pictures
+            Stack(
+              children: [
+                Container(
+                  height: 150,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: bgPic.isNotEmpty
+                          ? NetworkImage(bgPic)
+                          : const AssetImage('assets/images/default_bg.png')
+                              as ImageProvider,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
                 ),
-              ),
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      shape: const CircleBorder(),
+                      padding: const EdgeInsets.all(8),
+                      backgroundColor: Colors.white.withOpacity(0.7),
+                    ),
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/setup_profile_photo');
+                    },
+                    child: const Icon(Icons.edit, color: Colors.black),
+                  ),
+                ),
+              ],
             ),
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -308,10 +330,11 @@ class _ProfilePageState extends State<ProfilePage> {
                     children: [
                       CircleAvatar(
                         radius: 40,
-                        backgroundImage: profilepic?.isNotEmpty ?? false
+                        backgroundImage: (profilepic.isNotEmpty)
                             ? NetworkImage(profilepic)
-                            : AssetImage(
-                                'assets/images/default_profile_pic.png'),
+                            : const AssetImage(
+                                    'assets/images/default_profile_pic.png')
+                                as ImageProvider,
                       ),
                       const SizedBox(width: 16),
                       Column(
@@ -418,9 +441,10 @@ class _ProfilePageState extends State<ProfilePage> {
                 Navigator.pushNamed(context, '/profile');
               },
               child: CircleAvatar(
-                backgroundImage: profilepic?.isNotEmpty ?? false
+                backgroundImage: (profilepic.isNotEmpty)
                     ? NetworkImage(profilepic)
-                    : AssetImage('assets/images/default_profile_pic.png'),
+                    : const AssetImage('assets/images/default_profile_pic.png')
+                        as ImageProvider,
               ),
             ),
             label: '',
@@ -557,8 +581,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         Colors.green,
                         Colors.blue,
                         Colors.yellow,
-                      ][skills.indexOf(skill) %
-                          4], // Repeating pattern of 4 colors
+                      ][skills.indexOf(skill) % 4],
                     ))
                 .toList(),
           ),

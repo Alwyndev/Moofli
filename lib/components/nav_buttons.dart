@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 
 class NavButtons extends StatelessWidget {
   final String prev;
-  final String next;
+  final Future<void> Function() next;
+
   const NavButtons({
     required this.prev,
     required this.next,
-    super.key,
-  });
+    Key? key,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -30,15 +31,16 @@ class NavButtons extends StatelessWidget {
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.black, width: 1.5),
                 ),
-                child: Icon(Icons.arrow_back, size: 24, color: Colors.black),
+                child:
+                    const Icon(Icons.arrow_back, size: 24, color: Colors.black),
               ),
             ),
 
             // Next Button (Rounded Rectangle)
             InkWell(
-              onTap: () {
-                Navigator.pushNamed(context, next);
-              }, // Add your onTap logic here
+              onTap: () async {
+                await next();
+              },
               child: Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -48,7 +50,7 @@ class NavButtons extends StatelessWidget {
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: [
+                  children: const [
                     Text(
                       "NEXT",
                       style: TextStyle(

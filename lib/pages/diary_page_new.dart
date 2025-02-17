@@ -87,20 +87,22 @@ class _DiaryPageNewState extends State<DiaryPageNew> {
 
     Map<String, String> headers = {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token',
+      'Authorization': '$token',
     };
 
     try {
       final response = await http.post(
-        Uri.parse('http://93.127.172.217:2024/api/diary/dairyCreate'),
+        Uri.parse('http://93.127.172.217:2004/api/diary/dairyCreate'),
         headers: headers,
         body: body,
       );
 
-      if (response.statusCode == 200) {
+      print(response.statusCode);
+
+      if (response.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Entry saved successfully: ${response.body}"),
+            content: Text("Entry saved successfully!"),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(20)),
             ),

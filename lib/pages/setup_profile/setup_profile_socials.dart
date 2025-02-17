@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:moofli_app/components/nav_buttons.dart';
+import 'package:moofli_app/components/submit_to_backend.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // Import the backend submission function
 
 class SetupProfileSocials extends StatefulWidget {
   const SetupProfileSocials({super.key});
@@ -9,9 +11,26 @@ class SetupProfileSocials extends StatefulWidget {
 }
 
 class _SetupProfileSocialsState extends State<SetupProfileSocials> {
-  // text editing controllers
   final TextEditingController linkedInController = TextEditingController();
   final TextEditingController upiController = TextEditingController();
+
+  Future<void> saveSocials() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('linkedIn', linkedInController.text);
+    await prefs.setString('upi', upiController.text);
+
+    // Call the backend submission function.
+    bool success = await submitToBackend();
+    if (success) {
+      // If submission is successful, navigate to the homepage.
+      Navigator.pushReplacementNamed(context, '/home');
+    } else {
+      // Show an error message if submission fails.
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Submission failed! Please try again.')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,13 +46,10 @@ class _SetupProfileSocialsState extends State<SetupProfileSocials> {
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
         child: ListView(
-          // mainAxisAlignment: MainAxisAlignment.center,
           scrollDirection: Axis.vertical,
           children: [
-            SizedBox(height: 20),
-
-            // Subtitle
-            Text(
+            const SizedBox(height: 20),
+            const Text(
               'Complete your',
               style: TextStyle(
                 fontSize: 28,
@@ -41,10 +57,7 @@ class _SetupProfileSocialsState extends State<SetupProfileSocials> {
                 color: Colors.black,
               ),
             ),
-            // SizedBox(height: 2),
-
-            // Title
-            Text(
+            const Text(
               'Profile',
               style: TextStyle(
                 fontSize: 48,
@@ -52,14 +65,11 @@ class _SetupProfileSocialsState extends State<SetupProfileSocials> {
                 color: Colors.black,
               ),
             ),
-            // SizedBox(height: 8),
-
-            // Decorative Line
             Container(
               height: 8,
               width: double.infinity,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
+                gradient: const LinearGradient(
                   colors: [
                     Colors.red,
                     Colors.yellow,
@@ -70,81 +80,65 @@ class _SetupProfileSocialsState extends State<SetupProfileSocials> {
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Center(
               child: RichText(
-                text: TextSpan(
-                  text: 'You are ', // Normal text
+                text: const TextSpan(
+                  text: 'You are ',
                   style: TextStyle(
                     fontSize: 20,
-                    color: const Color.fromARGB(255, 109, 108, 108),
-                    fontWeight: FontWeight.normal,
+                    color: Color.fromARGB(255, 109, 108, 108),
                   ),
                   children: [
                     TextSpan(
-                      text: '100%', // Bold percentage
+                      text: '100%',
                       style: TextStyle(
-                        color: const Color.fromARGB(255, 90, 90, 90),
+                        color: Color.fromARGB(255, 90, 90, 90),
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     TextSpan(
-                      text: ' there', // Normal text after percentage
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.normal,
-                      ),
+                      text: ' there',
+                      style: TextStyle(fontSize: 20),
                     ),
                   ],
                 ),
               ),
             ),
-            SizedBox(height: 20),
-            Text(
+            const SizedBox(height: 20),
+            const Text(
               'Social Handles',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w600,
               ),
             ),
-
-            // Phone Number
             const SizedBox(height: 20),
             TextField(
               controller: linkedInController,
               decoration: InputDecoration(
                 labelText: 'LinkedIn Profile',
-                labelStyle: TextStyle(
-                    color: Colors.black,
-                    // fontWeight: FontWeight.w500,
-                    fontSize: 18),
+                labelStyle: const TextStyle(color: Colors.black, fontSize: 18),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20.0),
                 ),
               ),
             ),
-
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             TextField(
               controller: upiController,
               decoration: InputDecoration(
                 labelText: 'UPI ID',
-                labelStyle: TextStyle(
-                    color: Colors.black,
-                    // fontWeight: FontWeight.w500,
-                    fontSize: 18),
+                labelStyle: const TextStyle(color: Colors.black, fontSize: 18),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20.0),
                 ),
               ),
             ),
-
             const SizedBox(height: 20),
-            NavButtons(
-              prev: '/setup_profile_photo',
-              next: '/home',
-            ),
+            // NavButtons widget calls saveSocials() when "Next" is pressed.
+            NavButtons(prev: '/setup_profile_photo', next: saveSocials)
           ],
         ),
       ),

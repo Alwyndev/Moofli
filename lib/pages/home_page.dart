@@ -2,12 +2,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:moofli_app/components/diary_chips.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-// import 'login_page.dart';
-// import 'diary_page_new.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:intl/intl.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -20,10 +17,9 @@ class _HomePageState extends State<HomePage> {
   // Calendar states
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
-  CalendarFormat _calendarFormat = CalendarFormat.month;
 
-  // Scroll controller to listen for scroll events to adjust the calendar view
-  late ScrollController _scrollController;
+  // Control whether the calendar is expanded (month view) or compact (week view)
+  bool _isCalendarExpanded = false;
 
   // User and profile data variables
   Map<String, dynamic> userData = {};
@@ -37,42 +33,11 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-
-    // Initialize scroll controller and add a listener
-    _scrollController = ScrollController();
-    _scrollController.addListener(_onScroll);
-
-    // Load user data and diary entries from the API
     _loadUserData();
     _fetchDiaryEntries();
   }
 
-  @override
-  void dispose() {
-    // Remove the scroll listener and dispose of the controller
-    _scrollController.removeListener(_onScroll);
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  /// Listener that adjusts the calendar view (month/week)
-  /// based on the vertical scroll offset.
-  void _onScroll() {
-    if (_scrollController.offset > 50 &&
-        _calendarFormat != CalendarFormat.week) {
-      setState(() {
-        _calendarFormat = CalendarFormat.week;
-      });
-    } else if (_scrollController.offset <= 50 &&
-        _calendarFormat != CalendarFormat.month) {
-      setState(() {
-        _calendarFormat = CalendarFormat.month;
-      });
-    }
-  }
-
-  /// Loads user details stored in SharedPreferences, then fetches
-  /// additional profile information from the API.
+  /// Loads user details stored in SharedPreferences, then fetches additional profile information from the API.
   Future<void> _loadUserData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? userDataJson = prefs.getString('userDetails');
@@ -92,13 +57,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   /// Fetches the user profile details from the API.
-  /// Expects a response containing keys such as profilePicUrl, bgPicUrl, and streak.
   Future<void> _fetchProfile(String? token) async {
     if (token == null) return;
 
     try {
       final response = await http.get(
-        Uri.parse('http://93.127.172.217:2024/api/user/profile/me'),
+        Uri.parse('http://93.127.172.217:2004/api/user/profile/me'),
         headers: {'Authorization': token},
       );
 
@@ -124,7 +88,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   /// Fetches diary entries from the API.
-  /// The API response is expected to contain a key "entries" with a list of entries.
   Future<void> _fetchDiaryEntries() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
@@ -132,10 +95,10 @@ class _HomePageState extends State<HomePage> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://93.127.172.217:2024/api/diary/entries'),
+        Uri.parse('http://93.127.172.217:2004/api/diary/entries'),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
+          'Authorization': token,
         },
       );
       if (response.statusCode == 200) {
@@ -159,95 +122,32 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  // Logs the user out by clearing the SharedPreferences and
-  // navigating back to the login page.
-  // Future<void> logout(BuildContext context) async {
-  //   SharedPreferences prefs = await SharedPreferences.getInstance();
-  //   String? token = prefs.getString('token');
-
-  //   if (token == null) {
-  //     if (kDebugMode) {
-  //       print('No token found');
-  //     }
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text('No token found. Please log in again.')),
-  //     );
-  //     return;
-  //   }
-
-  //   try {
-  //     final response = await http.get(
-  //       Uri.parse('http://93.127.172.217:2024/api/user/logout'),
-  //     );
-  //     if (kDebugMode) {
-  //       print('Response status code: ${response.statusCode}');
-  //       print('Response body: ${response.body}');
-  //     }
-  //     if (response.statusCode == 200) {
-  //       print("I am inside the if block!");
-  //       final Map<String, dynamic> responseData = json.decode(response.body);
-  //       print(responseData);
-  //       if (responseData['result'] == true) {
-  //         await prefs.setBool('isLoggedIn', false);
-
-  //         ScaffoldMessenger.of(context).showSnackBar(
-  //           SnackBar(
-  //               content:
-  //                   Text(responseData['message'] ?? "Logged out successfully")),
-  //         );
-  //         await prefs.clear();
-  //         Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
-  //       } else {
-  //         ScaffoldMessenger.of(context).showSnackBar(
-  //           SnackBar(content: Text(responseData['message'] ?? "Logout failed")),
-  //         );
-  //       }
-  //     } else {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         const SnackBar(
-  //             content: Text('Logout failed. Please try again later.')),
-  //       );
-  //     }
-  //   } catch (e) {
-  //     if (kDebugMode) {
-  //       print('Error during logout: $e');
-  //     }
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(
-  //         content:
-  //             Text('An error occurred. Please check your internet connection.'),
-  //       ),
-  //     );
-  //   }
-  // }
-
+  /// Logs the user out by calling the API endpoint.
   Future<void> logout(BuildContext context) async {
-    // Define the API endpoint URL.
-    final url = Uri.parse('http://93.127.172.217:2024/api/user/logout');
+    final url = Uri.parse('http://93.127.172.217:2004/api/user/logout');
 
     try {
-      // Call the logout endpoint.
-      // Here we're using GET, but change this to POST if your API requires it.
       final response = await http.get(url);
-
-      // Check if logout was successful.
       if (response.statusCode == 200) {
-        // Logout succeeded.
-        // Redirect to the home route and remove all previous routes.
         Navigator.pushNamedAndRemoveUntil(
             context, '/', (Route<dynamic> route) => false);
       } else {
-        // If the logout failed, you can show a message.
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Logout failed: ${response.body}')),
         );
       }
     } catch (error) {
-      // Handle any errors (network issues, etc.).
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('An error occurred: $error')),
       );
     }
+  }
+
+  /// Toggles the calendar view between week (compact) and month (expanded).
+  void _toggleCalendarFormat() {
+    setState(() {
+      _isCalendarExpanded = !_isCalendarExpanded;
+    });
   }
 
   @override
@@ -261,11 +161,9 @@ class _HomePageState extends State<HomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Spacer(),
-            // App logo image
             Image.asset('assets/images/logo.png', height: 80),
             const Spacer(),
             const SizedBox(width: 25),
-            // Flame icon with gradient effect to show the user's streak
             ShaderMask(
               shaderCallback: (bounds) => LinearGradient(
                 colors: streak == '0'
@@ -277,7 +175,6 @@ class _HomePageState extends State<HomePage> {
                 color: Colors.white,
               ),
             ),
-            // Display the streak number with a similar gradient effect
             ShaderMask(
               shaderCallback: (bounds) => LinearGradient(
                 colors: streak == '0'
@@ -317,7 +214,6 @@ class _HomePageState extends State<HomePage> {
                 accountEmail: Text(''),
                 decoration: BoxDecoration(color: Colors.grey),
               ),
-            // Profile and Settings navigation
             ListTile(
               leading: const Icon(Icons.person),
               title: const Text('Profile'),
@@ -333,7 +229,6 @@ class _HomePageState extends State<HomePage> {
               },
             ),
             const Spacer(),
-            // Logout option
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.red),
               title: const Text('Logout Account',
@@ -345,30 +240,54 @@ class _HomePageState extends State<HomePage> {
       ),
       // Main body: ListView containing the calendar and diary entry chips
       body: ListView(
-        controller: _scrollController,
         children: [
-          // TableCalendar widget with dynamic format (month/week)
+          // Custom header above the calendar
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: TableCalendar(
-              firstDay: DateTime.utc(2000, 1, 1),
-              lastDay: DateTime.utc(2100, 12, 31),
-              focusedDay: _focusedDay,
-              selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-              calendarFormat: _calendarFormat,
-              onDaySelected: (selectedDay, focusedDay) {
-                setState(() {
-                  _selectedDay = selectedDay;
-                  _focusedDay = focusedDay;
-                });
-              },
-              headerStyle: const HeaderStyle(
-                formatButtonVisible: false,
-                titleCentered: true,
-              ),
+            child: Column(
+              children: [
+                // Custom header that shows the month and toggles the calendar view when tapped.
+                GestureDetector(
+                  onTap: _toggleCalendarFormat,
+                  child: Container(
+                    alignment: Alignment.center,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Text(
+                      MaterialLocalizations.of(context)
+                          .formatMonthYear(_focusedDay),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                // The TableCalendar with its built-in header hidden.
+                TableCalendar(
+                  firstDay: DateTime.utc(2000, 1, 1),
+                  lastDay: DateTime.utc(2100, 12, 31),
+                  focusedDay: _focusedDay,
+                  headerVisible: false, // Hides the default header.
+                  calendarFormat: _isCalendarExpanded
+                      ? CalendarFormat.month
+                      : CalendarFormat.week,
+                  selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                  onDaySelected: (selectedDay, focusedDay) {
+                    setState(() {
+                      _selectedDay = selectedDay;
+                      _focusedDay = focusedDay;
+                    });
+                  },
+                  // Update the focused day when the calendar is swiped.
+                  onPageChanged: (focusedDay) {
+                    setState(() {
+                      _focusedDay = focusedDay;
+                    });
+                  },
+                ),
+              ],
             ),
           ),
-          // Section label for diary entries
           const Padding(
             padding: EdgeInsets.all(16.0),
             child: Text(
@@ -376,17 +295,16 @@ class _HomePageState extends State<HomePage> {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
-          // Display the diary entries as Chips using a Wrap widget
           Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: DiaryChips(diaryEntries: _diaryEntries)),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: DiaryChips(diaryEntries: _diaryEntries),
+          ),
           const SizedBox(height: 16),
         ],
       ),
       // Floating action button to add a new diary entry
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Navigate to the diary entry creation page and refresh entries on return
           Navigator.pushNamed(context, '/diary_entry_new')
               .then((_) => _fetchDiaryEntries());
         },

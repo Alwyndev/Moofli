@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:moofli_app/components/nav_buttons.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SetupProfileContactInfo extends StatefulWidget {
   const SetupProfileContactInfo({super.key});
@@ -11,11 +12,20 @@ class SetupProfileContactInfo extends StatefulWidget {
 }
 
 class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
-  // TextEditingControllers
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController cityController = TextEditingController();
   String? emailError;
+
+  Future<void> saveContactInfo() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('mobile', phoneController.text);
+    await prefs.setString('city', cityController.text);
+
+    if (!mounted) return;
+
+    Navigator.pushNamed(context, '/setup_profile_professional_info');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,10 +43,8 @@ class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
         child: ListView(
           scrollDirection: Axis.vertical,
           children: [
-            SizedBox(height: 20),
-
-            // Subtitle
-            Text(
+            const SizedBox(height: 20),
+            const Text(
               'Complete your',
               style: TextStyle(
                 fontSize: 28,
@@ -44,10 +52,7 @@ class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
                 color: Colors.black,
               ),
             ),
-            // SizedBox(height: 2),
-
-            // Title
-            Text(
+            const Text(
               'Profile',
               style: TextStyle(
                 fontSize: 48,
@@ -55,18 +60,14 @@ class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
                 color: Colors.black,
               ),
             ),
-            // SizedBox(height: 8),
-
-            // Decorative Line
             Row(
               children: [
-                // Filled Progress
                 Expanded(
-                  flex: (1 * 100 ~/ 5), // 2/6 progress
+                  flex: (1 * 100 ~/ 5),
                   child: Container(
                     height: 8,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
+                      gradient: const LinearGradient(
                         colors: [
                           Colors.red,
                           Colors.yellow,
@@ -78,52 +79,46 @@ class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
                     ),
                   ),
                 ),
-                // Remaining Progress
                 Expanded(
-                  flex: (4 * 100 ~/ 5), // Remaining 4/6
+                  flex: (4 * 100 ~/ 5),
                   child: Container(
                     height: 8,
                     decoration: BoxDecoration(
-                      color: Color.fromRGBO(224, 217, 217, 1),
+                      color: const Color.fromRGBO(224, 217, 217, 1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                   ),
                 ),
               ],
             ),
-
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Center(
               child: RichText(
-                text: TextSpan(
-                  text: 'You are ', // Normal text
+                text: const TextSpan(
+                  text: 'You are ',
                   style: TextStyle(
                     fontSize: 20,
-                    color: const Color.fromARGB(255, 109, 108, 108),
-                    fontWeight: FontWeight.normal,
+                    color: Color.fromARGB(255, 109, 108, 108),
                   ),
                   children: [
                     TextSpan(
-                      text: '20%', // Bold percentage
+                      text: '20%',
                       style: TextStyle(
-                        color: const Color.fromARGB(255, 90, 90, 90),
+                        color: Color.fromARGB(255, 90, 90, 90),
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     TextSpan(
-                      text: ' there', // Normal text after percentage
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.normal,
-                      ),
+                      text: ' there',
+                      style: TextStyle(fontSize: 20),
                     ),
                   ],
                 ),
               ),
             ),
-            SizedBox(height: 20),
-            Text(
+            const SizedBox(height: 20),
+            const Text(
               'Contact Information',
               style: TextStyle(
                 fontSize: 24,
@@ -131,12 +126,11 @@ class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
               ),
             ),
             const SizedBox(height: 20),
-            // Phone Number
             TextField(
               controller: phoneController,
               decoration: InputDecoration(
                 prefix: RichText(
-                  text: TextSpan(
+                  text: const TextSpan(
                     text: '   +91   ',
                     style: TextStyle(
                       color: Colors.black,
@@ -147,7 +141,7 @@ class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
                       TextSpan(
                         text: '|    ',
                         style: TextStyle(
-                          color: const Color.fromARGB(255, 87, 87, 87),
+                          color: Color.fromARGB(255, 87, 87, 87),
                           fontSize: 30,
                           fontWeight: FontWeight.w600,
                         ),
@@ -156,7 +150,7 @@ class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
                   ),
                 ),
                 labelText: 'Phone Number',
-                labelStyle: TextStyle(
+                labelStyle: const TextStyle(
                   color: Colors.black,
                   fontSize: 18,
                 ),
@@ -166,8 +160,8 @@ class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
               ),
               keyboardType: TextInputType.number,
               inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly, // Only allows numbers
-                LengthLimitingTextInputFormatter(10), // Limits to 10 digits
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(10),
               ],
             ),
             const SizedBox(height: 10),
@@ -175,23 +169,17 @@ class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
               controller: emailController,
               decoration: InputDecoration(
                 hintText: 'something@example.com',
-                hintStyle: TextStyle(
-                  fontSize: 20,
-                ),
+                hintStyle: const TextStyle(fontSize: 20),
                 labelText: 'Email',
-                labelStyle: TextStyle(
-                  color: Colors.black,
-                  fontSize: 18,
-                ),
+                labelStyle: const TextStyle(color: Colors.black, fontSize: 18),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20.0),
                 ),
-                // errorText: emailError, // Displays the error text dynamically
+                errorText: emailError,
               ),
               keyboardType: TextInputType.emailAddress,
               inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(
-                    r'[a-zA-Z0-9@._\-]')), // Allows only valid email characters
+                FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9@._\-]')),
               ],
               onChanged: (value) {
                 setState(() {
@@ -200,41 +188,35 @@ class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
                       .hasMatch(value)) {
                     emailError = 'Invalid email format';
                   } else {
-                    emailError = null; // Clear the error if valid
+                    emailError = null;
                   }
                 });
               },
             ),
-            if (emailError !=
-                null) // Optionally show the warning below the field
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0, left: 12.0),
+            if (emailError != null)
+              const Padding(
+                padding: EdgeInsets.only(top: 8.0, left: 12.0),
                 child: Text(
-                  emailError!,
+                  'Invalid email format',
                   style: TextStyle(
                     color: Colors.red,
                     fontSize: 14,
                   ),
                 ),
               ),
-
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             TextField(
               controller: cityController,
               decoration: InputDecoration(
                 labelText: 'City',
-                labelStyle: TextStyle(
-                    color: Colors.black,
-                    // fontWeight: FontWeight.w500,
-                    fontSize: 18),
+                labelStyle: const TextStyle(color: Colors.black, fontSize: 18),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20.0),
                 ),
               ),
             ),
-
             const SizedBox(height: 20),
-            NavButtons(prev: '/setup_profile_1', next: '/setup_profile_skills'),
+            NavButtons(prev: '/setup_profile_1', next: saveContactInfo),
           ],
         ),
       ),

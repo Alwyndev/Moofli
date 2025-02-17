@@ -3,6 +3,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:moofli_app/components/google_login_button.dart';
 import 'package:moofli_app/components/gradient_button.dart';
+// import 'package:moofli_app/components/secrets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'home_page.dart';
@@ -55,7 +56,8 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     setState(() => _isLoading = true);
-    final Uri url = Uri.parse('http://93.127.172.217:2024/api/user/login');
+    final Uri url = Uri.parse('http://93.127.172.217:2004/api/user/login');
+    // print(url);
 
     try {
       final response = await http.post(
@@ -71,8 +73,10 @@ class _LoginPageState extends State<LoginPage> {
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setBool('isLoggedIn', true);
         await prefs.setString('token', responseData['token']);
+        print(responseData['token']);
         await prefs.setString(
             'userDetails', jsonEncode(responseData['result']));
+        print(responseData['result']);
 
         Navigator.pushReplacement(
           context,

@@ -1,11 +1,14 @@
 import 'dart:convert';
-
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:moofli_app/components/google_login_button.dart';
 import 'package:moofli_app/components/gradient_button.dart';
 import 'package:http/http.dart' as http;
+import 'package:moofli_app/pages/setup_profile/setup_profile_1.dart';
+// Removed unused import: SetupProfileContactInfo
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -46,11 +49,10 @@ class _SignupPageState extends State<SignupPage> {
   final TextEditingController passwdController = TextEditingController();
   final TextEditingController rePasswdController = TextEditingController();
 
-  void _showSnackBar(String message, Color color) {
+  void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: color,
       ),
     );
   }
@@ -65,7 +67,7 @@ class _SignupPageState extends State<SignupPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('OK'),
+              child: const Text('OK'),
             ),
           ],
         );
@@ -73,18 +75,21 @@ class _SignupPageState extends State<SignupPage> {
     );
   }
 
-  void _registerUser() async {
+  Future<void> saveSignupDetails() async {
+    // Validate Terms acceptance
     if (!termsAccepted) {
       _showDialog('Terms and Privacy Policy',
           'Please accept the Terms of Use and Privacy Policy to continue.');
       return;
     }
 
+    // Validate names
     if (fNameController.text.isEmpty || lNameController.text.isEmpty) {
       _showDialog('Error', 'First and Last name cannot be empty!');
       return;
     }
 
+    // Validate email
     if (emailController.text.isEmpty ||
         !emailController.text.contains('@') ||
         !emailController.text.contains('.')) {
@@ -92,6 +97,7 @@ class _SignupPageState extends State<SignupPage> {
       return;
     }
 
+    // Validate password match and length
     if (passwdController.text != rePasswdController.text) {
       _showDialog('Error', 'Passwords do not match!');
       return;
@@ -102,14 +108,15 @@ class _SignupPageState extends State<SignupPage> {
       return;
     }
 
+    // Validate email format with regex
     if (!RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$")
         .hasMatch(emailController.text)) {
       _showDialog('Error', 'Please enter a valid email address!');
       return;
     }
 
-    final url = Uri.parse('http://93.127.172.217:2004/api/user/register');
-
+    // Prepare the registration API call
+    final url = Uri.parse('http://93.127.172.217:2024/api/user/register');
     try {
       final response = await http.post(
         url,
@@ -125,9 +132,18 @@ class _SignupPageState extends State<SignupPage> {
       final responseData = jsonDecode(response.body);
 
       if (response.statusCode == 201) {
-        _showSnackBar(responseData['message'], Colors.green);
+        // Registration successful; save details in SharedPreferences
+        final SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setString('fname', fNameController.text);
+        await prefs.setString('lname', lNameController.text);
+        await prefs.setString('email', emailController.text);
+        await prefs.setString('password', passwdController.text);
+
+        _showSnackBar(responseData['message']);
+        // Navigate directly to profile setup page without showing a dialog
         Navigator.pushNamed(context, '/setup_profile_1');
       } else {
+        // Registration failed (e.g. user already exists)
         _showDialog('Error', '${responseData['message']}');
       }
     } catch (error) {
@@ -149,10 +165,9 @@ class _SignupPageState extends State<SignupPage> {
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: ListView(
-          scrollDirection: Axis.vertical,
           children: [
-            SizedBox(height: 10),
-            Text(
+            const SizedBox(height: 10),
+            const Text(
               'SIGN UP',
               style: TextStyle(
                 fontSize: 32,
@@ -160,12 +175,12 @@ class _SignupPageState extends State<SignupPage> {
                 color: Colors.black,
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Container(
               height: 8,
               width: 50,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
+                gradient: const LinearGradient(
                   colors: [
                     Colors.red,
                     Colors.yellow,
@@ -176,46 +191,46 @@ class _SignupPageState extends State<SignupPage> {
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
-            SizedBox(height: 40),
+            const SizedBox(height: 40),
             TextField(
               controller: fNameController,
               decoration: InputDecoration(
                 labelText: 'First Name',
-                labelStyle: TextStyle(color: Colors.black, fontSize: 18),
+                labelStyle: const TextStyle(color: Colors.black, fontSize: 18),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.0),
                 ),
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             TextField(
               controller: lNameController,
               decoration: InputDecoration(
                 labelText: 'Last Name',
-                labelStyle: TextStyle(color: Colors.black, fontSize: 18),
+                labelStyle: const TextStyle(color: Colors.black, fontSize: 18),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.0),
                 ),
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             TextField(
               controller: emailController,
               decoration: InputDecoration(
                 labelText: 'Email',
-                labelStyle: TextStyle(color: Colors.black, fontSize: 18),
+                labelStyle: const TextStyle(color: Colors.black, fontSize: 18),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.0),
                 ),
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             TextField(
               controller: passwdController,
               obscureText: status1,
               decoration: InputDecoration(
                 labelText: 'Password',
-                labelStyle: TextStyle(color: Colors.black, fontSize: 18),
+                labelStyle: const TextStyle(color: Colors.black, fontSize: 18),
                 suffixIcon: IconButton(
                   onPressed: () {
                     setState(() {
@@ -229,13 +244,13 @@ class _SignupPageState extends State<SignupPage> {
                 ),
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             TextField(
               controller: rePasswdController,
               obscureText: status2,
               decoration: InputDecoration(
                 labelText: 'Re-enter Password',
-                labelStyle: TextStyle(color: Colors.black, fontSize: 16),
+                labelStyle: const TextStyle(color: Colors.black, fontSize: 16),
                 suffixIcon: IconButton(
                   onPressed: () {
                     setState(() {
@@ -267,14 +282,14 @@ class _SignupPageState extends State<SignupPage> {
                       child: Text.rich(
                         TextSpan(
                           children: [
-                            TextSpan(
+                            const TextSpan(
                               text:
                                   'By signing up, you are creating a SKILLOP account, and you agree to ',
                               style: TextStyle(fontSize: 12),
                             ),
                             TextSpan(
                               text: 'SKILLOP\'s Terms of Use',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 12,
                                 color: Colors.blue,
                                 decoration: TextDecoration.underline,
@@ -284,13 +299,13 @@ class _SignupPageState extends State<SignupPage> {
                                   print("Terms of Use clicked");
                                 },
                             ),
-                            TextSpan(
+                            const TextSpan(
                               text: ' and ',
                               style: TextStyle(fontSize: 12),
                             ),
                             TextSpan(
                               text: 'Privacy Policy.',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 12,
                                 color: Colors.blue,
                                 decoration: TextDecoration.underline,
@@ -306,7 +321,7 @@ class _SignupPageState extends State<SignupPage> {
                     ),
                   ],
                 ),
-                SizedBox(height: 2),
+                const SizedBox(height: 2),
                 Row(
                   children: [
                     Checkbox(
@@ -317,7 +332,7 @@ class _SignupPageState extends State<SignupPage> {
                         });
                       },
                     ),
-                    Text(
+                    const Text(
                       'Remember me as a Member of SKILLOP Community',
                       style: TextStyle(fontSize: 12),
                     ),
@@ -327,18 +342,17 @@ class _SignupPageState extends State<SignupPage> {
             ),
             Center(
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
+                  const Padding(
+                    padding: EdgeInsets.all(8.0),
                     child: Text('Already a member?'),
                   ),
                   TextButton(
                     onPressed: () {
                       Navigator.pushNamed(context, '/');
                     },
-                    child: Text(
+                    child: const Text(
                       'LOG IN',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
@@ -349,27 +363,28 @@ class _SignupPageState extends State<SignupPage> {
                 ],
               ),
             ),
+            // Removed the confirmation dialog from the button.
             GradientButton(
               text: 'Setup Your Profile',
-              onPressed: _registerUser,
+              onPressed: saveSignupDetails,
               border: 20,
               padding: 12,
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Row(
               children: [
                 Expanded(
                   child: Container(
                     height: 4,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       borderRadius:
                           BorderRadius.only(topRight: Radius.circular(4)),
                       color: Color.fromRGBO(167, 166, 166, 1),
                     ),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8.0),
                   child: Text(
                     "OR",
                     style: TextStyle(
@@ -382,7 +397,7 @@ class _SignupPageState extends State<SignupPage> {
                 Expanded(
                   child: Container(
                     height: 4,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       borderRadius:
                           BorderRadius.only(topRight: Radius.circular(4)),
                       color: Color.fromRGBO(167, 166, 166, 1),
@@ -399,7 +414,7 @@ class _SignupPageState extends State<SignupPage> {
                 ),
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
           ],
         ),
       ),

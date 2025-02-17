@@ -1,8 +1,9 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:moofli_app/components/nav_buttons.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 class SetupProfileUploadPhoto extends StatefulWidget {
   const SetupProfileUploadPhoto({super.key});
@@ -25,6 +26,7 @@ class _SetupProfileUploadPhotoState extends State<SetupProfileUploadPhoto> {
       setState(() {
         coverPhoto = pickedImage;
       });
+      // Removed the immediate upload.
     }
   }
 
@@ -36,6 +38,60 @@ class _SetupProfileUploadPhotoState extends State<SetupProfileUploadPhoto> {
         profilePhoto = pickedImage;
       });
     }
+  }
+
+  /// Uploads the selected cover photo to the backend as multipart form data.
+  /// Returns true if the upload is successful.
+  Future<bool> uploadCoverPhoto() async {
+    if (coverPhoto == null) return false;
+
+    final uri =
+        Uri.parse('http://93.127.172.217:2024/api/user/add/boackgroundPic');
+    final request = http.MultipartRequest('POST', uri);
+
+    // Attach the image file under the key "image"
+    request.files.add(
+      await http.MultipartFile.fromPath('image', coverPhoto!.path),
+    );
+
+    // Optionally include an authorization header if needed.
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('token');
+    if (token != null) {
+      request.headers['Authorization'] = token;
+    }
+
+    final response = await request.send();
+
+    if (response.statusCode == 200) {
+      print("Cover photo uploaded successfully.");
+      return true;
+    } else {
+      print("Cover photo upload failed with status: ${response.statusCode}");
+      return false;
+    }
+  }
+
+  /// Called when the Next button is pressed.
+  /// This method first uploads the cover photo, then saves local paths and navigates to the next screen.
+  Future<void> savePhotos() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (profilePhoto != null) {
+      await prefs.setString('profilePic', profilePhoto!.path);
+    }
+    if (coverPhoto != null) {
+      bool uploadSuccess = await uploadCoverPhoto();
+      if (uploadSuccess) {
+        await prefs.setString('coverPic', coverPhoto!.path);
+      } else {
+        // Show an error message if the upload fails.
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Cover photo upload failed.")),
+        );
+        return; // Optionally halt navigation if upload fails.
+      }
+    }
+    Navigator.pushNamed(context, '/setup_profile_socials');
   }
 
   @override
@@ -77,7 +133,7 @@ class _SetupProfileUploadPhotoState extends State<SetupProfileUploadPhoto> {
                 child: Container(
                   height: 8,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
+                    gradient: const LinearGradient(
                       colors: [
                         Colors.red,
                         Colors.yellow,
@@ -143,7 +199,7 @@ class _SetupProfileUploadPhotoState extends State<SetupProfileUploadPhoto> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.5),
+                    color: Colors.black.withOpacity(0.5),
                     blurRadius: 5,
                     offset: const Offset(0, 2),
                   ),
@@ -161,15 +217,12 @@ class _SetupProfileUploadPhotoState extends State<SetupProfileUploadPhoto> {
                       ),
                     )
                   : ClipRRect(
-                      borderRadius: BorderRadius.circular(
-                          16), // Match the container's border radius
+                      borderRadius: BorderRadius.circular(16),
                       child: Image.file(
                         File(coverPhoto!.path),
                         fit: BoxFit.cover,
-                        height:
-                            150, // Ensure the image height matches the container height
-                        width: double
-                            .infinity, // Ensure the image width matches the container width
+                        height: 150,
+                        width: double.infinity,
                       ),
                     ),
             ),
@@ -187,14 +240,14 @@ class _SetupProfileUploadPhotoState extends State<SetupProfileUploadPhoto> {
             child: GestureDetector(
               onTap: pickProfilePhoto,
               child: Container(
-                height: 120, // Make height and width equal
+                height: 120,
                 width: 120,
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle, // Ensures the container is circular
+                  shape: BoxShape.circle,
                   border: Border.all(color: Colors.grey, width: 2),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.5),
+                      color: Colors.black.withOpacity(0.5),
                       blurRadius: 5,
                       offset: const Offset(0, 2),
                     ),
@@ -210,11 +263,10 @@ class _SetupProfileUploadPhotoState extends State<SetupProfileUploadPhoto> {
                         ],
                       )
                     : ClipOval(
-                        // Properly clip the image in a circle
                         child: Image.file(
                           File(profilePhoto!.path),
                           fit: BoxFit.cover,
-                          height: 120, // Match container dimensions
+                          height: 120,
                           width: 120,
                         ),
                       ),
@@ -222,9 +274,7 @@ class _SetupProfileUploadPhotoState extends State<SetupProfileUploadPhoto> {
             ),
           ),
           const SizedBox(height: 20),
-          NavButtons(
-              prev: '/setup_profile_professional_info',
-              next: '/setup_profile_socials'),
+          NavButtons(prev: '/setup_profile_skills', next: savePhotos)
         ],
       ),
     );

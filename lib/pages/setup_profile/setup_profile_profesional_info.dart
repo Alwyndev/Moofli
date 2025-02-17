@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:moofli_app/components/nav_buttons.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SetupProfileProfesionalInfo extends StatefulWidget {
   const SetupProfileProfesionalInfo({super.key});
@@ -32,35 +33,53 @@ class _SetupProfileProfesionalInfoState
   String jobStartYearError = '';
   String jobEndYearError = '';
 
-  // Function to validate if a year is a 4-digit number
   bool isValidYear(String input) {
     int? year = int.tryParse(input);
     return year != null && year >= 1000 && year <= 9999;
   }
 
-  // Function to validate all year fields
   void validateYearFields() {
     setState(() {
-      // Validate start year
       startYearError = isValidYear(startYearController.text)
           ? ''
           : 'Start year must be a valid 4-digit year';
-
-      // Validate end year
       endYearError = isValidYear(endYearController.text)
           ? ''
           : 'End year must be a valid 4-digit year';
-
-      // Validate job start year
       jobStartYearError = isValidYear(jobStartYearController.text)
           ? ''
           : 'Job start year must be a valid 4-digit year';
-
-      // Validate job end year
       jobEndYearError = isValidYear(jobEndYearController.text)
           ? ''
           : 'Job end year must be a valid 4-digit year';
     });
+  }
+
+  Future<void> saveProfessionalInfo() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (isSelected[0]) {
+      await prefs.setString('Profession', 'Student');
+      await prefs.setString('College', collegeController.text);
+      await prefs.setString('Degree', degreeController.text);
+      await prefs.setString('fieldOfStudy', fieldOfStudyController.text);
+      await prefs.setString('startCollege', startYearController.text);
+      await prefs.setString('endCollege', endYearController.text);
+    } else if (isSelected[1]) {
+      await prefs.setString('Profession', 'Professional');
+      await prefs.setString('College', collegeController.text);
+      await prefs.setString('Degree', degreeController.text);
+      await prefs.setString('fieldOfStudy', fieldOfStudyController.text);
+      await prefs.setString('startCollege', startYearController.text);
+      await prefs.setString('endCollege', endYearController.text);
+      await prefs.setString('JobTitle', jobTitleController.text);
+      await prefs.setString('Company', companyNameController.text);
+      await prefs.setString('Description', jobDescriptionController.text);
+      await prefs.setString('startJob', jobStartYearController.text);
+      await prefs.setString('endJob', jobEndYearController.text);
+    }
+    if (!mounted) return;
+
+    Navigator.pushNamed(context, '/setup_profile_skills');
   }
 
   @override
@@ -77,14 +96,10 @@ class _SetupProfileProfesionalInfoState
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
         child: ListView(
-          // mainAxisAlignment: MainAxisAlignment.center,
-          // crossAxisAlignment: CrossAxisAlignment.start,
           scrollDirection: Axis.vertical,
           children: [
-            SizedBox(height: 20),
-
-            // Subtitle
-            Text(
+            const SizedBox(height: 20),
+            const Text(
               'Complete your',
               style: TextStyle(
                 fontSize: 28,
@@ -92,10 +107,7 @@ class _SetupProfileProfesionalInfoState
                 color: Colors.black,
               ),
             ),
-            // SizedBox(height: 2),
-
-            // Title
-            Text(
+            const Text(
               'Profile',
               style: TextStyle(
                 fontSize: 48,
@@ -103,18 +115,14 @@ class _SetupProfileProfesionalInfoState
                 color: Colors.black,
               ),
             ),
-            // SizedBox(height: 8),
-
-            // Decorative Line
             Row(
               children: [
-                // Filled Progress
                 Expanded(
                   flex: (3 * 100 ~/ 5),
                   child: Container(
                     height: 8,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
+                      gradient: const LinearGradient(
                         colors: [
                           Colors.red,
                           Colors.yellow,
@@ -126,60 +134,52 @@ class _SetupProfileProfesionalInfoState
                     ),
                   ),
                 ),
-
-                // Remaining Progress
                 Expanded(
-                  flex: (2 * 100 ~/ 5), // Remaining 4/5
+                  flex: (2 * 100 ~/ 5),
                   child: Container(
                     height: 8,
                     decoration: BoxDecoration(
-                      color: Color.fromRGBO(224, 217, 217, 1),
+                      color: const Color.fromRGBO(224, 217, 217, 1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                   ),
                 ),
               ],
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Center(
               child: RichText(
-                text: TextSpan(
-                  text: 'You are ', // Normal text
+                text: const TextSpan(
+                  text: 'You are ',
                   style: TextStyle(
                     fontSize: 20,
-                    color: const Color.fromARGB(255, 109, 108, 108),
-                    fontWeight: FontWeight.normal,
+                    color: Color.fromARGB(255, 109, 108, 108),
                   ),
                   children: [
                     TextSpan(
-                      text: '60%', // Bold percentage
+                      text: '60%',
                       style: TextStyle(
-                        color: const Color.fromARGB(255, 90, 90, 90),
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     TextSpan(
-                      text: ' there', // Normal text after percentage
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.normal,
-                      ),
+                      text: ' there',
+                      style: TextStyle(fontSize: 20),
                     ),
                   ],
                 ),
               ),
             ),
-            SizedBox(height: 20),
-            Text(
+            const SizedBox(height: 20),
+            const Text(
               'Professional Information',
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w600,
               ),
             ),
-
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
@@ -200,13 +200,13 @@ class _SetupProfileProfesionalInfoState
                       ),
                       borderRadius: BorderRadius.circular(16.0),
                     ),
-                    child: Text(
+                    child: const Text(
                       'Student',
                       style: TextStyle(fontSize: 16, color: Colors.black),
                     ),
                   ),
                 ),
-                SizedBox(width: 16),
+                const SizedBox(width: 16),
                 InkWell(
                   onTap: () {
                     setState(() {
@@ -224,7 +224,7 @@ class _SetupProfileProfesionalInfoState
                       ),
                       borderRadius: BorderRadius.circular(16.0),
                     ),
-                    child: Text(
+                    child: const Text(
                       'Professional',
                       style: TextStyle(fontSize: 16, color: Colors.black),
                     ),
@@ -232,9 +232,7 @@ class _SetupProfileProfesionalInfoState
                 ),
               ],
             ),
-            SizedBox(height: 20),
-
-            // Student Fields
+            const SizedBox(height: 20),
             if (isSelected[0]) ...[
               TextField(
                 controller: collegeController,
@@ -245,7 +243,7 @@ class _SetupProfileProfesionalInfoState
                   ),
                 ),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               TextField(
                 controller: degreeController,
                 decoration: InputDecoration(
@@ -255,7 +253,7 @@ class _SetupProfileProfesionalInfoState
                   ),
                 ),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               TextField(
                 controller: fieldOfStudyController,
                 decoration: InputDecoration(
@@ -265,7 +263,7 @@ class _SetupProfileProfesionalInfoState
                   ),
                 ),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               Row(
                 children: [
                   Expanded(
@@ -282,7 +280,7 @@ class _SetupProfileProfesionalInfoState
                       onChanged: (_) => validateYearFields(),
                     ),
                   ),
-                  SizedBox(width: 16),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: TextField(
                       controller: endYearController,
@@ -300,8 +298,6 @@ class _SetupProfileProfesionalInfoState
                 ],
               ),
             ],
-
-            // Professional Fields
             if (isSelected[1]) ...[
               TextField(
                 controller: collegeController,
@@ -312,7 +308,7 @@ class _SetupProfileProfesionalInfoState
                   ),
                 ),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               TextField(
                 controller: degreeController,
                 decoration: InputDecoration(
@@ -322,7 +318,7 @@ class _SetupProfileProfesionalInfoState
                   ),
                 ),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               TextField(
                 controller: fieldOfStudyController,
                 decoration: InputDecoration(
@@ -332,7 +328,7 @@ class _SetupProfileProfesionalInfoState
                   ),
                 ),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               Row(
                 children: [
                   Expanded(
@@ -349,7 +345,7 @@ class _SetupProfileProfesionalInfoState
                       onChanged: (_) => validateYearFields(),
                     ),
                   ),
-                  SizedBox(width: 16),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: TextField(
                       controller: endYearController,
@@ -376,7 +372,7 @@ class _SetupProfileProfesionalInfoState
                   ),
                 ),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               TextField(
                 controller: companyNameController,
                 decoration: InputDecoration(
@@ -386,7 +382,7 @@ class _SetupProfileProfesionalInfoState
                   ),
                 ),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               TextField(
                 controller: jobDescriptionController,
                 decoration: InputDecoration(
@@ -396,7 +392,7 @@ class _SetupProfileProfesionalInfoState
                   ),
                 ),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               Row(
                 children: [
                   Expanded(
@@ -414,7 +410,7 @@ class _SetupProfileProfesionalInfoState
                       onChanged: (_) => validateYearFields(),
                     ),
                   ),
-                  SizedBox(width: 16),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: TextField(
                       controller: jobEndYearController,
@@ -434,9 +430,7 @@ class _SetupProfileProfesionalInfoState
             ],
             const SizedBox(height: 20),
             NavButtons(
-              prev: '/setup_profile_skills',
-              next: '/setup_profile_photo',
-            ),
+                prev: '/setup_profile_contact_info', next: saveProfessionalInfo)
           ],
         ),
       ),
