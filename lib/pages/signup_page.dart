@@ -116,7 +116,7 @@ class _SignupPageState extends State<SignupPage> {
     }
 
     // Prepare the registration API call
-    final url = Uri.parse('http://93.127.172.217:2024/api/user/register');
+    final url = Uri.parse('http://93.127.172.217:2004/api/user/register');
     try {
       final response = await http.post(
         url,
@@ -134,10 +134,11 @@ class _SignupPageState extends State<SignupPage> {
       if (response.statusCode == 201) {
         // Registration successful; save details in SharedPreferences
         final SharedPreferences prefs = await SharedPreferences.getInstance();
-        await prefs.setString('fname', fNameController.text);
-        await prefs.setString('lname', lNameController.text);
-        await prefs.setString('email', emailController.text);
-        await prefs.setString('password', passwdController.text);
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+        await prefs.setString('token', responseData['token']);
+        await prefs.setBool('isLoggedIn', true);
+        await prefs.setString(
+            'userDetails', jsonEncode(responseData['result']));
 
         _showSnackBar(responseData['message']);
         // Navigate directly to profile setup page without showing a dialog

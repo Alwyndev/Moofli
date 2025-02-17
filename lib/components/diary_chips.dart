@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
 
 class DiaryChips extends StatefulWidget {
   final List<dynamic> diaryEntries;
+  final ValueChanged<dynamic> onDelete; // Callback to update the UI
+  final String token;
 
-  const DiaryChips({Key? key, required this.diaryEntries}) : super(key: key);
+  const DiaryChips({
+    Key? key,
+    required this.diaryEntries,
+    required this.onDelete,
+    required this.token,
+  }) : super(key: key);
 
   @override
   _DiaryChipsState createState() => _DiaryChipsState();
@@ -14,9 +22,34 @@ class _DiaryChipsState extends State<DiaryChips> {
   // Initially show 15 chips.
   int _visibleChipsCount = 15;
 
+  Future<void> _deleteDiaryEntry(dynamic diaryEntry) async {
+    final entryId = diaryEntry['_id'];
+    final url =
+        'http://93.127.172.217:2004/api/diary/entries/$entryId'; // Correct URI
+
+    try {
+      final response = await http.delete(
+        Uri.parse(url),
+        headers: {'Authorization': widget.token},
+      );
+      if (response.statusCode == 200) {
+        // Notify the parent widget to remove the deleted entry from the list.
+        widget.onDelete(diaryEntry);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to delete entry.')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error deleting entry: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Define the list of colors you want to use.
+    // Colors for the chips.
     final List<Color> chipColors = [
       Colors.red,
       Colors.orange,
@@ -26,18 +59,16 @@ class _DiaryChipsState extends State<DiaryChips> {
       Colors.purple,
     ];
 
-    // Reverse the diary entries list so that the most recent ones come first.
+    // Reverse the list so the most recent entries appear first.
     final reversedEntries = widget.diaryEntries.reversed.toList();
-    // Take only the first _visibleChipsCount items.
     final visibleEntries = reversedEntries.take(_visibleChipsCount).toList();
 
     return Column(
       children: [
-        // Map visible diary entries to chips.
+        // Build a Chip for each visible diary entry.
         ...visibleEntries.asMap().entries.map<Widget>((entry) {
           int index = entry.key;
           final diaryEntry = entry.value;
-          // Cycle through the colors using the modulo operator.
           final chipColor = chipColors[index % chipColors.length];
 
           // Parse and format the date.
@@ -45,25 +76,26 @@ class _DiaryChipsState extends State<DiaryChips> {
           try {
             date = DateTime.parse(diaryEntry['createdAt'] ?? '');
           } catch (e) {
-            // Fallback in case parsing fails.
             date = DateTime.now();
           }
           final formattedDate = DateFormat('MMM d').format(date);
-          // Use 'EEE' for abbreviated day names (e.g., "Mon", "Tue").
           final formattedDay = DateFormat('EEE').format(date);
 
           return Container(
-            width: double.infinity, // Makes the chip stretch the full width.
-            margin:
-                const EdgeInsets.only(bottom: 8.0), // Adds vertical spacing.
+            width: double.infinity,
+            margin: const EdgeInsets.only(bottom: 8.0),
             child: Chip(
               backgroundColor: chipColor.withOpacity(0.25),
+              onDeleted: () async {
+                await _deleteDiaryEntry(diaryEntry);
+              },
+              deleteIcon: Icon(Icons.delete, color: chipColor),
               label: Align(
                 alignment: Alignment.centerLeft,
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Display the formatted date and abbreviated day.
+                    // Display date information.
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -73,14 +105,11 @@ class _DiaryChipsState extends State<DiaryChips> {
                         ),
                         Text(
                           formattedDay,
-                          style: const TextStyle(
-                            fontSize: 18.0,
-                          ),
+                          style: const TextStyle(fontSize: 18.0),
                         ),
                       ],
                     ),
-                    const SizedBox(
-                        width: 8.0), // Spacing between date info and content.
+                    const SizedBox(width: 8.0),
                     Expanded(
                       child: Text(
                         diaryEntry['content'] ?? '',
@@ -100,12 +129,12 @@ class _DiaryChipsState extends State<DiaryChips> {
           );
         }).toList(),
 
-        // If there are more entries than are currently visible, show the "Load more..." button.
+        // "Load more..." button if there are more entries.
         if (_visibleChipsCount < reversedEntries.length)
           TextButton(
             onPressed: () {
               setState(() {
-                _visibleChipsCount += 15; // Load 15 more entries.
+                _visibleChipsCount += 15;
               });
             },
             child: const Text("Load more..."),

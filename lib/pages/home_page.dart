@@ -124,23 +124,18 @@ class _HomePageState extends State<HomePage> {
 
   /// Logs the user out by calling the API endpoint.
   Future<void> logout(BuildContext context) async {
-    final url = Uri.parse('http://93.127.172.217:2004/api/user/logout');
-
     try {
-      final response = await http.get(url);
-      if (response.statusCode == 200) {
-        Navigator.pushNamedAndRemoveUntil(
-            context, '/', (Route<dynamic> route) => false);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Logout failed: ${response.body}')),
-        );
-      }
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.remove('token');
+      await prefs.remove('userDetails');
+      await prefs.setBool('isLoggedIn', false);
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('An error occurred: $error')),
       );
     }
+    Navigator.pushNamedAndRemoveUntil(
+        context, '/', (Route<dynamic> route) => false);
   }
 
   /// Toggles the calendar view between week (compact) and month (expanded).
@@ -297,7 +292,26 @@ class _HomePageState extends State<HomePage> {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: DiaryChips(diaryEntries: _diaryEntries),
+            child: FutureBuilder<SharedPreferences>(
+              future: SharedPreferences.getInstance(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.done) {
+                  final token = snapshot.data?.getString('token') ?? '';
+                  return DiaryChips(
+                    diaryEntries: _diaryEntries,
+                    token: token,
+                    onDelete: (entry) {
+                      setState(() {
+                        _diaryEntries
+                            .removeWhere((e) => e['_id'] == entry['_id']);
+                      });
+                    },
+                  );
+                } else {
+                  return CircularProgressIndicator();
+                }
+              },
+            ),
           ),
           const SizedBox(height: 16),
         ],

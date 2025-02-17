@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:moofli_app/components/nav_buttons.dart';
@@ -26,7 +27,6 @@ class _SetupProfileUploadPhotoState extends State<SetupProfileUploadPhoto> {
       setState(() {
         coverPhoto = pickedImage;
       });
-      // Removed the immediate upload.
     }
   }
 
@@ -40,57 +40,92 @@ class _SetupProfileUploadPhotoState extends State<SetupProfileUploadPhoto> {
     }
   }
 
-  /// Uploads the selected cover photo to the backend as multipart form data.
-  /// Returns true if the upload is successful.
-  Future<bool> uploadCoverPhoto() async {
-    if (coverPhoto == null) return false;
-
-    final uri =
-        Uri.parse('http://93.127.172.217:2024/api/user/add/boackgroundPic');
-    final request = http.MultipartRequest('POST', uri);
-
-    // Attach the image file under the key "image"
-    request.files.add(
-      await http.MultipartFile.fromPath('image', coverPhoto!.path),
-    );
-
-    // Optionally include an authorization header if needed.
+  /// Uploads both the cover and profile photos to the backend.
+  /// Returns true only if both uploads are successful.
+  Future<bool> uploadPhotos() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
-    if (token != null) {
-      request.headers['Authorization'] = token;
+
+    bool coverUploadSuccess = false;
+    bool profileUploadSuccess = false;
+
+    // --- Upload Cover Photo ---
+    if (coverPhoto != null) {
+      final uriCoverPhoto =
+          Uri.parse('https://skillop.in/api/user/add/boackgroundPic');
+      final coverRequest = http.MultipartRequest('POST', uriCoverPhoto);
+
+      // Attach the cover photo with key "profileBackgroundPic"
+      coverRequest.files.add(
+        await http.MultipartFile.fromPath(
+            'profileBackgroundPic', coverPhoto!.path),
+      );
+
+      if (token != null) {
+        coverRequest.headers['Authorization'] = token;
+      }
+
+      final coverResponse = await coverRequest.send();
+      coverUploadSuccess = coverResponse.statusCode == 200;
+      if (kDebugMode) {
+        print(coverUploadSuccess
+            ? "Cover photo uploaded successfully."
+            : "Cover photo upload failed with status: ${coverResponse.statusCode}");
+      }
     }
 
-    final response = await request.send();
+    // --- Upload Profile Photo ---
+    if (profilePhoto != null) {
+      final uriProfilePic =
+          Uri.parse('https://skillop.in/api/user/update/profile');
+      final profileRequest = http.MultipartRequest('PUT', uriProfilePic);
 
-    if (response.statusCode == 200) {
-      print("Cover photo uploaded successfully.");
-      return true;
-    } else {
-      print("Cover photo upload failed with status: ${response.statusCode}");
-      return false;
+      // Attach the profile photo with key "profilePic"
+      profileRequest.files.add(
+        await http.MultipartFile.fromPath('profilePic', profilePhoto!.path),
+      );
+
+      if (token != null) {
+        profileRequest.headers['Authorization'] = token;
+      }
+
+      final profileResponse = await profileRequest.send();
+      profileUploadSuccess = profileResponse.statusCode == 200;
+      if (kDebugMode) {
+        print(profileUploadSuccess
+            ? "Profile photo uploaded successfully."
+            : "Profile photo upload failed with status: ${profileResponse.statusCode}");
+      }
     }
+
+    return coverUploadSuccess && profileUploadSuccess;
   }
 
   /// Called when the Next button is pressed.
-  /// This method first uploads the cover photo, then saves local paths and navigates to the next screen.
+  /// First checks that both photos have been selected,
+  /// then attempts to upload them, saves the local paths if successful,
+  /// and navigates to the next screen.
   Future<void> savePhotos() async {
+    if (coverPhoto == null || profilePhoto == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please select both photos.")),
+      );
+      return;
+    }
+
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    if (profilePhoto != null) {
-      await prefs.setString('profilePic', profilePhoto!.path);
+    bool uploadSuccess = await uploadPhotos();
+    if (!uploadSuccess) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Photo upload failed.")),
+      );
+      return;
     }
-    if (coverPhoto != null) {
-      bool uploadSuccess = await uploadCoverPhoto();
-      if (uploadSuccess) {
-        await prefs.setString('coverPic', coverPhoto!.path);
-      } else {
-        // Show an error message if the upload fails.
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Cover photo upload failed.")),
-        );
-        return; // Optionally halt navigation if upload fails.
-      }
-    }
+
+    // Save the local file paths if needed.
+    await prefs.setString('profilePic', profilePhoto!.path);
+    await prefs.setString('coverPic', coverPhoto!.path);
+
     Navigator.pushNamed(context, '/setup_profile_socials');
   }
 
@@ -160,7 +195,7 @@ class _SetupProfileUploadPhotoState extends State<SetupProfileUploadPhoto> {
           const SizedBox(height: 10),
           Center(
             child: RichText(
-              text: const TextSpan(
+              text: TextSpan(
                 text: 'You are ',
                 style: TextStyle(
                   fontSize: 20,
@@ -274,7 +309,7 @@ class _SetupProfileUploadPhotoState extends State<SetupProfileUploadPhoto> {
             ),
           ),
           const SizedBox(height: 20),
-          NavButtons(prev: '/setup_profile_skills', next: savePhotos)
+          NavButtons(prev: '/setup_profile_skills', next: savePhotos),
         ],
       ),
     );

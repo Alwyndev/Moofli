@@ -244,7 +244,8 @@ class _SetupProfileSkillsState extends State<SetupProfileSkills> {
             ),
             const SizedBox(height: 20),
             NavButtons(
-                prev: '/setup_profile_profesional_info', next: saveSkillDetails)
+                prev: '/setup_profile_professional_info',
+                next: saveSkillDetails)
           ],
         ),
       ),

@@ -56,7 +56,7 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     setState(() => _isLoading = true);
-    final Uri url = Uri.parse('http://93.127.172.217:2004/api/user/login');
+    final Uri url = Uri.parse('https://skillop.in/api/user/login');
     // print(url);
 
     try {

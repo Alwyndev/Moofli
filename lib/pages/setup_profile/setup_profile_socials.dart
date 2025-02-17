@@ -20,17 +20,19 @@ class _SetupProfileSocialsState extends State<SetupProfileSocials> {
     await prefs.setString('upi', upiController.text);
 
     // Call the backend submission function.
-    bool success = await submitToBackend();
+    bool success = true; //await submitToBackend();
     if (success) {
       // If submission is successful, navigate to the homepage.
       Navigator.pushReplacementNamed(context, '/home');
-    } else {
-      // Show an error message if submission fails.
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Submission failed! Please try again.')),
-      );
     }
   }
+  //    else {
+  //     // Show an error message if submission fails.
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(content: Text('Submission failed! Please try again.')),
+  //     );
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {

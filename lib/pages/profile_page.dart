@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfilePage extends StatefulWidget {
-  ProfilePage({super.key});
+  const ProfilePage({super.key});
 
   @override
   _ProfilePageState createState() => _ProfilePageState();
@@ -23,6 +23,15 @@ class _ProfilePageState extends State<ProfilePage> {
   List<Map<String, String>> experienceItems = [];
   String bgPic = "";
   Map<String, dynamic>? userData;
+
+  // Editing flags for each section
+  bool isEditingBio = false;
+  bool isEditingLinkedIn = false;
+  bool isEditingAbout = false;
+  bool isEditingPastExperience = false;
+  bool isEditingFuturePlans = false;
+  bool isEditingExperience = false;
+  bool isEditingSkills = false;
 
   Future<void> _loadUserData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -46,10 +55,9 @@ class _ProfilePageState extends State<ProfilePage> {
       print("Token is null");
       return;
     }
-    print(token);
     try {
       final response = await http.get(
-        Uri.parse('http://93.127.172.217:2004/api/user/profile/me'),
+        Uri.parse('https://skillop.in/api/user/profile/me'),
         headers: {'Authorization': token},
       );
 
@@ -58,6 +66,7 @@ class _ProfilePageState extends State<ProfilePage> {
         if (responseData != null) {
           setState(() {
             name = responseData['result']['firstname'] ?? "";
+            // Both bio and about come from the same field in your API.
             bio = responseData['result']['about'] ?? "";
             linkedin = responseData['result']['linkedinId'] ?? "";
             about = responseData['result']['about'] ?? "";
@@ -66,8 +75,8 @@ class _ProfilePageState extends State<ProfilePage> {
             profilepic = responseData['result']['profilePicUrl'] ?? "";
             skills = List<String>.from(responseData['result']['skills'] ?? []);
             bgPic = responseData['result']['bgPicUrl'] ?? "";
-            // experienceItems = List<Map<String, String>>.from(
-            //     responseData['result']['experence'] ?? []);
+            // Uncomment and adjust if you want to load experience items:
+            // experienceItems = List<Map<String, String>>.from(responseData['result']['experence'] ?? []);
           });
         }
       }
@@ -82,10 +91,7 @@ class _ProfilePageState extends State<ProfilePage> {
     _loadUserData();
   }
 
-  // Editable fields
-
   // Controllers for text fields
-  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _bioController = TextEditingController();
   final TextEditingController _linkedinController = TextEditingController();
   final TextEditingController _aboutController = TextEditingController();
@@ -93,13 +99,8 @@ class _ProfilePageState extends State<ProfilePage> {
       TextEditingController();
   final TextEditingController _futurePlansController = TextEditingController();
 
-  // Flag to toggle edit mode
-  bool isEditing = false;
-
   @override
   void dispose() {
-    // Dispose controllers to avoid memory leaks
-    _nameController.dispose();
     _bioController.dispose();
     _linkedinController.dispose();
     _aboutController.dispose();
@@ -108,34 +109,98 @@ class _ProfilePageState extends State<ProfilePage> {
     super.dispose();
   }
 
-  void _toggleEditMode() {
+  /// Toggles editing for the given field and loads the current value into its controller.
+  void _toggleEdit(String field) {
     setState(() {
-      isEditing = !isEditing;
+      switch (field) {
+        // case 'bio':
+        //   isEditingBio = !isEditingBio;
+        //   if (isEditingBio) {
+        //     _bioController.text = bio;
+        //   }
+        //   break;
+        // case 'linkedin':
+        //   isEditingLinkedIn = !isEditingLinkedIn;
+        //   if (isEditingLinkedIn) {
+        //     _linkedinController.text = linkedin;
+        //   }
+        //   break;
+        case 'about':
+          isEditingAbout = !isEditingAbout;
+          if (isEditingAbout) {
+            _aboutController.text = about;
+          }
+          break;
+        case 'pastExperience':
+          isEditingPastExperience = !isEditingPastExperience;
+          if (isEditingPastExperience) {
+            _pastExperienceController.text = pastExperience;
+          }
+          break;
+        case 'futurePlans':
+          isEditingFuturePlans = !isEditingFuturePlans;
+          if (isEditingFuturePlans) {
+            _futurePlansController.text = futurePlans;
+          }
+          break;
+      }
     });
   }
 
-  Future<void> _saveChanges() async {
+  /// Saves changes for the given field into state and SharedPreferences.
+  Future<void> _saveField(String field) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+
     setState(() {
-      name = _nameController.text;
-      bio = _bioController.text;
-      linkedin = _linkedinController.text;
-      about = _aboutController.text;
-      pastExperience = _pastExperienceController.text;
-      futurePlans = _futurePlansController.text;
-      isEditing = false;
+      switch (field) {
+        // case 'bio':
+        //   bio = _bioController.text;
+        //   isEditingBio = false;
+        //   break;
+        // case 'linkedin':
+        //   linkedin = _linkedinController.text;
+        //   isEditingLinkedIn = false;
+        //   break;
+        case 'about':
+          about = _aboutController.text;
+          isEditingAbout = false;
+          break;
+        case 'pastExperience':
+          pastExperience = _pastExperienceController.text;
+          isEditingPastExperience = false;
+          break;
+        case 'futurePlans':
+          futurePlans = _futurePlansController.text;
+          isEditingFuturePlans = false;
+          break;
+      }
     });
 
-    Map<String, dynamic> updatedUserData = {
-      'name': name,
-      'bio': bio,
-      'linkedin': linkedin,
-      'about': about,
-      'pastExperience': pastExperience,
-      'futurePlans': futurePlans,
-    };
-
+    // Update stored user details.
+    String? userDetailsJson = prefs.getString('userDetails');
+    Map<String, dynamic> updatedUserData = {};
+    if (userDetailsJson != null) {
+      updatedUserData = json.decode(userDetailsJson);
+    }
+    updatedUserData[field] = _getFieldValue(field);
     prefs.setString('userDetails', json.encode(updatedUserData));
+  }
+
+  String _getFieldValue(String field) {
+    switch (field) {
+      // case 'bio':
+      //   return bio;
+      // case 'linkedin':
+      //   return linkedin;
+      case 'about':
+        return about;
+      case 'pastExperience':
+        return pastExperience;
+      case 'futurePlans':
+        return futurePlans;
+      default:
+        return "";
+    }
   }
 
   void _addExperience() async {
@@ -289,7 +354,7 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Stack to allow an overlay button for editing pictures
+            // Background image with edit button (for changing background)
             Stack(
               children: [
                 Container(
@@ -326,6 +391,7 @@ class _ProfilePageState extends State<ProfilePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Profile picture, name, and bio section with its own edit/save button
                   Row(
                     children: [
                       CircleAvatar(
@@ -337,86 +403,113 @@ class _ProfilePageState extends State<ProfilePage> {
                                 as ImageProvider,
                       ),
                       const SizedBox(width: 16),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            name,
-                            style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              name,
+                              style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          isEditing
-                              ? SizedBox(
-                                  width: 200,
-                                  child: TextField(
-                                    controller: _bioController,
-                                    decoration: const InputDecoration(
-                                      hintText: "Enter your bio",
-                                    ),
-                                  ),
-                                )
-                              : Text(
-                                  bio,
-                                  style: const TextStyle(
-                                      fontSize: 14, color: Colors.grey),
+                            // Bio row with inline edit/save button
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: isEditingBio
+                                      ? TextField(
+                                          controller: _bioController,
+                                          decoration: const InputDecoration(
+                                            hintText: "Enter your bio",
+                                          ),
+                                        )
+                                      : Text(
+                                          bio,
+                                          style: const TextStyle(
+                                              fontSize: 14, color: Colors.grey),
+                                        ),
                                 ),
-                        ],
+                                // IconButton(
+                                //   iconSize: 20,
+                                //   padding: EdgeInsets.zero,
+                                //   constraints: const BoxConstraints(),
+                                //   icon: Icon(
+                                //       isEditingBio ? Icons.save : Icons.edit,
+                                //       size: 16),
+                                //   onPressed: () {
+                                //     if (isEditingBio) {
+                                //       _saveField('bio');
+                                //     } else {
+                                //       _toggleEdit('bio');
+                                //     }
+                                //   },
+                                // ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                      const Spacer(),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
-                          textStyle: const TextStyle(fontSize: 12),
-                        ),
-                        onPressed: () {
-                          if (isEditing) {
-                            _saveChanges();
-                          } else {
-                            _toggleEditMode();
-                          }
-                        },
-                        child: Text(
-                          isEditing ? "Save" : "Edit Profile",
-                          style: const TextStyle(
-                            color: Colors.black,
-                          ),
-                        ),
-                      )
                     ],
                   ),
                   const SizedBox(height: 16),
+                  // LinkedIn row with its own edit/save button
                   Row(
                     children: [
                       const Icon(Icons.link),
                       const SizedBox(width: 8),
-                      isEditing
-                          ? Expanded(
-                              child: TextField(
+                      Expanded(
+                        child: isEditingLinkedIn
+                            ? TextField(
                                 controller: _linkedinController,
                                 decoration: const InputDecoration(
                                   hintText: "Enter LinkedIn URL",
                                 ),
+                              )
+                            : Text(
+                                linkedin,
+                                style: TextStyle(
+                                  color: Colors.blue.shade800,
+                                  decoration: TextDecoration.underline,
+                                ),
                               ),
-                            )
-                          : Text(
-                              linkedin,
-                              style: TextStyle(
-                                color: Colors.blue.shade800,
-                                decoration: TextDecoration.underline,
-                              ),
-                            ),
+                      ),
+                      // IconButton(
+                      //   iconSize: 20,
+                      //   padding: EdgeInsets.zero,
+                      //   constraints: const BoxConstraints(),
+                      //   icon: Icon(isEditingLinkedIn ? Icons.save : Icons.edit,
+                      //       size: 16),
+                      //   onPressed: () {
+                      //     if (isEditingLinkedIn) {
+                      //       _saveField('linkedin');
+                      //     } else {
+                      //       _toggleEdit('linkedin');
+                      //     }
+                      //   },
+                      // ),
                     ],
                   ),
                   const SizedBox(height: 16),
-                  buildSection("ABOUT", about, _aboutController, isEditing),
-                  buildSection("Past Experience", pastExperience,
-                      _pastExperienceController, isEditing),
-                  buildSection("Future Plans", futurePlans,
-                      _futurePlansController, isEditing),
+                  // Other sections: ABOUT, Past Experience, Future Plans
+                  buildEditableSection("ABOUT", about, _aboutController,
+                      isEditingAbout, "about"),
+                  buildEditableSection(
+                      "Past Experience",
+                      pastExperience,
+                      _pastExperienceController,
+                      isEditingPastExperience,
+                      "pastExperience"),
+                  buildEditableSection(
+                      "Future Plans",
+                      futurePlans,
+                      _futurePlansController,
+                      isEditingFuturePlans,
+                      "futurePlans"),
+                  // Experience section with its own edit toggle and add button
                   buildExperienceSection(),
+                  // Skills section with its own edit toggle and add button
                   buildSkillsSection(),
                 ],
               ),
@@ -454,19 +547,37 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget buildSection(String title, String content,
-      TextEditingController controller, bool isEditing) {
+  /// A reusable widget for editable text sections.
+  Widget buildEditableSection(String title, String content,
+      TextEditingController controller, bool isEditing, String field) {
     return Padding(
       padding: const EdgeInsets.only(top: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+          // Title row with small edit/save button next to heading
+          Row(
+            children: [
+              Text(
+                title,
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                iconSize: 20,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                icon: Icon(isEditing ? Icons.save : Icons.edit, size: 16),
+                onPressed: () {
+                  if (isEditing) {
+                    _saveField(field);
+                  } else {
+                    _toggleEdit(field);
+                  }
+                },
+              ),
+            ],
           ),
           const SizedBox(height: 4),
           isEditing
@@ -488,16 +599,33 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header row with small edit and add buttons next to "EXPERIENCE"
           Row(
             children: [
               const Text(
                 "EXPERIENCE",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              if (isEditing)
+              const SizedBox(width: 8),
+              IconButton(
+                iconSize: 20,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                icon: Icon(isEditingExperience ? Icons.save : Icons.edit,
+                    size: 16),
+                onPressed: () {
+                  setState(() {
+                    isEditingExperience = !isEditingExperience;
+                  });
+                },
+              ),
+              if (isEditingExperience)
                 IconButton(
+                  iconSize: 20,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
                   onPressed: _addExperience,
-                  icon: const Icon(Icons.add, color: Colors.blue),
+                  icon: const Icon(Icons.add, color: Colors.blue, size: 16),
                 ),
             ],
           ),
@@ -541,7 +669,7 @@ class _ProfilePageState extends State<ProfilePage> {
               ],
             ),
           ),
-          if (isEditing)
+          if (isEditingExperience)
             IconButton(
               icon: const Icon(Icons.delete, color: Colors.red),
               onPressed: () => _confirmDeleteExperience(index),
@@ -557,16 +685,32 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header row with small edit and add buttons next to "SKILLS"
           Row(
             children: [
               const Text(
                 "SKILLS",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              if (isEditing)
+              const SizedBox(width: 8),
+              IconButton(
+                iconSize: 20,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                icon: Icon(isEditingSkills ? Icons.save : Icons.edit, size: 16),
+                onPressed: () {
+                  setState(() {
+                    isEditingSkills = !isEditingSkills;
+                  });
+                },
+              ),
+              if (isEditingSkills)
                 IconButton(
+                  iconSize: 20,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
                   onPressed: _addSkill,
-                  icon: const Icon(Icons.add, color: Colors.blue),
+                  icon: const Icon(Icons.add, color: Colors.blue, size: 16),
                 ),
             ],
           ),
@@ -593,8 +737,9 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget buildSkillChip(String label, Color color) {
     return Chip(
       backgroundColor: color.withOpacity(0.15),
-      onDeleted:
-          isEditing ? () => _confirmDeleteSkill(skills.indexOf(label)) : null,
+      onDeleted: isEditingSkills
+          ? () => _confirmDeleteSkill(skills.indexOf(label))
+          : null,
       label: Text(label, style: const TextStyle(color: Colors.black)),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
