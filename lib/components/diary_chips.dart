@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
+import 'package:moofli_app/pages/diary_page_new.dart';
 
 class DiaryChips extends StatefulWidget {
   final List<dynamic> diaryEntries;
-  final ValueChanged<dynamic> onDelete; // Callback to update the UI
+  final VoidCallback onRefresh;
   final String token;
 
   const DiaryChips({
     Key? key,
     required this.diaryEntries,
-    required this.onDelete,
+    required this.onRefresh,
     required this.token,
   }) : super(key: key);
 
@@ -19,13 +20,11 @@ class DiaryChips extends StatefulWidget {
 }
 
 class _DiaryChipsState extends State<DiaryChips> {
-  // Initially show 15 chips.
   int _visibleChipsCount = 15;
 
   Future<void> _deleteDiaryEntry(dynamic diaryEntry) async {
     final entryId = diaryEntry['_id'];
-    final url =
-        'http://93.127.172.217:2004/api/diary/entries/$entryId'; // Correct URI
+    final url = 'http://93.127.172.217:2004/api/diary/entries/$entryId';
 
     try {
       final response = await http.delete(
@@ -33,8 +32,7 @@ class _DiaryChipsState extends State<DiaryChips> {
         headers: {'Authorization': widget.token},
       );
       if (response.statusCode == 200) {
-        // Notify the parent widget to remove the deleted entry from the list.
-        widget.onDelete(diaryEntry);
+        widget.onRefresh(); // Refresh homepage after deletion
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Failed to delete entry.')),
@@ -49,7 +47,6 @@ class _DiaryChipsState extends State<DiaryChips> {
 
   @override
   Widget build(BuildContext context) {
-    // Colors for the chips.
     final List<Color> chipColors = [
       Colors.red,
       Colors.orange,
@@ -59,19 +56,16 @@ class _DiaryChipsState extends State<DiaryChips> {
       Colors.purple,
     ];
 
-    // Reverse the list so the most recent entries appear first.
     final reversedEntries = widget.diaryEntries.reversed.toList();
     final visibleEntries = reversedEntries.take(_visibleChipsCount).toList();
 
     return Column(
       children: [
-        // Build a Chip for each visible diary entry.
         ...visibleEntries.asMap().entries.map<Widget>((entry) {
           int index = entry.key;
           final diaryEntry = entry.value;
           final chipColor = chipColors[index % chipColors.length];
 
-          // Parse and format the date.
           DateTime date;
           try {
             date = DateTime.parse(diaryEntry['createdAt'] ?? '');
@@ -81,21 +75,32 @@ class _DiaryChipsState extends State<DiaryChips> {
           final formattedDate = DateFormat('MMM d').format(date);
           final formattedDay = DateFormat('EEE').format(date);
 
-          return Container(
-            width: double.infinity,
-            margin: const EdgeInsets.only(bottom: 8.0),
-            child: Chip(
-              backgroundColor: chipColor.withOpacity(0.25),
-              onDeleted: () async {
-                await _deleteDiaryEntry(diaryEntry);
-              },
-              deleteIcon: Icon(Icons.delete, color: chipColor),
-              label: Align(
-                alignment: Alignment.centerLeft,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DiaryPageNew(
+                    existingEntry: diaryEntry['content'], // Pass existing text
+                    entryId: diaryEntry['_id'], // Pass entry ID for updating
+                  ),
+                ),
+              ).then((value) {
+                if (value == true)
+                  widget.onRefresh(); // Refresh homepage after edit
+              });
+            },
+            child: Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(bottom: 8.0),
+              child: Chip(
+                backgroundColor: chipColor.withOpacity(0.25),
+                onDeleted: () async {
+                  await _deleteDiaryEntry(diaryEntry);
+                },
+                deleteIcon: Icon(Icons.delete, color: chipColor),
+                label: Row(
                   children: [
-                    // Display date information.
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -120,16 +125,14 @@ class _DiaryChipsState extends State<DiaryChips> {
                     ),
                   ],
                 ),
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-                side: BorderSide(color: chipColor, width: 2),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  side: BorderSide(color: chipColor, width: 2),
+                ),
               ),
             ),
           );
         }).toList(),
-
-        // "Load more..." button if there are more entries.
         if (_visibleChipsCount < reversedEntries.length)
           TextButton(
             onPressed: () {

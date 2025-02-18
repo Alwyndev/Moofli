@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:moofli_app/components/diary_chips.dart';
+import 'package:moofli_app/pages/diary_page_new.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:http/http.dart' as http;
@@ -234,93 +235,97 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       // Main body: ListView containing the calendar and diary entry chips
-      body: ListView(
-        children: [
-          // Custom header above the calendar
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Column(
-              children: [
-                // Custom header that shows the month and toggles the calendar view when tapped.
-                GestureDetector(
-                  onTap: _toggleCalendarFormat,
-                  child: Container(
-                    alignment: Alignment.center,
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Text(
-                      MaterialLocalizations.of(context)
-                          .formatMonthYear(_focusedDay),
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+      body: RefreshIndicator(
+        onRefresh: _fetchDiaryEntries, // Refresh when user swipes down
+        child: ListView(
+          children: [
+            // Custom header above the calendar
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Column(
+                children: [
+                  // Custom header that shows the month and toggles the calendar view when tapped.
+                  GestureDetector(
+                    onTap: _toggleCalendarFormat,
+                    child: Container(
+                      alignment: Alignment.center,
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(
+                        MaterialLocalizations.of(context)
+                            .formatMonthYear(_focusedDay),
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                // The TableCalendar with its built-in header hidden.
-                TableCalendar(
-                  firstDay: DateTime.utc(2000, 1, 1),
-                  lastDay: DateTime.utc(2100, 12, 31),
-                  focusedDay: _focusedDay,
-                  headerVisible: false, // Hides the default header.
-                  calendarFormat: _isCalendarExpanded
-                      ? CalendarFormat.month
-                      : CalendarFormat.week,
-                  selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                  onDaySelected: (selectedDay, focusedDay) {
-                    setState(() {
-                      _selectedDay = selectedDay;
-                      _focusedDay = focusedDay;
-                    });
-                  },
-                  // Update the focused day when the calendar is swiped.
-                  onPageChanged: (focusedDay) {
-                    setState(() {
-                      _focusedDay = focusedDay;
-                    });
-                  },
-                ),
-              ],
-            ),
-          ),
-          const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Text(
-              'Diary Entries:',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: FutureBuilder<SharedPreferences>(
-              future: SharedPreferences.getInstance(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.done) {
-                  final token = snapshot.data?.getString('token') ?? '';
-                  return DiaryChips(
-                    diaryEntries: _diaryEntries,
-                    token: token,
-                    onDelete: (entry) {
+                  // The TableCalendar with its built-in header hidden.
+                  TableCalendar(
+                    firstDay: DateTime.utc(2000, 1, 1),
+                    lastDay: DateTime.utc(2100, 12, 31),
+                    focusedDay: _focusedDay,
+                    headerVisible: false, // Hides the default header.
+                    calendarFormat: _isCalendarExpanded
+                        ? CalendarFormat.month
+                        : CalendarFormat.week,
+                    selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                    onDaySelected: (selectedDay, focusedDay) {
                       setState(() {
-                        _diaryEntries
-                            .removeWhere((e) => e['_id'] == entry['_id']);
+                        _selectedDay = selectedDay;
+                        _focusedDay = focusedDay;
                       });
                     },
-                  );
-                } else {
-                  return CircularProgressIndicator();
-                }
-              },
+                    // Update the focused day when the calendar is swiped.
+                    onPageChanged: (focusedDay) {
+                      setState(() {
+                        _focusedDay = focusedDay;
+                      });
+                    },
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-        ],
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text(
+                'Diary Entries:',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: FutureBuilder<SharedPreferences>(
+                future: SharedPreferences.getInstance(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    final token = snapshot.data?.getString('token') ?? '';
+                    return DiaryChips(
+                      diaryEntries: _diaryEntries,
+                      token: token,
+                      onRefresh: _fetchDiaryEntries,
+                    );
+                  } else {
+                    return CircularProgressIndicator();
+                  }
+                },
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
       ),
       // Floating action button to add a new diary entry
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.pushNamed(context, '/diary_entry_new')
-              .then((_) => _fetchDiaryEntries());
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => DiaryPageNew()),
+          ).then((result) {
+            if (result == true) {
+              _fetchDiaryEntries(); // Refresh the homepage when returning
+            }
+          });
         },
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
         backgroundColor: const Color.fromRGBO(0, 119, 255, 0.6),

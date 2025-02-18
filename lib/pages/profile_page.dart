@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io'; // For file upload (if needed)
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -33,6 +34,9 @@ class _ProfilePageState extends State<ProfilePage> {
   bool isEditingExperience = false;
   bool isEditingSkills = false;
 
+  // For profile image update.
+  File? _profileImageFile;
+
   Future<void> _loadUserData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? userDataJson = prefs.getString('userDetails');
@@ -43,7 +47,6 @@ class _ProfilePageState extends State<ProfilePage> {
         userData = json.decode(userDataJson);
         userData?['token'] = token;
       });
-
       await _fetchProfile(token);
     } else {
       print('User data not found in SharedPreferences');
@@ -73,9 +76,30 @@ class _ProfilePageState extends State<ProfilePage> {
             pastExperience = responseData['result']['pastExp'] ?? "";
             futurePlans = responseData['result']['futurePlans'] ?? "";
             profilepic = responseData['result']['profilePicUrl'] ?? "";
-            skills = List<String>.from(responseData['result']['skills'] ?? []);
             bgPic = responseData['result']['bgPicUrl'] ?? "";
-            // Uncomment and adjust if you want to load experience items:
+
+            // Decode the skills field.
+            var skillsData = responseData['result']['skills'];
+            if (skillsData is String) {
+              try {
+                // Try decoding as JSON.
+                var decoded = json.decode(skillsData);
+                if (decoded is List) {
+                  skills = List<String>.from(decoded);
+                }
+              } catch (e) {
+                // Fallback: remove brackets and quotes, then split.
+                skills = skillsData
+                    .replaceAll(RegExp(r'[\[\]"]'), '')
+                    .split(',')
+                    .map((s) => s.trim())
+                    .toList();
+              }
+            } else if (skillsData is List) {
+              skills = List<String>.from(skillsData);
+            }
+
+            // Uncomment if you wish to load experience items:
             // experienceItems = List<Map<String, String>>.from(responseData['result']['experence'] ?? []);
           });
         }
@@ -91,7 +115,7 @@ class _ProfilePageState extends State<ProfilePage> {
     _loadUserData();
   }
 
-  // Controllers for text fields
+  // Controllers for text fields.
   final TextEditingController _bioController = TextEditingController();
   final TextEditingController _linkedinController = TextEditingController();
   final TextEditingController _aboutController = TextEditingController();
@@ -109,97 +133,109 @@ class _ProfilePageState extends State<ProfilePage> {
     super.dispose();
   }
 
-  /// Toggles editing for the given field and loads the current value into its controller.
+  /// Toggles editing mode for a section.
   void _toggleEdit(String field) {
     setState(() {
       switch (field) {
+        // Uncomment for bio or LinkedIn.
         // case 'bio':
         //   isEditingBio = !isEditingBio;
-        //   if (isEditingBio) {
-        //     _bioController.text = bio;
-        //   }
+        //   if (isEditingBio) _bioController.text = bio;
         //   break;
         // case 'linkedin':
         //   isEditingLinkedIn = !isEditingLinkedIn;
-        //   if (isEditingLinkedIn) {
-        //     _linkedinController.text = linkedin;
-        //   }
+        //   if (isEditingLinkedIn) _linkedinController.text = linkedin;
         //   break;
         case 'about':
           isEditingAbout = !isEditingAbout;
-          if (isEditingAbout) {
-            _aboutController.text = about;
-          }
+          if (isEditingAbout) _aboutController.text = about;
           break;
         case 'pastExperience':
           isEditingPastExperience = !isEditingPastExperience;
-          if (isEditingPastExperience) {
+          if (isEditingPastExperience)
             _pastExperienceController.text = pastExperience;
-          }
           break;
         case 'futurePlans':
           isEditingFuturePlans = !isEditingFuturePlans;
-          if (isEditingFuturePlans) {
-            _futurePlansController.text = futurePlans;
-          }
+          if (isEditingFuturePlans) _futurePlansController.text = futurePlans;
           break;
       }
     });
   }
 
-  /// Saves changes for the given field into state and SharedPreferences.
+  /// Saves the updated field locally and then updates the backend.
   Future<void> _saveField(String field) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-
+    String newValue = "";
     setState(() {
       switch (field) {
         // case 'bio':
         //   bio = _bioController.text;
+        //   newValue = bio;
         //   isEditingBio = false;
         //   break;
         // case 'linkedin':
         //   linkedin = _linkedinController.text;
+        //   newValue = linkedin;
         //   isEditingLinkedIn = false;
         //   break;
         case 'about':
           about = _aboutController.text;
+          newValue = about;
           isEditingAbout = false;
           break;
         case 'pastExperience':
           pastExperience = _pastExperienceController.text;
+          newValue = pastExperience;
           isEditingPastExperience = false;
           break;
         case 'futurePlans':
           futurePlans = _futurePlansController.text;
+          newValue = futurePlans;
           isEditingFuturePlans = false;
           break;
       }
     });
 
-    // Update stored user details.
+    // Update local SharedPreferences.
     String? userDetailsJson = prefs.getString('userDetails');
     Map<String, dynamic> updatedUserData = {};
     if (userDetailsJson != null) {
       updatedUserData = json.decode(userDetailsJson);
     }
-    updatedUserData[field] = _getFieldValue(field);
+    updatedUserData[field] = newValue;
     prefs.setString('userDetails', json.encode(updatedUserData));
+
+    // Now update the backend for this field.
+    await _updateFieldInBackend(field, newValue);
   }
 
-  String _getFieldValue(String field) {
-    switch (field) {
-      // case 'bio':
-      //   return bio;
-      // case 'linkedin':
-      //   return linkedin;
-      case 'about':
-        return about;
-      case 'pastExperience':
-        return pastExperience;
-      case 'futurePlans':
-        return futurePlans;
-      default:
-        return "";
+  /// Updates a single field on the backend using the update profile API.
+  Future<void> _updateFieldInBackend(String field, String value) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('token');
+    if (token == null) {
+      print("Token is null");
+      return;
+    }
+    var uri = Uri.parse("https://skillop.in/api/user/update/profile");
+    var request = http.MultipartRequest("PUT", uri);
+    request.headers['authorization'] = token;
+
+    // Map 'pastExperience' to 'pastExp' since the API expects 'pastExp'
+    String fieldKey = (field == 'pastExperience') ? 'pastExp' : field;
+    request.fields[fieldKey] = value;
+
+    try {
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      if (response.statusCode == 200) {
+        print("$field updated successfully");
+      } else {
+        print("Failed to update $field: ${response.body}");
+      }
+    } catch (e) {
+      print("Error updating $field: $e");
     }
   }
 
@@ -232,9 +268,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
+              onPressed: () => Navigator.pop(context),
               child: const Text("Cancel"),
             ),
             TextButton(
@@ -258,7 +292,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
   void _addSkill() async {
     final skillController = TextEditingController();
-
     await showDialog(
       context: context,
       builder: (context) {
@@ -270,9 +303,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
+              onPressed: () => Navigator.pop(context),
               child: const Text("Cancel"),
             ),
             TextButton(
@@ -350,11 +381,12 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // No global save button – each section saves individually.
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Background image with edit button (for changing background)
+            // Background image with edit button.
             Stack(
               children: [
                 Container(
@@ -378,9 +410,8 @@ class _ProfilePageState extends State<ProfilePage> {
                       padding: const EdgeInsets.all(8),
                       backgroundColor: Colors.white.withOpacity(0.7),
                     ),
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/setup_profile_photo');
-                    },
+                    onPressed: () =>
+                        Navigator.pushNamed(context, '/setup_profile_photo'),
                     child: const Icon(Icons.edit, color: Colors.black),
                   ),
                 ),
@@ -391,12 +422,12 @@ class _ProfilePageState extends State<ProfilePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Profile picture, name, and bio section with its own edit/save button
+                  // Profile picture, name, and bio section.
                   Row(
                     children: [
                       CircleAvatar(
                         radius: 40,
-                        backgroundImage: (profilepic.isNotEmpty)
+                        backgroundImage: profilepic.isNotEmpty
                             ? NetworkImage(profilepic)
                             : const AssetImage(
                                     'assets/images/default_profile_pic.png')
@@ -410,11 +441,8 @@ class _ProfilePageState extends State<ProfilePage> {
                             Text(
                               name,
                               style: const TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                              ),
+                                  fontSize: 22, fontWeight: FontWeight.bold),
                             ),
-                            // Bio row with inline edit/save button
                             Row(
                               children: [
                                 Expanded(
@@ -431,13 +459,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                               fontSize: 14, color: Colors.grey),
                                         ),
                                 ),
+                                // Uncomment below to allow bio editing.
                                 // IconButton(
-                                //   iconSize: 20,
-                                //   padding: EdgeInsets.zero,
-                                //   constraints: const BoxConstraints(),
-                                //   icon: Icon(
-                                //       isEditingBio ? Icons.save : Icons.edit,
-                                //       size: 16),
+                                //   icon: Icon(isEditingBio ? Icons.save : Icons.edit, size: 16),
                                 //   onPressed: () {
                                 //     if (isEditingBio) {
                                 //       _saveField('bio');
@@ -454,7 +478,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  // LinkedIn row with its own edit/save button
+                  // LinkedIn row.
                   Row(
                     children: [
                       const Icon(Icons.link),
@@ -464,8 +488,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             ? TextField(
                                 controller: _linkedinController,
                                 decoration: const InputDecoration(
-                                  hintText: "Enter LinkedIn URL",
-                                ),
+                                    hintText: "Enter LinkedIn URL"),
                               )
                             : Text(
                                 linkedin,
@@ -475,12 +498,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                 ),
                               ),
                       ),
+                      // Uncomment to allow LinkedIn editing.
                       // IconButton(
-                      //   iconSize: 20,
-                      //   padding: EdgeInsets.zero,
-                      //   constraints: const BoxConstraints(),
-                      //   icon: Icon(isEditingLinkedIn ? Icons.save : Icons.edit,
-                      //       size: 16),
+                      //   icon: Icon(isEditingLinkedIn ? Icons.save : Icons.edit, size: 16),
                       //   onPressed: () {
                       //     if (isEditingLinkedIn) {
                       //       _saveField('linkedin');
@@ -492,7 +512,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  // Other sections: ABOUT, Past Experience, Future Plans
+                  // Editable text sections.
                   buildEditableSection("ABOUT", about, _aboutController,
                       isEditingAbout, "about"),
                   buildEditableSection(
@@ -507,9 +527,9 @@ class _ProfilePageState extends State<ProfilePage> {
                       _futurePlansController,
                       isEditingFuturePlans,
                       "futurePlans"),
-                  // Experience section with its own edit toggle and add button
+                  // Experience section.
                   buildExperienceSection(),
-                  // Skills section with its own edit toggle and add button
+                  // Skills section.
                   buildSkillsSection(),
                 ],
               ),
@@ -521,20 +541,16 @@ class _ProfilePageState extends State<ProfilePage> {
         items: [
           BottomNavigationBarItem(
             icon: GestureDetector(
-              onTap: () {
-                Navigator.pushNamed(context, "/home");
-              },
+              onTap: () => Navigator.pushNamed(context, "/home"),
               child: const Icon(Icons.home, color: Colors.black, size: 40),
             ),
             label: '',
           ),
           BottomNavigationBarItem(
             icon: GestureDetector(
-              onTap: () {
-                Navigator.pushNamed(context, '/profile');
-              },
+              onTap: () => Navigator.pushNamed(context, '/profile'),
               child: CircleAvatar(
-                backgroundImage: (profilepic.isNotEmpty)
+                backgroundImage: profilepic.isNotEmpty
                     ? NetworkImage(profilepic)
                     : const AssetImage('assets/images/default_profile_pic.png')
                         as ImageProvider,
@@ -547,7 +563,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  /// A reusable widget for editable text sections.
+  /// Reusable widget for editable text sections.
   Widget buildEditableSection(String title, String content,
       TextEditingController controller, bool isEditing, String field) {
     return Padding(
@@ -555,19 +571,14 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Title row with small edit/save button next to heading
+          // Title row with edit/save icon.
           Row(
             children: [
-              Text(
-                title,
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+              Text(title,
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(width: 8),
               IconButton(
-                iconSize: 20,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
                 icon: Icon(isEditing ? Icons.save : Icons.edit, size: 16),
                 onPressed: () {
                   if (isEditing) {
@@ -583,10 +594,7 @@ class _ProfilePageState extends State<ProfilePage> {
           isEditing
               ? TextField(
                   controller: controller,
-                  decoration: InputDecoration(
-                    hintText: "Enter $title",
-                  ),
-                )
+                  decoration: InputDecoration(hintText: "Enter $title"))
               : Text(content, style: const TextStyle(fontSize: 14)),
         ],
       ),
@@ -599,48 +607,46 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header row with small edit and add buttons next to "EXPERIENCE"
+          // Header with edit/save icon and add button.
           Row(
             children: [
-              const Text(
-                "EXPERIENCE",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+              const Text("EXPERIENCE",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(width: 8),
               IconButton(
-                iconSize: 20,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
                 icon: Icon(isEditingExperience ? Icons.save : Icons.edit,
                     size: 16),
                 onPressed: () {
-                  setState(() {
-                    isEditingExperience = !isEditingExperience;
-                  });
+                  if (isEditingExperience) {
+                    setState(() {
+                      isEditingExperience = false;
+                    });
+                    _updateFieldInBackend(
+                        "experence", jsonEncode(experienceItems));
+                  } else {
+                    setState(() {
+                      isEditingExperience = true;
+                    });
+                  }
                 },
               ),
               if (isEditingExperience)
                 IconButton(
-                  iconSize: 20,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  onPressed: _addExperience,
                   icon: const Icon(Icons.add, color: Colors.blue, size: 16),
+                  onPressed: _addExperience,
                 ),
             ],
           ),
           const SizedBox(height: 8),
           Column(
-            children: experienceItems
-                .asMap()
-                .entries
-                .map((entry) => buildExperienceItem(
-                      entry.value["title"]!,
-                      entry.value["company"]!,
-                      entry.value["duration"]!,
-                      entry.key,
-                    ))
-                .toList(),
+            children: experienceItems.asMap().entries.map((entry) {
+              return buildExperienceItem(
+                entry.value["title"]!,
+                entry.value["company"]!,
+                entry.value["duration"]!,
+                entry.key,
+              );
+            }).toList(),
           ),
         ],
       ),
@@ -657,11 +663,9 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.bold),
-                ),
+                Text(title,
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold)),
                 Text(company,
                     style: const TextStyle(fontSize: 14, color: Colors.grey)),
                 Text(duration,
@@ -685,49 +689,49 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header row with small edit and add buttons next to "SKILLS"
+          // Header with edit/save icon and add button.
           Row(
             children: [
-              const Text(
-                "SKILLS",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+              const Text("SKILLS",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(width: 8),
               IconButton(
-                iconSize: 20,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
                 icon: Icon(isEditingSkills ? Icons.save : Icons.edit, size: 16),
                 onPressed: () {
-                  setState(() {
-                    isEditingSkills = !isEditingSkills;
-                  });
+                  if (isEditingSkills) {
+                    setState(() {
+                      isEditingSkills = false;
+                    });
+                    _updateFieldInBackend("skills", jsonEncode(skills));
+                  } else {
+                    setState(() {
+                      isEditingSkills = true;
+                    });
+                  }
                 },
               ),
               if (isEditingSkills)
                 IconButton(
-                  iconSize: 20,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  onPressed: _addSkill,
                   icon: const Icon(Icons.add, color: Colors.blue, size: 16),
+                  onPressed: _addSkill,
                 ),
             ],
           ),
           const SizedBox(height: 8),
+          // Each skill will be shown as an individual chip.
           Wrap(
             spacing: 8,
-            children: skills
-                .map((skill) => buildSkillChip(
-                      skill,
-                      [
-                        Colors.red,
-                        Colors.green,
-                        Colors.blue,
-                        Colors.yellow,
-                      ][skills.indexOf(skill) % 4],
-                    ))
-                .toList(),
+            children: skills.map((skill) {
+              return buildSkillChip(
+                skill,
+                [
+                  Colors.red,
+                  Colors.green,
+                  Colors.blue,
+                  Colors.yellow,
+                ][skills.indexOf(skill) % 4],
+              );
+            }).toList(),
           ),
         ],
       ),
