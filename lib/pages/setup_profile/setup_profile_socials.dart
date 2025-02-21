@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:moofli_app/components/nav_buttons.dart';
-import 'package:moofli_app/components/submit_to_backend.dart';
+// import 'package:moofli_app/components/submit_to_backend.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // Import the backend submission function
 
 class SetupProfileSocials extends StatefulWidget {

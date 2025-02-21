@@ -1,13 +1,10 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:moofli_app/components/google_login_button.dart';
 import 'package:moofli_app/components/gradient_button.dart';
 import 'package:http/http.dart' as http;
-import 'package:moofli_app/pages/setup_profile/setup_profile_1.dart';
-// Removed unused import: SetupProfileContactInfo
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SignupPage extends StatefulWidget {

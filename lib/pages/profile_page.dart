@@ -1,6 +1,7 @@
 import 'dart:convert';
-import 'dart:io'; // For file upload (if needed)
-import 'package:cached_network_image/cached_network_image.dart';
+// import 'dart:io'; // For file upload (if needed)
+// import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -35,7 +36,7 @@ class _ProfilePageState extends State<ProfilePage> {
   bool isEditingSkills = false;
 
   // For profile image update.
-  File? _profileImageFile;
+  // File? _profileImageFile;
 
   Future<void> _loadUserData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -49,13 +50,17 @@ class _ProfilePageState extends State<ProfilePage> {
       });
       await _fetchProfile(token);
     } else {
-      print('User data not found in SharedPreferences');
+      if (kDebugMode) {
+        print('User data not found in SharedPreferences');
+      }
     }
   }
 
   Future<void> _fetchProfile(String? token) async {
     if (token == null) {
-      print("Token is null");
+      if (kDebugMode) {
+        print("Token is null");
+      }
       return;
     }
     try {
@@ -105,7 +110,9 @@ class _ProfilePageState extends State<ProfilePage> {
         }
       }
     } catch (e) {
-      print('Error fetching profile: $e');
+      if (kDebugMode) {
+        print('Error fetching profile: $e');
+      }
     }
   }
 
@@ -152,8 +159,9 @@ class _ProfilePageState extends State<ProfilePage> {
           break;
         case 'pastExperience':
           isEditingPastExperience = !isEditingPastExperience;
-          if (isEditingPastExperience)
+          if (isEditingPastExperience) {
             _pastExperienceController.text = pastExperience;
+          }
           break;
         case 'futurePlans':
           isEditingFuturePlans = !isEditingFuturePlans;
@@ -215,7 +223,9 @@ class _ProfilePageState extends State<ProfilePage> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
     if (token == null) {
-      print("Token is null");
+      if (kDebugMode) {
+        print("Token is null");
+      }
       return;
     }
     var uri = Uri.parse("https://skillop.in/api/user/update/profile");
@@ -230,12 +240,18 @@ class _ProfilePageState extends State<ProfilePage> {
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
       if (response.statusCode == 200) {
-        print("$field updated successfully");
+        if (kDebugMode) {
+          print("$field updated successfully");
+        }
       } else {
-        print("Failed to update $field: ${response.body}");
+        if (kDebugMode) {
+          print("Failed to update $field: ${response.body}");
+        }
       }
     } catch (e) {
-      print("Error updating $field: $e");
+      if (kDebugMode) {
+        print("Error updating $field: $e");
+      }
     }
   }
 
