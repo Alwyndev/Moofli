@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:moofli_app/api/api_service.dart';
 import 'package:moofli_app/components/nav_buttons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -18,13 +19,24 @@ class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
   String? emailError;
 
   Future<void> saveContactInfo() async {
+    // Save locally
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('mobile', phoneController.text);
     await prefs.setString('city', cityController.text);
 
-    if (!mounted) return;
+    // Update backend: You can use the same update endpoint if your API expects a combined profile update.
+    bool success = await ApiService.updateMultipleProfileFields({
+      'mobile': phoneController.text,
+      'city': cityController.text,
+    });
 
-    Navigator.pushNamed(context, '/setup_profile_professional_info');
+    if (success) {
+      Navigator.pushNamed(context, '/setup_profile_professional_info');
+    } else {
+      // Show an error message if needed.
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to update contact info")));
+    }
   }
 
   @override

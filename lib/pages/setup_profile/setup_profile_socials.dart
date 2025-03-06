@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:moofli_app/api/api_service.dart';
 import 'package:moofli_app/components/nav_buttons.dart';
 // import 'package:moofli_app/components/submit_to_backend.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // Import the backend submission function
@@ -19,13 +20,19 @@ class _SetupProfileSocialsState extends State<SetupProfileSocials> {
     await prefs.setString('linkedIn', linkedInController.text);
     await prefs.setString('upi', upiController.text);
 
-    // Call the backend submission function.
-    bool success = true; //await submitToBackend();
+    bool success = await ApiService.updateMultipleProfileFields({
+      'linkedIn': linkedInController.text,
+      'upi': upiController.text,
+    });
+
     if (success) {
-      // If submission is successful, navigate to the homepage.
       Navigator.pushReplacementNamed(context, '/home');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to update socials")));
     }
   }
+
   //    else {
   //     // Show an error message if submission fails.
   //     ScaffoldMessenger.of(context).showSnackBar(

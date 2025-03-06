@@ -1,5 +1,6 @@
-import 'package:flutter/foundation.dart';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:moofli_app/api/api_service.dart';
 import 'package:moofli_app/components/gradient_button.dart';
 import 'package:moofli_app/components/nav_buttons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -103,8 +104,18 @@ class _SetupProfileSkillsState extends State<SetupProfileSkills> {
   Future<void> saveSkillDetails() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setStringList('selectedSkills', selectedSkills);
-    if (kDebugMode) print(selectedSkills);
-    Navigator.pushNamed(context, '/setup_profile_photo');
+
+    // Convert skills list to JSON (or a comma-separated string based on your API design)
+    String skillsJson = jsonEncode(selectedSkills);
+
+    bool success = await ApiService.updateProfileField('skills', skillsJson);
+
+    if (success) {
+      Navigator.pushNamed(context, '/setup_profile_photo');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to update skills")));
+    }
   }
 
   @override

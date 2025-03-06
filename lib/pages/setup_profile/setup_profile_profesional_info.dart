@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:moofli_app/api/api_service.dart';
 import 'package:moofli_app/components/nav_buttons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -59,27 +60,49 @@ class _SetupProfileProfesionalInfoState
     SharedPreferences prefs = await SharedPreferences.getInstance();
     if (isSelected[0]) {
       await prefs.setString('Profession', 'Student');
-      await prefs.setString('College', collegeController.text);
-      await prefs.setString('Degree', degreeController.text);
-      await prefs.setString('fieldOfStudy', fieldOfStudyController.text);
-      await prefs.setString('startCollege', startYearController.text);
-      await prefs.setString('endCollege', endYearController.text);
     } else if (isSelected[1]) {
       await prefs.setString('Profession', 'Professional');
-      await prefs.setString('College', collegeController.text);
-      await prefs.setString('Degree', degreeController.text);
-      await prefs.setString('fieldOfStudy', fieldOfStudyController.text);
-      await prefs.setString('startCollege', startYearController.text);
-      await prefs.setString('endCollege', endYearController.text);
+    }
+
+    // Save other professional info locally.
+    await prefs.setString('College', collegeController.text);
+    await prefs.setString('Degree', degreeController.text);
+    await prefs.setString('fieldOfStudy', fieldOfStudyController.text);
+    await prefs.setString('startCollege', startYearController.text);
+    await prefs.setString('endCollege', endYearController.text);
+
+    if (isSelected[1]) {
       await prefs.setString('JobTitle', jobTitleController.text);
       await prefs.setString('Company', companyNameController.text);
       await prefs.setString('Description', jobDescriptionController.text);
       await prefs.setString('startJob', jobStartYearController.text);
       await prefs.setString('endJob', jobEndYearController.text);
     }
-    if (!mounted) return;
 
-    Navigator.pushNamed(context, '/setup_profile_skills');
+    // Update backend with professional info.
+    bool success = await ApiService.updateMultipleProfileFields({
+      'Profession': isSelected[0] ? 'Student' : 'Professional',
+      'College': collegeController.text,
+      'Degree': degreeController.text,
+      'fieldOfStudy': fieldOfStudyController.text,
+      'startCollege': startYearController.text,
+      'endCollege': endYearController.text,
+      // Include job details if Professional.
+      if (isSelected[1]) ...{
+        'JobTitle': jobTitleController.text,
+        'Company': companyNameController.text,
+        'Description': jobDescriptionController.text,
+        'startJob': jobStartYearController.text,
+        'endJob': jobEndYearController.text,
+      }
+    });
+
+    if (success) {
+      Navigator.pushNamed(context, '/setup_profile_skills');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to update professional info")));
+    }
   }
 
   @override
