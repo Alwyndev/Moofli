@@ -352,9 +352,23 @@ class _HomePageState extends State<HomePage> {
         currentIndex: 0,
         onTap: (index) {
           if (index == 0) {
-            Navigator.pushNamed(context, "/home");
+            // Only push if not already on home
+            if (ModalRoute.of(context)?.settings.name != "/home") {
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                "/home",
+                (Route<dynamic> route) => false,
+              );
+            }
           } else if (index == 1) {
-            Navigator.pushNamed(context, '/profile');
+            // Only push profile if not already there
+            if (ModalRoute.of(context)?.settings.name != "/profile") {
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/profile',
+                (Route<dynamic> route) => false,
+              );
+            }
           }
         },
       ),

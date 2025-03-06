@@ -1,6 +1,4 @@
 import 'dart:convert';
-// import 'dart:io'; // For file upload (if needed)
-// import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -35,8 +33,17 @@ class _ProfilePageState extends State<ProfilePage> {
   bool isEditingExperience = false;
   bool isEditingSkills = false;
 
-  // For profile image update.
-  // File? _profileImageFile;
+  // Helper method to convert strings to Title Case
+  String toTitleCase(String text) {
+    if (text.isEmpty) return text;
+
+    // Split the string by spaces and capitalize first letter of each word
+    return text.split(' ').map((word) {
+      if (word.isEmpty) return word;
+      return word[0].toUpperCase() +
+          (word.length > 1 ? word.substring(1).toLowerCase() : '');
+    }).join(' ');
+  }
 
   Future<void> _loadUserData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -74,7 +81,6 @@ class _ProfilePageState extends State<ProfilePage> {
         if (responseData != null) {
           setState(() {
             name = responseData['result']['firstname'] ?? "";
-            // Both bio and about come from the same field in your API.
             bio = responseData['result']['about'] ?? "";
             linkedin = responseData['result']['linkedinId'] ?? "";
             about = responseData['result']['about'] ?? "";
@@ -83,30 +89,44 @@ class _ProfilePageState extends State<ProfilePage> {
             profilepic = responseData['result']['profilePicUrl'] ?? "";
             bgPic = responseData['result']['bgPicUrl'] ?? "";
 
-            // Decode the skills field.
+            // Start with empty skills array
+            skills = [];
+
+            // Process skills data
             var skillsData = responseData['result']['skills'];
-            if (skillsData is String) {
-              try {
-                // Try decoding as JSON.
-                var decoded = json.decode(skillsData);
-                if (decoded is List) {
-                  skills = List<String>.from(decoded);
-                }
-              } catch (e) {
-                // Fallback: remove brackets and quotes, then split.
-                skills = skillsData
-                    .replaceAll(RegExp(r'[\[\]"]'), '')
+
+            if (skillsData != null) {
+              if (kDebugMode) {
+                print("Original skills data type: ${skillsData.runtimeType}");
+                print("Original skills data: $skillsData");
+              }
+
+              // Force convert to string and try to parse
+              String skillsStr = skillsData.toString();
+
+              // Remove all nested brackets, quotes, and extra spaces
+              skillsStr = skillsStr
+                  .replaceAll(RegExp(r'[\[\]"]'), '')
+                  .replaceAll('\\', '')
+                  .trim();
+
+              if (kDebugMode) {
+                print("Cleaned skills string: $skillsStr");
+              }
+
+              // Split by commas, convert to title case, and add to skills list
+              if (skillsStr.isNotEmpty) {
+                skills = skillsStr
                     .split(',')
-                    .map((s) => s.trim())
+                    .map((s) => toTitleCase(s.trim()))
+                    .where((s) => s.isNotEmpty)
                     .toList();
               }
-            } else if (skillsData is List) {
-              skills = List<String>.from(skillsData);
             }
-
-            // Uncomment if you wish to load experience items:
-            // experienceItems = List<Map<String, String>>.from(responseData['result']['experence'] ?? []);
           });
+        }
+        if (kDebugMode) {
+          print("Final skills list (title case): $skills");
         }
       }
     } catch (e) {
@@ -144,15 +164,6 @@ class _ProfilePageState extends State<ProfilePage> {
   void _toggleEdit(String field) {
     setState(() {
       switch (field) {
-        // Uncomment for bio or LinkedIn.
-        // case 'bio':
-        //   isEditingBio = !isEditingBio;
-        //   if (isEditingBio) _bioController.text = bio;
-        //   break;
-        // case 'linkedin':
-        //   isEditingLinkedIn = !isEditingLinkedIn;
-        //   if (isEditingLinkedIn) _linkedinController.text = linkedin;
-        //   break;
         case 'about':
           isEditingAbout = !isEditingAbout;
           if (isEditingAbout) _aboutController.text = about;
@@ -177,16 +188,6 @@ class _ProfilePageState extends State<ProfilePage> {
     String newValue = "";
     setState(() {
       switch (field) {
-        // case 'bio':
-        //   bio = _bioController.text;
-        //   newValue = bio;
-        //   isEditingBio = false;
-        //   break;
-        // case 'linkedin':
-        //   linkedin = _linkedinController.text;
-        //   newValue = linkedin;
-        //   isEditingLinkedIn = false;
-        //   break;
         case 'about':
           about = _aboutController.text;
           newValue = about;
@@ -228,6 +229,21 @@ class _ProfilePageState extends State<ProfilePage> {
       }
       return;
     }
+
+    // Special handling for skills to ensure they're in title case
+    if (field == "skills") {
+      try {
+        List<dynamic> skillsList = json.decode(value);
+        List<String> titleCaseSkills =
+            skillsList.map((skill) => toTitleCase(skill.toString())).toList();
+        value = json.encode(titleCaseSkills);
+      } catch (e) {
+        if (kDebugMode) {
+          print("Error processing skills for title case: $e");
+        }
+      }
+    }
+
     var uri = Uri.parse("https://skillop.in/api/user/update/profile");
     var request = http.MultipartRequest("PUT", uri);
     request.headers['authorization'] = token;
@@ -316,6 +332,8 @@ class _ProfilePageState extends State<ProfilePage> {
           content: TextField(
             controller: skillController,
             decoration: const InputDecoration(hintText: "Skill Name"),
+            textCapitalization:
+                TextCapitalization.words, // Adds keyboard hint for title case
           ),
           actions: [
             TextButton(
@@ -325,9 +343,12 @@ class _ProfilePageState extends State<ProfilePage> {
             TextButton(
               onPressed: () {
                 setState(() {
-                  skills.add(skillController.text);
+                  // Convert to title case before adding
+                  skills.add(toTitleCase(skillController.text));
                 });
                 Navigator.pop(context);
+                // Update skills in backend
+                _updateFieldInBackend("skills", jsonEncode(skills));
               },
               child: const Text("Add"),
             ),
@@ -391,190 +412,178 @@ class _ProfilePageState extends State<ProfilePage> {
       setState(() {
         skills.removeAt(index);
       });
+      // Update skills in backend after deletion
+      _updateFieldInBackend("skills", jsonEncode(skills));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      // No global save button – each section saves individually.
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Background image with edit button.
-            Stack(
-              children: [
-                Container(
-                  height: 150,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: bgPic.isNotEmpty
-                          ? NetworkImage(bgPic)
-                          : const AssetImage('assets/images/default_bg.png')
-                              as ImageProvider,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      shape: const CircleBorder(),
-                      padding: const EdgeInsets.all(8),
-                      backgroundColor: Colors.white.withOpacity(0.7),
-                    ),
-                    onPressed: () =>
-                        Navigator.pushNamed(context, '/setup_profile_photo'),
-                    child: const Icon(Icons.edit, color: Colors.black),
-                  ),
-                ),
-              ],
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+    return WillPopScope(
+      onWillPop: () async {
+        Navigator.pushNamedAndRemoveUntil(
+            context, "/home", (Route<dynamic> route) => false);
+        return false;
+      },
+      child: Scaffold(
+        body: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Background image with edit button.
+              Stack(
                 children: [
-                  // Profile picture, name, and bio section.
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 40,
-                        backgroundImage: profilepic.isNotEmpty
-                            ? NetworkImage(profilepic)
-                            : const AssetImage(
-                                    'assets/images/default_profile_pic.png')
+                  Container(
+                    height: 150,
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: bgPic.isNotEmpty
+                            ? NetworkImage(bgPic)
+                            : const AssetImage('assets/images/default_bg.png')
                                 as ImageProvider,
+                        fit: BoxFit.cover,
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              name,
-                              style: const TextStyle(
-                                  fontSize: 22, fontWeight: FontWeight.bold),
-                            ),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: isEditingBio
-                                      ? TextField(
-                                          controller: _bioController,
-                                          decoration: const InputDecoration(
-                                            hintText: "Enter your bio",
-                                          ),
-                                        )
-                                      : Text(
-                                          bio,
-                                          style: const TextStyle(
-                                              fontSize: 14, color: Colors.grey),
-                                        ),
-                                ),
-                                // Uncomment below to allow bio editing.
-                                // IconButton(
-                                //   icon: Icon(isEditingBio ? Icons.save : Icons.edit, size: 16),
-                                //   onPressed: () {
-                                //     if (isEditingBio) {
-                                //       _saveField('bio');
-                                //     } else {
-                                //       _toggleEdit('bio');
-                                //     }
-                                //   },
-                                // ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                  const SizedBox(height: 16),
-                  // LinkedIn row.
-                  Row(
-                    children: [
-                      const Icon(Icons.link),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: isEditingLinkedIn
-                            ? TextField(
-                                controller: _linkedinController,
-                                decoration: const InputDecoration(
-                                    hintText: "Enter LinkedIn URL"),
-                              )
-                            : Text(
-                                linkedin,
-                                style: TextStyle(
-                                  color: Colors.blue.shade800,
-                                  decoration: TextDecoration.underline,
-                                ),
-                              ),
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        shape: const CircleBorder(),
+                        padding: const EdgeInsets.all(8),
+                        backgroundColor: Colors.white.withOpacity(0.7),
                       ),
-                      // Uncomment to allow LinkedIn editing.
-                      // IconButton(
-                      //   icon: Icon(isEditingLinkedIn ? Icons.save : Icons.edit, size: 16),
-                      //   onPressed: () {
-                      //     if (isEditingLinkedIn) {
-                      //       _saveField('linkedin');
-                      //     } else {
-                      //       _toggleEdit('linkedin');
-                      //     }
-                      //   },
-                      // ),
-                    ],
+                      onPressed: () =>
+                          Navigator.pushNamed(context, '/setup_profile_photo'),
+                      child: const Icon(Icons.edit, color: Colors.black),
+                    ),
                   ),
-                  const SizedBox(height: 16),
-                  // Editable text sections.
-                  buildEditableSection("ABOUT", about, _aboutController,
-                      isEditingAbout, "about"),
-                  buildEditableSection(
-                      "Past Experience",
-                      pastExperience,
-                      _pastExperienceController,
-                      isEditingPastExperience,
-                      "pastExperience"),
-                  buildEditableSection(
-                      "Future Plans",
-                      futurePlans,
-                      _futurePlansController,
-                      isEditingFuturePlans,
-                      "futurePlans"),
-                  // Experience section.
-                  buildExperienceSection(),
-                  // Skills section.
-                  buildSkillsSection(),
                 ],
               ),
-            )
-          ],
-        ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: [
-          BottomNavigationBarItem(
-            icon: GestureDetector(
-              onTap: () => Navigator.pushNamed(context, "/home"),
-              child: const Icon(Icons.home, color: Colors.black, size: 40),
-            ),
-            label: '',
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Profile picture, name, and bio section.
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 40,
+                          backgroundImage: profilepic.isNotEmpty
+                              ? NetworkImage(profilepic)
+                              : const AssetImage(
+                                      'assets/images/default_profile_pic.png')
+                                  as ImageProvider,
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                name,
+                                style: const TextStyle(
+                                    fontSize: 22, fontWeight: FontWeight.bold),
+                              ),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: isEditingBio
+                                        ? TextField(
+                                            controller: _bioController,
+                                            decoration: const InputDecoration(
+                                              hintText: "Enter your bio",
+                                            ),
+                                          )
+                                        : Text(
+                                            bio,
+                                            style: const TextStyle(
+                                                fontSize: 14,
+                                                color: Colors.grey),
+                                          ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    // LinkedIn row.
+                    Row(
+                      children: [
+                        const Icon(Icons.link),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: isEditingLinkedIn
+                              ? TextField(
+                                  controller: _linkedinController,
+                                  decoration: const InputDecoration(
+                                      hintText: "Enter LinkedIn URL"),
+                                )
+                              : Text(
+                                  linkedin,
+                                  style: TextStyle(
+                                    color: Colors.blue.shade800,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    // Editable text sections.
+                    buildEditableSection("ABOUT", about, _aboutController,
+                        isEditingAbout, "about"),
+                    buildEditableSection(
+                        "Past Experience",
+                        pastExperience,
+                        _pastExperienceController,
+                        isEditingPastExperience,
+                        "pastExperience"),
+                    buildEditableSection(
+                        "Future Plans",
+                        futurePlans,
+                        _futurePlansController,
+                        isEditingFuturePlans,
+                        "futurePlans"),
+                    // Experience section.
+                    buildExperienceSection(),
+                    // Skills section.
+                    buildSkillsSection(),
+                  ],
+                ),
+              )
+            ],
           ),
-          BottomNavigationBarItem(
-            icon: GestureDetector(
-              onTap: () => Navigator.pushNamed(context, '/profile'),
-              child: CircleAvatar(
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          items: [
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.home, color: Colors.black, size: 40),
+              label: '',
+            ),
+            BottomNavigationBarItem(
+              icon: CircleAvatar(
                 backgroundImage: profilepic.isNotEmpty
                     ? NetworkImage(profilepic)
                     : const AssetImage('assets/images/default_profile_pic.png')
                         as ImageProvider,
               ),
+              label: '',
             ),
-            label: '',
-          ),
-        ],
+          ],
+          currentIndex: 1,
+          onTap: (index) {
+            if (index == 0) {
+              Navigator.pushNamedAndRemoveUntil(
+                  context, "/home", (Route<dynamic> route) => false);
+            }
+          },
+        ),
       ),
     );
   }
@@ -638,7 +647,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       isEditingExperience = false;
                     });
                     _updateFieldInBackend(
-                        "experence", jsonEncode(experienceItems));
+                        "experience", jsonEncode(experienceItems));
                   } else {
                     setState(() {
                       isEditingExperience = true;
@@ -745,7 +754,8 @@ class _ProfilePageState extends State<ProfilePage> {
                   Colors.green,
                   Colors.blue,
                   Colors.yellow,
-                ][skills.indexOf(skill) % 4],
+                  Colors.purple,
+                ][skills.indexOf(skill) % 5],
               );
             }).toList(),
           ),
