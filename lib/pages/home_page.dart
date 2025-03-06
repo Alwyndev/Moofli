@@ -188,52 +188,84 @@ class _HomePageState extends State<HomePage> {
       ),
       // Navigation drawer with profile information and settings
       drawer: Drawer(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (userData.isNotEmpty)
-              UserAccountsDrawerHeader(
-                accountName: Text(userData['firstname'] ?? ''),
-                accountEmail: Text(userData['email'] ?? ''),
-                currentAccountPicture: userData['profilePic'] != null
-                    ? const CircleAvatar(
-                        backgroundImage:
-                            AssetImage('assets/images/default_profile_pic.png'),
-                      )
-                    : CircleAvatar(
-                        backgroundImage: NetworkImage(profilePic),
-                      ),
-              )
-            else
-              const UserAccountsDrawerHeader(
-                accountName: Text('Loading...'),
-                accountEmail: Text(''),
-                decoration: BoxDecoration(color: Colors.grey),
+        child: Container(
+          // You can remove or keep this Container decoration,
+          // depending on whether you also want a background image
+          // behind the entire drawer.
+          // decoration: BoxDecoration(
+          //   image: DecorationImage(
+          //     image: NetworkImage(bgPic),
+          //     fit: BoxFit.cover,
+          //   ),
+          // ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (userData.isNotEmpty)
+                UserAccountsDrawerHeader(
+                  // <-- Add a decoration here to replace the purple background
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: NetworkImage(bgPic),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  accountName: Text(
+                    userData['firstname'] ?? '',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                  accountEmail: Text(
+                    userData['email'] ?? '',
+                    style: TextStyle(
+                      color: Colors.black,
+                    ),
+                  ),
+                  currentAccountPicture: userData['profilePic'] == null
+                      ? const CircleAvatar(
+                          backgroundImage: AssetImage(
+                              'assets/images/default_profile_pic.png'),
+                        )
+                      : CircleAvatar(
+                          backgroundImage: NetworkImage(profilePic),
+                        ),
+                )
+              else
+                const UserAccountsDrawerHeader(
+                  accountName: Text('Loading...'),
+                  accountEmail: Text(''),
+                  decoration: BoxDecoration(color: Colors.grey),
+                ),
+              ListTile(
+                leading: const Icon(Icons.person),
+                title: const Text('Profile'),
+                onTap: () {
+                  Navigator.pushNamed(context, '/profile');
+                },
               ),
-            ListTile(
-              leading: const Icon(Icons.person),
-              title: const Text('Profile'),
-              onTap: () {
-                Navigator.pushNamed(context, '/profile');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text('Settings'),
-              onTap: () {
-                Navigator.pushNamed(context, '/settings');
-              },
-            ),
-            const Spacer(),
-            ListTile(
-              leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text('Logout Account',
-                  style: TextStyle(color: Colors.red)),
-              onTap: () => logout(context),
-            ),
-          ],
+              // ListTile(
+              //   leading: const Icon(Icons.settings),
+              //   title: const Text('Settings'),
+              //   onTap: () {
+              //     Navigator.pushNamed(context, '/settings');
+              //   },
+              // ),
+              const Spacer(),
+              ListTile(
+                leading: const Icon(Icons.logout, color: Colors.red),
+                title: const Text(
+                  'Logout Account',
+                  style: TextStyle(color: Colors.red),
+                ),
+                onTap: () => logout(context),
+              ),
+            ],
+          ),
         ),
       ),
+
       // Main body: ListView containing the calendar and diary entry chips
       body: RefreshIndicator(
         onRefresh: _fetchDiaryEntries, // Refresh when user swipes down

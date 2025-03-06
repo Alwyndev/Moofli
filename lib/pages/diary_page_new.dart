@@ -175,7 +175,7 @@ class _DiaryPageNewState extends State<DiaryPageNew> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(25.0),
                 ),
-                color: Colors.blue[300],
+                color: Color.fromRGBO(145, 185, 56, 0.85),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: TextField(
@@ -205,8 +205,8 @@ class _DiaryPageNewState extends State<DiaryPageNew> {
           onPressed: saveEntry,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
-          backgroundColor: const Color.fromRGBO(0, 119, 255, 0.6),
-          child: const Icon(Icons.save_outlined, color: Colors.black),
+          backgroundColor: const Color.fromRGBO(34, 72, 79, 0.75),
+          child: const Icon(Icons.save_outlined, color: Colors.white),
         ),
         bottomNavigationBar: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,

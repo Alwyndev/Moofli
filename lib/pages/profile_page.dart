@@ -89,32 +89,15 @@ class _ProfilePageState extends State<ProfilePage> {
             profilepic = responseData['result']['profilePicUrl'] ?? "";
             bgPic = responseData['result']['bgPicUrl'] ?? "";
 
-            // Start with empty skills array
+            // Process skills data (unchanged)
             skills = [];
-
-            // Process skills data
             var skillsData = responseData['result']['skills'];
-
             if (skillsData != null) {
-              if (kDebugMode) {
-                print("Original skills data type: ${skillsData.runtimeType}");
-                print("Original skills data: $skillsData");
-              }
-
-              // Force convert to string and try to parse
-              String skillsStr = skillsData.toString();
-
-              // Remove all nested brackets, quotes, and extra spaces
-              skillsStr = skillsStr
+              String skillsStr = skillsData
+                  .toString()
                   .replaceAll(RegExp(r'[\[\]"]'), '')
                   .replaceAll('\\', '')
                   .trim();
-
-              if (kDebugMode) {
-                print("Cleaned skills string: $skillsStr");
-              }
-
-              // Split by commas, convert to title case, and add to skills list
               if (skillsStr.isNotEmpty) {
                 skills = skillsStr
                     .split(',')
@@ -123,10 +106,30 @@ class _ProfilePageState extends State<ProfilePage> {
                     .toList();
               }
             }
+
+            // Process experience data from the backend key "experence"
+            List<dynamic>? experenceData = responseData['result']['experence'];
+            if (experenceData != null) {
+              experienceItems = experenceData.map<Map<String, String>>((item) {
+                String startDate = item["startDate"] ?? "";
+                String endDate = item["endDate"] ?? "";
+                String duration = startDate.isNotEmpty
+                    ? (endDate.isNotEmpty
+                        ? "$startDate - $endDate"
+                        : "$startDate - Present")
+                    : "";
+                return {
+                  "title": item["title"] ?? "",
+                  "company": item["company"] ?? "",
+                  "duration": duration,
+                };
+              }).toList();
+            }
           });
         }
+      } else {
         if (kDebugMode) {
-          print("Final skills list (title case): $skills");
+          print("Failed to fetch profile: ${response.body}");
         }
       }
     } catch (e) {
@@ -281,22 +284,26 @@ class _ProfilePageState extends State<ProfilePage> {
       builder: (context) {
         return AlertDialog(
           title: const Text("Add Experience"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: titleController,
-                decoration: const InputDecoration(hintText: "Title"),
-              ),
-              TextField(
-                controller: companyController,
-                decoration: const InputDecoration(hintText: "Company"),
-              ),
-              TextField(
-                controller: durationController,
-                decoration: const InputDecoration(hintText: "Duration"),
-              ),
-            ],
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: titleController,
+                  decoration: const InputDecoration(hintText: "Title"),
+                ),
+                TextField(
+                  controller: companyController,
+                  decoration: const InputDecoration(hintText: "Company"),
+                ),
+                TextField(
+                  controller: durationController,
+                  decoration: const InputDecoration(
+                    hintText: "Duration (e.g., Mar 2020 - Dec 2023)",
+                  ),
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -305,13 +312,27 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             TextButton(
               onPressed: () {
+                String durationInput = durationController.text.trim();
+                // Split the input by the hyphen
+                List<String> parts = durationInput.split('-');
+                String startDate = "";
+                String endDate = "";
+                if (parts.length == 2) {
+                  startDate = parts[0].trim();
+                  endDate = parts[1].trim();
+                }
+
                 setState(() {
                   experienceItems.add({
                     "title": titleController.text,
                     "company": companyController.text,
-                    "duration": durationController.text,
+                    "startDate": startDate,
+                    "endDate": endDate,
+                    "duration": durationInput,
                   });
                 });
+                // Update the backend using the expected key "experence"
+                _updateFieldInBackend("experence", jsonEncode(experienceItems));
                 Navigator.pop(context);
               },
               child: const Text("Add"),
@@ -647,7 +668,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       isEditingExperience = false;
                     });
                     _updateFieldInBackend(
-                        "experience", jsonEncode(experienceItems));
+                        "experence", jsonEncode(experienceItems));
                   } else {
                     setState(() {
                       isEditingExperience = true;
