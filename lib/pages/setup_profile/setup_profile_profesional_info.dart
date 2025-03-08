@@ -180,7 +180,7 @@ class _SetupProfileProfesionalInfoState
                   ),
                   children: [
                     TextSpan(
-                      text: '60%',
+                      text: '40%',
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,

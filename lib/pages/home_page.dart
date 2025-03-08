@@ -146,263 +146,277 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  // Handle swipe from right-to-left on homepage
+  void _handleHorizontalSwipe(DragEndDetails details) {
+    // Check if swipe is from right-to-left (negative velocity) with sufficient speed.
+    if (details.primaryVelocity != null && details.primaryVelocity! < -500) {
+      Navigator.pushNamed(context, '/profile');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      // AppBar with logo and streak display
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 1,
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Spacer(),
-            Image.asset('assets/images/logo.png', height: 80),
-            const Spacer(),
-            const SizedBox(width: 25),
-            ShaderMask(
-              shaderCallback: (bounds) => LinearGradient(
-                colors: streak == '0'
-                    ? [Colors.black, Colors.black]
-                    : [Colors.yellow, Colors.deepOrange],
-              ).createShader(bounds),
-              child: const Icon(
-                Icons.local_fire_department,
-                color: Colors.white,
-              ),
-            ),
-            ShaderMask(
-              shaderCallback: (bounds) => LinearGradient(
-                colors: streak == '0'
-                    ? [Colors.black, Colors.black]
-                    : [Colors.yellow, Colors.deepOrange],
-              ).createShader(bounds),
-              child: Text(
-                streak,
-                style: const TextStyle(
-                    fontWeight: FontWeight.bold, color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-      ),
-      // Navigation drawer with profile information and settings
-      drawer: Drawer(
-        child: Container(
-          // You can remove or keep this Container decoration,
-          // depending on whether you also want a background image
-          // behind the entire drawer.
-          // decoration: BoxDecoration(
-          //   image: DecorationImage(
-          //     image: NetworkImage(bgPic),
-          //     fit: BoxFit.cover,
-          //   ),
-          // ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return GestureDetector(
+      onHorizontalDragEnd: _handleHorizontalSwipe,
+      child: Scaffold(
+        // AppBar with logo and streak display
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 1,
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (userData.isNotEmpty)
-                UserAccountsDrawerHeader(
-                  // <-- Add a decoration here to replace the purple background
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: NetworkImage(bgPic),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  accountName: Text(
-                    userData['firstname'] ?? '',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                  accountEmail: Text(
-                    userData['email'] ?? '',
-                    style: TextStyle(
-                      color: Colors.black,
-                    ),
-                  ),
-                  currentAccountPicture: userData['profilePic'] == null
-                      ? const CircleAvatar(
-                          backgroundImage: AssetImage(
-                              'assets/images/default_profile_pic.png'),
-                        )
-                      : CircleAvatar(
-                          backgroundImage: NetworkImage(profilePic),
-                        ),
-                )
-              else
-                const UserAccountsDrawerHeader(
-                  accountName: Text('Loading...'),
-                  accountEmail: Text(''),
-                  decoration: BoxDecoration(color: Colors.grey),
-                ),
-              ListTile(
-                leading: const Icon(Icons.person),
-                title: const Text('Profile'),
-                onTap: () {
-                  Navigator.pushNamed(context, '/profile');
-                },
-              ),
-              // ListTile(
-              //   leading: const Icon(Icons.settings),
-              //   title: const Text('Settings'),
-              //   onTap: () {
-              //     Navigator.pushNamed(context, '/settings');
-              //   },
-              // ),
               const Spacer(),
-              ListTile(
-                leading: const Icon(Icons.logout, color: Colors.red),
-                title: const Text(
-                  'Logout Account',
-                  style: TextStyle(color: Colors.red),
+              Image.asset('assets/images/logo.png', height: 80),
+              const Spacer(),
+              const SizedBox(width: 25),
+              ShaderMask(
+                shaderCallback: (bounds) => LinearGradient(
+                  colors: streak == '0'
+                      ? [Colors.black, Colors.black]
+                      : [Colors.yellow, Colors.deepOrange],
+                ).createShader(bounds),
+                child: const Icon(
+                  Icons.local_fire_department,
+                  color: Colors.white,
                 ),
-                onTap: () => logout(context),
+              ),
+              ShaderMask(
+                shaderCallback: (bounds) => LinearGradient(
+                  colors: streak == '0'
+                      ? [Colors.black, Colors.black]
+                      : [Colors.yellow, Colors.deepOrange],
+                ).createShader(bounds),
+                child: Text(
+                  streak,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, color: Colors.white),
+                ),
               ),
             ],
           ),
         ),
-      ),
+        // Navigation drawer with profile information and settings
+        drawer: Drawer(
+          child: Container(
+            // You can remove or keep this Container decoration,
+            // depending on whether you also want a background image
+            // behind the entire drawer.
+            // decoration: BoxDecoration(
+            //   image: DecorationImage(
+            //     image: NetworkImage(bgPic),
+            //     fit: BoxFit.cover,
+            //   ),
+            // ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (userData.isNotEmpty)
+                  UserAccountsDrawerHeader(
+                    // <-- Add a decoration here to replace the purple background
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: NetworkImage(bgPic),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    accountName: Text(
+                      userData['firstname'] ?? '',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                    accountEmail: Text(
+                      userData['email'] ?? '',
+                      style: TextStyle(
+                        color: Colors.black,
+                      ),
+                    ),
+                    currentAccountPicture: userData['profilePic'] != null
+                        ? const CircleAvatar(
+                            backgroundImage: AssetImage(
+                                'assets/images/default_profile_pic.png'),
+                          )
+                        : CircleAvatar(
+                            backgroundImage: NetworkImage(profilePic),
+                          ),
+                  )
+                else
+                  const UserAccountsDrawerHeader(
+                    accountName: Text('Loading...'),
+                    accountEmail: Text(''),
+                    decoration: BoxDecoration(color: Colors.grey),
+                  ),
+                ListTile(
+                  leading: const Icon(Icons.person),
+                  title: const Text('Profile'),
+                  onTap: () {
+                    Navigator.pushNamed(context, '/profile');
+                  },
+                ),
+                // ListTile(
+                //   leading: const Icon(Icons.settings),
+                //   title: const Text('Settings'),
+                //   onTap: () {
+                //     Navigator.pushNamed(context, '/settings');
+                //   },
+                // ),
+                const Spacer(),
+                ListTile(
+                  leading: const Icon(Icons.logout, color: Colors.red),
+                  title: const Text(
+                    'Logout Account',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                  onTap: () => logout(context),
+                ),
+              ],
+            ),
+          ),
+        ),
 
-      // Main body: ListView containing the calendar and diary entry chips
-      body: RefreshIndicator(
-        onRefresh: _fetchDiaryEntries, // Refresh when user swipes down
-        child: ListView(
-          children: [
-            // Custom header above the calendar
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Column(
-                children: [
-                  // Custom header that shows the month and toggles the calendar view when tapped.
-                  GestureDetector(
-                    onTap: _toggleCalendarFormat,
-                    child: Container(
-                      alignment: Alignment.center,
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Text(
-                        MaterialLocalizations.of(context)
-                            .formatMonthYear(_focusedDay),
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+        // Main body: ListView containing the calendar and diary entry chips
+        body: RefreshIndicator(
+          onRefresh: _fetchDiaryEntries, // Refresh when user swipes down
+          child: ListView(
+            children: [
+              // Custom header above the calendar
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Column(
+                  children: [
+                    // Custom header that shows the month and toggles the calendar view when tapped.
+                    GestureDetector(
+                      onTap: _toggleCalendarFormat,
+                      child: Container(
+                        alignment: Alignment.center,
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Text(
+                          MaterialLocalizations.of(context)
+                              .formatMonthYear(_focusedDay),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  // The TableCalendar with its built-in header hidden.
-                  TableCalendar(
-                    firstDay: DateTime.utc(2000, 1, 1),
-                    lastDay: DateTime.utc(2100, 12, 31),
-                    focusedDay: _focusedDay,
-                    headerVisible: false, // Hides the default header.
-                    calendarFormat: _isCalendarExpanded
-                        ? CalendarFormat.month
-                        : CalendarFormat.week,
-                    selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                    onDaySelected: (selectedDay, focusedDay) {
-                      setState(() {
-                        _selectedDay = selectedDay;
-                        _focusedDay = focusedDay;
-                      });
-                    },
-                    // Update the focused day when the calendar is swiped.
-                    onPageChanged: (focusedDay) {
-                      setState(() {
-                        _focusedDay = focusedDay;
-                      });
-                    },
-                  ),
-                ],
+                    // The TableCalendar with its built-in header hidden.
+                    TableCalendar(
+                      firstDay: DateTime.utc(2000, 1, 1),
+                      lastDay: DateTime.utc(2100, 12, 31),
+                      focusedDay: _focusedDay,
+                      headerVisible: false, // Hides the default header.
+                      calendarFormat: _isCalendarExpanded
+                          ? CalendarFormat.month
+                          : CalendarFormat.week,
+                      selectedDayPredicate: (day) =>
+                          isSameDay(_selectedDay, day),
+                      onDaySelected: (selectedDay, focusedDay) {
+                        setState(() {
+                          _selectedDay = selectedDay;
+                          _focusedDay = focusedDay;
+                        });
+                      },
+                      // Update the focused day when the calendar is swiped.
+                      onPageChanged: (focusedDay) {
+                        setState(() {
+                          _focusedDay = focusedDay;
+                        });
+                      },
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Text(
-                'Diary Entries:',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text(
+                  'Diary Entries:',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: FutureBuilder<SharedPreferences>(
-                future: SharedPreferences.getInstance(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done) {
-                    final token = snapshot.data?.getString('token') ?? '';
-                    return DiaryChips(
-                      diaryEntries: _diaryEntries,
-                      token: token,
-                      onRefresh: _fetchDiaryEntries,
-                    );
-                  } else {
-                    return CircularProgressIndicator();
-                  }
-                },
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: FutureBuilder<SharedPreferences>(
+                  future: SharedPreferences.getInstance(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      final token = snapshot.data?.getString('token') ?? '';
+                      return DiaryChips(
+                        diaryEntries: _diaryEntries,
+                        token: token,
+                        onRefresh: _fetchDiaryEntries,
+                      );
+                    } else {
+                      return CircularProgressIndicator();
+                    }
+                  },
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-          ],
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
-      ),
-      // Floating action button to add a new diary entry
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => DiaryPageNew()),
-          ).then((result) {
-            if (result == true) {
-              _fetchDiaryEntries(); // Refresh the homepage when returning
-            }
-          });
-        },
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
-        backgroundColor: const Color.fromRGBO(0, 119, 255, 0.6),
-        splashColor: Colors.blue,
-        child: const Icon(Icons.add),
-      ),
-      // Bottom navigation bar with Home and Profile options
-      bottomNavigationBar: BottomNavigationBar(
-        items: [
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.home, color: Colors.black, size: 40),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: CircleAvatar(
-              backgroundImage: profilePic.isNotEmpty
-                  ? NetworkImage(profilePic)
-                  : const AssetImage('assets/images/default_profile_pic.png')
-                      as ImageProvider,
+        // Floating action button to add a new diary entry
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => DiaryPageNew()),
+            ).then((result) {
+              if (result == true) {
+                _fetchDiaryEntries(); // Refresh the homepage when returning
+              }
+            });
+          },
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+          backgroundColor: const Color.fromRGBO(0, 119, 255, 0.6),
+          splashColor: Colors.blue,
+          child: const Icon(Icons.add),
+        ),
+        // Bottom navigation bar with Home and Profile options
+        bottomNavigationBar: BottomNavigationBar(
+          items: [
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.home, color: Colors.black, size: 40),
+              label: '',
             ),
-            label: '',
-          ),
-        ],
-        currentIndex: 0,
-        onTap: (index) {
-          if (index == 0) {
-            // Only push if not already on home
-            if (ModalRoute.of(context)?.settings.name != "/home") {
-              Navigator.pushNamedAndRemoveUntil(
-                context,
-                "/home",
-                (Route<dynamic> route) => false,
-              );
+            BottomNavigationBarItem(
+              icon: CircleAvatar(
+                backgroundImage: profilePic.isNotEmpty
+                    ? NetworkImage(profilePic)
+                    : const AssetImage('assets/images/default_profile_pic.png')
+                        as ImageProvider,
+              ),
+              label: '',
+            ),
+          ],
+          currentIndex: 0,
+          onTap: (index) {
+            if (index == 0) {
+              // Only push if not already on home
+              if (ModalRoute.of(context)?.settings.name != "/home") {
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  "/home",
+                  (Route<dynamic> route) => false,
+                );
+              }
+            } else if (index == 1) {
+              // Only push profile if not already there
+              if (ModalRoute.of(context)?.settings.name != "/profile") {
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/profile',
+                  (Route<dynamic> route) => false,
+                );
+              }
             }
-          } else if (index == 1) {
-            // Only push profile if not already there
-            if (ModalRoute.of(context)?.settings.name != "/profile") {
-              Navigator.pushNamedAndRemoveUntil(
-                context,
-                '/profile',
-                (Route<dynamic> route) => false,
-              );
-            }
-          }
-        },
+          },
+        ),
       ),
     );
   }

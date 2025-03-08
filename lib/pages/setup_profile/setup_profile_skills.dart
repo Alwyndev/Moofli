@@ -193,7 +193,7 @@ class _SetupProfileSkillsState extends State<SetupProfileSkills> {
                   ),
                   children: [
                     TextSpan(
-                      text: '40%',
+                      text: '60%',
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,

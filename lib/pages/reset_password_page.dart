@@ -2,10 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:async';
 import 'package:moofli_app/components/gradient_button.dart';
 
 class ResetPasswordPage extends StatefulWidget {
-  // If token is provided, the page will be in reset mode.
   final String? token;
   const ResetPasswordPage({Key? key, this.token}) : super(key: key);
 
@@ -16,11 +16,13 @@ class ResetPasswordPage extends StatefulWidget {
 class _ResetPasswordPageState extends State<ResetPasswordPage> {
   final TextEditingController _controller = TextEditingController();
   bool _isLoading = false;
+  bool _mailSent = false;
+  bool _canResend = false;
+  int _resendDelay = 30;
+  Timer? _timer;
 
-  // Base URL constant
   static const String baseUrl = 'https://skillop.in/api';
 
-  // Function to call the forget password API.
   Future<void> _sendForgetPassword() async {
     final email = _controller.text;
     final url = '$baseUrl/user/password/forget';
@@ -37,6 +39,11 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
         print(response.statusCode);
       }
       if (response.statusCode == 200 || response.statusCode == 204) {
+        setState(() {
+          _mailSent = true;
+          _canResend = false;
+          _startResendTimer();
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Password reset email sent.')),
         );
@@ -56,7 +63,6 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     }
   }
 
-  // Function to call the reset password API.
   Future<void> _resetPassword() async {
     final password = _controller.text;
     final token = widget.token;
@@ -91,9 +97,36 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     }
   }
 
+  void _startResendTimer() {
+    _timer?.cancel();
+    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      if (_resendDelay > 0) {
+        setState(() {
+          _resendDelay--;
+        });
+      } else {
+        setState(() {
+          _canResend = true;
+        });
+        timer.cancel();
+      }
+    });
+  }
+
+  VoidCallback? _resendMailFunction() {
+    if (!_canResend) return null;
+    return () {
+      setState(() {
+        _resendDelay += 15;
+        _canResend = false;
+      });
+      _startResendTimer();
+      _sendForgetPassword();
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Determine the mode based on whether a token is passed.
     final isResetMode = widget.token != null;
     return Scaffold(
       appBar: AppBar(
@@ -112,7 +145,6 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // Title
                   Text(
                     isResetMode ? 'RESET PASSWORD' : 'FORGOT PASSWORD',
                     style: TextStyle(
@@ -122,7 +154,6 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                     ),
                   ),
                   SizedBox(height: 8),
-                  // Decorative Line
                   Container(
                     height: 8,
                     width: 100,
@@ -139,7 +170,6 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                     ),
                   ),
                   SizedBox(height: 40),
-                  // Input Field: shows Email or New Password based on mode.
                   TextField(
                     controller: _controller,
                     decoration: InputDecoration(
@@ -153,15 +183,17 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                         borderRadius: BorderRadius.circular(12.0),
                       ),
                     ),
-                    // Hide input text in reset mode for password security.
                     obscureText: isResetMode,
                   ),
-                  SizedBox(height: 40),
-                  // Gradient Button to trigger the API call.
+                  SizedBox(height: 20),
                   GradientButton(
-                    text: isResetMode ? 'Reset Password' : 'Send Mail',
+                    text: _mailSent
+                        ? 'Back to Login'
+                        : (isResetMode ? 'Reset Password' : 'Send Mail'),
                     onPressed: () {
-                      if (isResetMode) {
+                      if (_mailSent) {
+                        Navigator.pop(context);
+                      } else if (isResetMode) {
                         _resetPassword();
                       } else {
                         _sendForgetPassword();
@@ -170,9 +202,26 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                     border: 20,
                     padding: 13,
                   ),
+                  if (_mailSent) ...[
+                    SizedBox(height: 10),
+                    GradientButton(
+                      text: _canResend
+                          ? "Resend Mail"
+                          : "Resend in $_resendDelay s",
+                      onPressed: _resendMailFunction() ?? () {},
+                      border: 20,
+                      padding: 13,
+                    ),
+                  ],
                 ],
               ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 }

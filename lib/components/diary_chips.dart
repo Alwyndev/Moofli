@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
@@ -81,13 +82,12 @@ class _DiaryChipsState extends State<DiaryChips> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => DiaryPageNew(
-                    existingEntry: diaryEntry['content'], // Pass existing text
-                    entryId: diaryEntry['_id'], // Pass entry ID for updating
+                    existingEntry: diaryEntry['content'],
+                    entryId: diaryEntry['_id'],
                   ),
                 ),
               ).then((value) {
-                if (value == true)
-                  widget.onRefresh(); // Refresh homepage after edit
+                if (value == true) widget.onRefresh();
               });
             },
             child: Container(
@@ -95,8 +95,28 @@ class _DiaryChipsState extends State<DiaryChips> {
               margin: const EdgeInsets.only(bottom: 8.0),
               child: Chip(
                 backgroundColor: chipColor.withOpacity(0.25),
-                onDeleted: () async {
-                  await _deleteDiaryEntry(diaryEntry);
+                onDeleted: () {
+                  // Create a timer that deletes the entry after 7 seconds.
+                  late Timer deletionTimer;
+                  deletionTimer = Timer(const Duration(seconds: 10), () async {
+                    await _deleteDiaryEntry(diaryEntry);
+                  });
+
+                  // Show a SnackBar with a custom countdown widget and an Undo button.
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      duration: const Duration(seconds: 10),
+                      content: CountdownSnackBarContent(initialSeconds: 10),
+                      action: SnackBarAction(
+                        label: 'Undo',
+                        onPressed: () {
+                          if (deletionTimer.isActive) {
+                            deletionTimer.cancel();
+                          }
+                        },
+                      ),
+                    ),
+                  );
                 },
                 deleteIcon: Icon(Icons.delete, color: chipColor),
                 label: Row(
@@ -144,5 +164,48 @@ class _DiaryChipsState extends State<DiaryChips> {
           ),
       ],
     );
+  }
+}
+
+// This widget displays the countdown timer inside the SnackBar.
+class CountdownSnackBarContent extends StatefulWidget {
+  final int initialSeconds;
+
+  const CountdownSnackBarContent({Key? key, required this.initialSeconds})
+      : super(key: key);
+
+  @override
+  _CountdownSnackBarContentState createState() =>
+      _CountdownSnackBarContentState();
+}
+
+class _CountdownSnackBarContentState extends State<CountdownSnackBarContent> {
+  late int _secondsRemaining;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _secondsRemaining = widget.initialSeconds;
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_secondsRemaining > 0) {
+        setState(() {
+          _secondsRemaining--;
+        });
+      } else {
+        _timer?.cancel();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Text('Entry will be deleted in $_secondsRemaining second(s)');
   }
 }

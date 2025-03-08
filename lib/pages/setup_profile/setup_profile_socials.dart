@@ -100,7 +100,7 @@ class _SetupProfileSocialsState extends State<SetupProfileSocials> {
                   ),
                   children: [
                     TextSpan(
-                      text: '100%',
+                      text: '99%',
                       style: TextStyle(
                         color: Color.fromARGB(255, 90, 90, 90),
                         fontSize: 22,

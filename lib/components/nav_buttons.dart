@@ -52,7 +52,7 @@ class NavButtons extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: const [
                     Text(
-                      "NEXT",
+                      "NEXT/SKIP",
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.black,
