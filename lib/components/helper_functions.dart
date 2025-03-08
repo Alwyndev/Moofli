@@ -135,13 +135,16 @@ Widget buildEditableSection({
   );
 }
 
-/// Builds a widget for a single experience item.
+/// Builds a widget for a single experience item. When in edit mode, an edit
+/// icon is shown that opens the edit dialog.
 Widget buildExperienceItem({
+  required int index,
   required String title,
   required String company,
   required String duration,
   required VoidCallback onDelete,
   required bool isEditing,
+  VoidCallback? onEdit,
 }) {
   return Padding(
     padding: const EdgeInsets.only(bottom: 8),
@@ -161,11 +164,16 @@ Widget buildExperienceItem({
             ],
           ),
         ),
-        if (isEditing)
+        if (isEditing) ...[
+          IconButton(
+            icon: const Icon(Icons.edit, color: Colors.blue),
+            onPressed: onEdit,
+          ),
           IconButton(
             icon: const Icon(Icons.delete, color: Colors.red),
             onPressed: onDelete,
           ),
+        ],
       ],
     ),
   );
@@ -178,6 +186,7 @@ Widget buildExperienceSection({
   required VoidCallback onToggleEdit,
   required VoidCallback onAddExperience,
   required Function(int) onDeleteExperience,
+  required Function(int) onEditExperience,
 }) {
   return Padding(
     padding: const EdgeInsets.only(top: 16),
@@ -186,7 +195,7 @@ Widget buildExperienceSection({
       children: [
         Row(
           children: [
-            const Text("EXPERIENCE",
+            const Text("Experience",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(width: 8),
             IconButton(
@@ -205,11 +214,13 @@ Widget buildExperienceSection({
         Column(
           children: List.generate(experienceItems.length, (index) {
             return buildExperienceItem(
+              index: index,
               title: experienceItems[index]["title"] ?? "",
               company: experienceItems[index]["company"] ?? "",
               duration: experienceItems[index]["duration"] ?? "",
               onDelete: () => onDeleteExperience(index),
               isEditing: isEditingExperience,
+              onEdit: () => onEditExperience(index),
             );
           }),
         ),
@@ -278,6 +289,74 @@ Widget buildSkillsSection({
                 Colors.purple,
               ][index % 5],
               onDeleted: isEditingSkills ? () => onDeleteSkill(index) : null,
+            );
+          }),
+        ),
+      ],
+    ),
+  );
+}
+
+/// Builds the complete Education section.
+Widget buildEducationSection({
+  required bool isEditingEducation,
+  required List<Map<String, String>> educationItems,
+  required VoidCallback onToggleEdit,
+  required VoidCallback onAddEducation,
+  required Function(int) onDeleteEducation,
+}) {
+  return Padding(
+    padding: const EdgeInsets.only(top: 16),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Text("Education",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(width: 8),
+            IconButton(
+              icon:
+                  Icon(isEditingEducation ? Icons.save : Icons.edit, size: 16),
+              onPressed: onToggleEdit,
+            ),
+            if (isEditingEducation)
+              IconButton(
+                icon: const Icon(Icons.add, color: Colors.blue, size: 16),
+                onPressed: onAddEducation,
+              ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Column(
+          children: List.generate(educationItems.length, (index) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(educationItems[index]["degree"] ?? "",
+                            style: const TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold)),
+                        Text(educationItems[index]["institution"] ?? "",
+                            style: const TextStyle(
+                                fontSize: 14, color: Colors.grey)),
+                        Text(educationItems[index]["duration"] ?? "",
+                            style: const TextStyle(
+                                fontSize: 14, color: Colors.grey)),
+                      ],
+                    ),
+                  ),
+                  if (isEditingEducation)
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () => onDeleteEducation(index),
+                    ),
+                ],
+              ),
             );
           }),
         ),

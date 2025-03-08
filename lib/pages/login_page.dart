@@ -278,7 +278,8 @@ class _LoginPageState extends State<LoginPage> {
               const Center(child: Text('Not Registered Yet?')),
               Center(
                 child: TextButton(
-                  onPressed: () => Navigator.pushNamed(context, '/signup'),
+                  onPressed: () => Navigator.pushNamedAndRemoveUntil(
+                      context, '/signup', (Route<dynamic> route) => false),
                   child: const Text(
                     'SIGN UP',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
@@ -286,46 +287,47 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      height: 4,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(4),
-                        color: const Color.fromRGBO(167, 166, 166, 1),
-                      ),
-                    ),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Text(
-                      "OR",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Container(
-                      height: 4,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(4),
-                        color: const Color.fromRGBO(167, 166, 166, 1),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 50),
-                  // When pressed, this button triggers Google login.
-                  child: GoogleLoginButton(onPressed: _loginWithGoogle),
-                ),
-              ),
+              // Uncomment when Google sign in works
+              // Row(
+              //   children: [
+              //     Expanded(
+              //       child: Container(
+              //         height: 4,
+              //         decoration: BoxDecoration(
+              //           borderRadius: BorderRadius.circular(4),
+              //           color: const Color.fromRGBO(167, 166, 166, 1),
+              //         ),
+              //       ),
+              //     ),
+              //     const Padding(
+              //       padding: EdgeInsets.symmetric(horizontal: 8.0),
+              //       child: Text(
+              //         "OR",
+              //         style: TextStyle(
+              //           fontSize: 16,
+              //           fontWeight: FontWeight.bold,
+              //         ),
+              //       ),
+              //     ),
+              //     Expanded(
+              //       child: Container(
+              //         height: 4,
+              //         decoration: BoxDecoration(
+              //           borderRadius: BorderRadius.circular(4),
+              //           color: const Color.fromRGBO(167, 166, 166, 1),
+              //         ),
+              //       ),
+              //     ),
+              //   ],
+              // ),
+              // const SizedBox(height: 10),
+              // Center(
+              //   child: Padding(
+              //     padding: const EdgeInsets.symmetric(horizontal: 50),
+              //     // When pressed, this button triggers Google login.
+              //     child: GoogleLoginButton(onPressed: _loginWithGoogle),
+              // ),
+              // ),
             ],
           ),
         ),

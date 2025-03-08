@@ -38,7 +38,32 @@ class _HomePageState extends State<HomePage> {
     _fetchDiaryEntries();
   }
 
-  /// Loads user details stored in SharedPreferences, then fetches additional profile information from the API.
+  /// Returns a list of diary entries for a given day based on the "createdAt" field.
+  List<dynamic> _getEventsForDay(DateTime day) {
+    return _diaryEntries.where((entry) {
+      if (entry['createdAt'] == null) return false;
+      try {
+        DateTime entryDate = DateTime.parse(entry['createdAt']);
+        return isSameDay(entryDate, day);
+      } catch (e) {
+        if (kDebugMode) print('Error parsing createdAt: $e');
+        return false;
+      }
+    }).toList();
+  }
+
+  /// Refreshes the whole page by clearing any selected date,
+  /// resetting the focused day to today, and reloading user data and diary entries.
+  Future<void> _refreshPage() async {
+    setState(() {
+      _selectedDay = null;
+      _focusedDay = DateTime.now();
+    });
+    await _loadUserData();
+    await _fetchDiaryEntries();
+  }
+
+  /// Loads user details from SharedPreferences and fetches additional profile info.
   Future<void> _loadUserData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? userDataJson = prefs.getString('userDetails');
@@ -51,22 +76,18 @@ class _HomePageState extends State<HomePage> {
       });
       await _fetchProfile(token);
     } else {
-      if (kDebugMode) {
-        print('User data not found in SharedPreferences');
-      }
+      if (kDebugMode) print('User data not found in SharedPreferences');
     }
   }
 
   /// Fetches the user profile details from the API.
   Future<void> _fetchProfile(String? token) async {
     if (token == null) return;
-
     try {
       final response = await http.get(
         Uri.parse('http://93.127.172.217:2004/api/user/profile/me'),
         headers: {'Authorization': token},
       );
-
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
         if (responseData != null) {
@@ -77,14 +98,11 @@ class _HomePageState extends State<HomePage> {
           });
         }
       } else {
-        if (kDebugMode) {
+        if (kDebugMode)
           print("Failed to fetch profile: ${response.statusCode}");
-        }
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error fetching profile: $e');
-      }
+      if (kDebugMode) print('Error fetching profile: $e');
     }
   }
 
@@ -93,23 +111,17 @@ class _HomePageState extends State<HomePage> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
     if (token == null) return;
-
     try {
       final response = await http.get(
         Uri.parse('http://93.127.172.217:2004/api/diary/entries'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token,
-        },
+        headers: {'Content-Type': 'application/json', 'Authorization': token},
       );
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
         setState(() {
           _diaryEntries = responseData['entries'] ?? [];
         });
-        if (kDebugMode) {
-          print("Diary entries loaded: $_diaryEntries");
-        }
+        if (kDebugMode) print("Diary entries loaded: $_diaryEntries");
       } else {
         if (kDebugMode) {
           print(
@@ -117,13 +129,11 @@ class _HomePageState extends State<HomePage> {
         }
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error fetching diary entries: $e');
-      }
+      if (kDebugMode) print('Error fetching diary entries: $e');
     }
   }
 
-  /// Logs the user out by calling the API endpoint.
+  /// Logs the user out.
   Future<void> logout(BuildContext context) async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -135,20 +145,18 @@ class _HomePageState extends State<HomePage> {
         SnackBar(content: Text('An error occurred: $error')),
       );
     }
-    Navigator.pushNamedAndRemoveUntil(
-        context, '/', (Route<dynamic> route) => false);
+    Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
   }
 
-  /// Toggles the calendar view between week (compact) and month (expanded).
+  /// Toggles the calendar view between week and month.
   void _toggleCalendarFormat() {
     setState(() {
       _isCalendarExpanded = !_isCalendarExpanded;
     });
   }
 
-  // Handle swipe from right-to-left on homepage
+  // Handle horizontal swipe to navigate to the profile page.
   void _handleHorizontalSwipe(DragEndDetails details) {
-    // Check if swipe is from right-to-left (negative velocity) with sufficient speed.
     if (details.primaryVelocity != null && details.primaryVelocity! < -500) {
       Navigator.pushNamed(context, '/profile');
     }
@@ -156,10 +164,27 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    // Filter diary entries based on the selected day.
+    List<dynamic> filteredEntries = _selectedDay != null
+        ? _diaryEntries.where((entry) {
+            if (entry['createdAt'] == null) return false;
+            try {
+              DateTime entryDate = DateTime.parse(entry['createdAt']);
+              return isSameDay(entryDate, _selectedDay!);
+            } catch (e) {
+              if (kDebugMode) print('Error parsing createdAt: $e');
+              return false;
+            }
+          }).toList()
+        : _diaryEntries;
+
+    String headerText = _selectedDay != null
+        ? 'Diary Entries on ${_selectedDay!.toLocal().toString().split(' ')[0]}'
+        : 'All Diary Entries';
+
     return GestureDetector(
       onHorizontalDragEnd: _handleHorizontalSwipe,
       child: Scaffold(
-        // AppBar with logo and streak display
         appBar: AppBar(
           backgroundColor: Colors.white,
           elevation: 1,
@@ -195,25 +220,15 @@ class _HomePageState extends State<HomePage> {
               ),
             ],
           ),
+          // Removed the refresh icon button from the actions
         ),
-        // Navigation drawer with profile information and settings
         drawer: Drawer(
           child: Container(
-            // You can remove or keep this Container decoration,
-            // depending on whether you also want a background image
-            // behind the entire drawer.
-            // decoration: BoxDecoration(
-            //   image: DecorationImage(
-            //     image: NetworkImage(bgPic),
-            //     fit: BoxFit.cover,
-            //   ),
-            // ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (userData.isNotEmpty)
                   UserAccountsDrawerHeader(
-                    // <-- Add a decoration here to replace the purple background
                     decoration: BoxDecoration(
                       image: DecorationImage(
                         image: NetworkImage(bgPic),
@@ -222,16 +237,12 @@ class _HomePageState extends State<HomePage> {
                     ),
                     accountName: Text(
                       userData['firstname'] ?? '',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, color: Colors.black),
                     ),
                     accountEmail: Text(
                       userData['email'] ?? '',
-                      style: TextStyle(
-                        color: Colors.black,
-                      ),
+                      style: const TextStyle(color: Colors.black),
                     ),
                     currentAccountPicture: userData['profilePic'] != null
                         ? const CircleAvatar(
@@ -255,13 +266,6 @@ class _HomePageState extends State<HomePage> {
                     Navigator.pushNamed(context, '/profile');
                   },
                 ),
-                // ListTile(
-                //   leading: const Icon(Icons.settings),
-                //   title: const Text('Settings'),
-                //   onTap: () {
-                //     Navigator.pushNamed(context, '/settings');
-                //   },
-                // ),
                 const Spacer(),
                 ListTile(
                   leading: const Icon(Icons.logout, color: Colors.red),
@@ -275,19 +279,15 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         ),
-
-        // Main body: ListView containing the calendar and diary entry chips
         body: RefreshIndicator(
-          onRefresh: _fetchDiaryEntries, // Refresh when user swipes down
+          onRefresh: _refreshPage,
           child: ListView(
             children: [
-              // Custom header above the calendar
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Column(
                   children: [
-                    // Custom header that shows the month and toggles the calendar view when tapped.
                     GestureDetector(
                       onTap: _toggleCalendarFormat,
                       child: Container(
@@ -297,30 +297,136 @@ class _HomePageState extends State<HomePage> {
                           MaterialLocalizations.of(context)
                               .formatMonthYear(_focusedDay),
                           style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                              fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
-                    // The TableCalendar with its built-in header hidden.
                     TableCalendar(
                       firstDay: DateTime.utc(2000, 1, 1),
                       lastDay: DateTime.utc(2100, 12, 31),
                       focusedDay: _focusedDay,
-                      headerVisible: false, // Hides the default header.
+                      headerVisible: false,
                       calendarFormat: _isCalendarExpanded
                           ? CalendarFormat.month
                           : CalendarFormat.week,
                       selectedDayPredicate: (day) =>
                           isSameDay(_selectedDay, day),
+                      eventLoader: _getEventsForDay,
+                      calendarBuilders: CalendarBuilders(
+                        markerBuilder: (context, date, events) {
+                          return const SizedBox();
+                        },
+                        defaultBuilder: (context, date, _) {
+                          if (_getEventsForDay(date).isNotEmpty) {
+                            return Container(
+                              margin: const EdgeInsets.all(6),
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  Image.asset(
+                                    'assets/images/fire_background.png',
+                                    width: 30,
+                                    height: 30,
+                                    fit: BoxFit.contain,
+                                  ),
+                                  Text(
+                                    '${date.day}',
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+                          return null;
+                        },
+                        todayBuilder: (context, date, _) {
+                          if (_getEventsForDay(date).isNotEmpty) {
+                            return Container(
+                              margin: const EdgeInsets.all(6),
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  Image.asset(
+                                    'assets/images/fire_background.png',
+                                    width: 30,
+                                    height: 30,
+                                    fit: BoxFit.contain,
+                                  ),
+                                  Text(
+                                    '${date.day}',
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+                          return Container(
+                            margin: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Colors.blueAccent,
+                              shape: BoxShape.circle,
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              '${date.day}',
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          );
+                        },
+                        selectedBuilder: (context, date, _) {
+                          if (_getEventsForDay(date).isNotEmpty) {
+                            return Container(
+                              margin: const EdgeInsets.all(6),
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  Image.asset(
+                                    'assets/images/fire_background.png',
+                                    width: 30,
+                                    height: 30,
+                                    fit: BoxFit.contain,
+                                  ),
+                                  Text(
+                                    '${date.day}',
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+                          return Container(
+                            margin: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Colors.green,
+                              shape: BoxShape.circle,
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              '${date.day}',
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          );
+                        },
+                      ),
                       onDaySelected: (selectedDay, focusedDay) {
                         setState(() {
                           _selectedDay = selectedDay;
                           _focusedDay = focusedDay;
                         });
+                        if (kDebugMode) {
+                          print("New selected day: $_selectedDay");
+                        }
                       },
-                      // Update the focused day when the calendar is swiped.
                       onPageChanged: (focusedDay) {
                         setState(() {
                           _focusedDay = focusedDay;
@@ -330,11 +436,12 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
               ),
-              const Padding(
-                padding: EdgeInsets.all(16.0),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
                 child: Text(
-                  'Diary Entries:',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  headerText,
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
               Padding(
@@ -345,12 +452,12 @@ class _HomePageState extends State<HomePage> {
                     if (snapshot.connectionState == ConnectionState.done) {
                       final token = snapshot.data?.getString('token') ?? '';
                       return DiaryChips(
-                        diaryEntries: _diaryEntries,
+                        diaryEntries: filteredEntries,
                         token: token,
                         onRefresh: _fetchDiaryEntries,
                       );
                     } else {
-                      return CircularProgressIndicator();
+                      return const CircularProgressIndicator();
                     }
                   },
                 ),
@@ -359,7 +466,6 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
         ),
-        // Floating action button to add a new diary entry
         floatingActionButton: FloatingActionButton(
           onPressed: () {
             Navigator.push(
@@ -367,7 +473,7 @@ class _HomePageState extends State<HomePage> {
               MaterialPageRoute(builder: (context) => DiaryPageNew()),
             ).then((result) {
               if (result == true) {
-                _fetchDiaryEntries(); // Refresh the homepage when returning
+                _fetchDiaryEntries();
               }
             });
           },
@@ -377,7 +483,6 @@ class _HomePageState extends State<HomePage> {
           splashColor: Colors.blue,
           child: const Icon(Icons.add),
         ),
-        // Bottom navigation bar with Home and Profile options
         bottomNavigationBar: BottomNavigationBar(
           items: [
             const BottomNavigationBarItem(
@@ -397,7 +502,6 @@ class _HomePageState extends State<HomePage> {
           currentIndex: 0,
           onTap: (index) {
             if (index == 0) {
-              // Only push if not already on home
               if (ModalRoute.of(context)?.settings.name != "/home") {
                 Navigator.pushNamedAndRemoveUntil(
                   context,
@@ -406,7 +510,6 @@ class _HomePageState extends State<HomePage> {
                 );
               }
             } else if (index == 1) {
-              // Only push profile if not already there
               if (ModalRoute.of(context)?.settings.name != "/profile") {
                 Navigator.pushNamedAndRemoveUntil(
                   context,

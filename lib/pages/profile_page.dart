@@ -4,8 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:moofli_app/components/helper_functions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart'
-    as url_launcher; // Using a prefix
+import 'package:url_launcher/url_launcher.dart' as url_launcher;
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -36,6 +35,7 @@ class _ProfilePageState extends State<ProfilePage> {
   bool isEditingFuturePlans = false;
   bool isEditingExperience = false;
   bool isEditingSkills = false;
+  bool isEditingEducation = false;
 
   Future<void> _loadUserData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -108,6 +108,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 return {
                   "title": item["title"] ?? "",
                   "company": item["company"] ?? "",
+                  "startDate": startDate,
+                  "endDate": endDate,
                   "duration": duration,
                 };
               }).toList();
@@ -171,8 +173,9 @@ class _ProfilePageState extends State<ProfilePage> {
           break;
         case 'pastExperience':
           isEditingPastExperience = !isEditingPastExperience;
-          if (isEditingPastExperience)
+          if (isEditingPastExperience) {
             _pastExperienceController.text = pastExperience;
+          }
           break;
         case 'futurePlans':
           isEditingFuturePlans = !isEditingFuturePlans;
@@ -260,66 +263,194 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  // Shows a dialog to add a new experience with Title, Company, Start Date,
+  // End Date and a "Current" checkbox.
   void _addExperience() async {
     final titleController = TextEditingController();
     final companyController = TextEditingController();
-    final durationController = TextEditingController();
+    final startDateController = TextEditingController();
+    final endDateController = TextEditingController();
+    bool isCurrent = false;
     await showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: const Text("Add Experience"),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: titleController,
-                  decoration: const InputDecoration(hintText: "Title"),
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              title: const Text("Add Experience"),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: titleController,
+                      decoration: const InputDecoration(hintText: "Title"),
+                    ),
+                    TextField(
+                      controller: companyController,
+                      decoration: const InputDecoration(hintText: "Company"),
+                    ),
+                    TextField(
+                      controller: startDateController,
+                      decoration: const InputDecoration(
+                          hintText: "Start Date (e.g., Mar 2020)"),
+                    ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: endDateController,
+                            decoration: InputDecoration(
+                              hintText: isCurrent
+                                  ? "Present"
+                                  : "End Date (e.g., Dec 2023)",
+                            ),
+                            enabled: !isCurrent,
+                          ),
+                        ),
+                        Checkbox(
+                          value: isCurrent,
+                          onChanged: (bool? value) {
+                            setStateDialog(() {
+                              isCurrent = value ?? false;
+                            });
+                          },
+                        ),
+                        const Text("Current")
+                      ],
+                    ),
+                  ],
                 ),
-                TextField(
-                  controller: companyController,
-                  decoration: const InputDecoration(hintText: "Company"),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Cancel"),
                 ),
-                TextField(
-                  controller: durationController,
-                  decoration: const InputDecoration(
-                    hintText: "Duration (e.g., Mar 2020 - Dec 2023)",
-                  ),
+                TextButton(
+                  onPressed: () {
+                    String startDate = startDateController.text.trim();
+                    String endDate =
+                        isCurrent ? "Present" : endDateController.text.trim();
+                    String duration = "$startDate - $endDate";
+                    setState(() {
+                      experienceItems.add({
+                        "title": titleController.text,
+                        "company": companyController.text,
+                        "startDate": startDate,
+                        "endDate": endDate,
+                        "duration": duration,
+                      });
+                    });
+                    _updateFieldInBackend(
+                        "experence", jsonEncode(experienceItems));
+                    Navigator.pop(context);
+                  },
+                  child: const Text("Add"),
                 ),
               ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
-            ),
-            TextButton(
-              onPressed: () {
-                String durationInput = durationController.text.trim();
-                List<String> parts = durationInput.split('-');
-                String startDate = "";
-                String endDate = "";
-                if (parts.length == 2) {
-                  startDate = parts[0].trim();
-                  endDate = parts[1].trim();
-                }
-                setState(() {
-                  experienceItems.add({
-                    "title": titleController.text,
-                    "company": companyController.text,
-                    "startDate": startDate,
-                    "endDate": endDate,
-                    "duration": durationInput,
-                  });
-                });
-                _updateFieldInBackend("experence", jsonEncode(experienceItems));
-                Navigator.pop(context);
-              },
-              child: const Text("Add"),
-            ),
-          ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // Shows a dialog to edit an existing experience item.
+  void _editExperience(int index) async {
+    final titleController =
+        TextEditingController(text: experienceItems[index]["title"]);
+    final companyController =
+        TextEditingController(text: experienceItems[index]["company"]);
+    final startDateController =
+        TextEditingController(text: experienceItems[index]["startDate"] ?? "");
+    final endDateController =
+        TextEditingController(text: experienceItems[index]["endDate"] ?? "");
+    bool isCurrent = false;
+    if ((experienceItems[index]["endDate"] ?? "").toLowerCase() == "present") {
+      isCurrent = true;
+      endDateController.text = "";
+    }
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              title: const Text("Edit Experience"),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: titleController,
+                      decoration: const InputDecoration(hintText: "Title"),
+                    ),
+                    TextField(
+                      controller: companyController,
+                      decoration: const InputDecoration(hintText: "Company"),
+                    ),
+                    TextField(
+                      controller: startDateController,
+                      decoration: const InputDecoration(
+                          hintText: "Start Date (e.g., Mar 2020)"),
+                    ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: endDateController,
+                            decoration: InputDecoration(
+                              hintText: isCurrent
+                                  ? "Present"
+                                  : "End Date (e.g., Dec 2023)",
+                            ),
+                            enabled: !isCurrent,
+                          ),
+                        ),
+                        Checkbox(
+                          value: isCurrent,
+                          onChanged: (bool? value) {
+                            setStateDialog(() {
+                              isCurrent = value ?? false;
+                            });
+                          },
+                        ),
+                        const Text("Current")
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Cancel"),
+                ),
+                TextButton(
+                  onPressed: () {
+                    String startDate = startDateController.text.trim();
+                    String endDate =
+                        isCurrent ? "Present" : endDateController.text.trim();
+                    String duration = "$startDate - $endDate";
+                    setState(() {
+                      experienceItems[index] = {
+                        "title": titleController.text,
+                        "company": companyController.text,
+                        "startDate": startDate,
+                        "endDate": endDate,
+                        "duration": duration,
+                      };
+                    });
+                    _updateFieldInBackend(
+                        "experence", jsonEncode(experienceItems));
+                    Navigator.pop(context);
+                  },
+                  child: const Text("Save"),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -383,6 +514,7 @@ class _ProfilePageState extends State<ProfilePage> {
       setState(() {
         experienceItems.removeAt(index);
       });
+      _updateFieldInBackend("experence", jsonEncode(experienceItems));
     }
   }
 
@@ -414,13 +546,97 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  // Functions for Education section.
+  void _addEducation() async {
+    final degreeController = TextEditingController();
+    final institutionController = TextEditingController();
+    final durationController = TextEditingController();
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Add Education"),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: degreeController,
+                  decoration: const InputDecoration(hintText: "Degree"),
+                ),
+                TextField(
+                  controller: institutionController,
+                  decoration: const InputDecoration(hintText: "Institution"),
+                ),
+                TextField(
+                  controller: durationController,
+                  decoration: const InputDecoration(hintText: "Duration"),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  educationItems.add({
+                    "degree": degreeController.text,
+                    "institution": institutionController.text,
+                    "duration": durationController.text,
+                  });
+                });
+                _updateFieldInBackend("education", jsonEncode(educationItems));
+                Navigator.pop(context);
+              },
+              child: const Text("Add"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _confirmDeleteEducation(int index) async {
+    bool? confirm = await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Delete Education"),
+          content: const Text(
+              "Are you sure you want to delete this education entry?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text("Delete"),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirm == true) {
+      setState(() {
+        educationItems.removeAt(index);
+      });
+      _updateFieldInBackend("education", jsonEncode(educationItems));
+    }
+  }
+
   bool _hasUnsavedChanges() {
     return isEditingAbout ||
         isEditingPastExperience ||
         isEditingFuturePlans ||
         isEditingExperience ||
         isEditingSkills ||
-        isEditingBio;
+        isEditingBio ||
+        isEditingEducation;
   }
 
   Future<void> _handleSaveAndNavigate() async {
@@ -449,9 +665,9 @@ class _ProfilePageState extends State<ProfilePage> {
           );
         },
       );
-      if (result == "cancel")
+      if (result == "cancel") {
         return;
-      else if (result == "save") {
+      } else if (result == "save") {
         if (isEditingAbout) await _saveField("about");
         if (isEditingPastExperience) await _saveField("pastExperience");
         if (isEditingFuturePlans) await _saveField("futurePlans");
@@ -468,6 +684,12 @@ class _ProfilePageState extends State<ProfilePage> {
           });
         }
         if (isEditingBio) await _saveField("bio");
+        if (isEditingEducation) {
+          await _updateFieldInBackend("education", jsonEncode(educationItems));
+          setState(() {
+            isEditingEducation = false;
+          });
+        }
       }
     }
     Navigator.pushNamedAndRemoveUntil(
@@ -527,7 +749,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ),
                     Positioned(
-                      top: 8,
+                      bottom: 8,
                       right: 8,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
@@ -671,6 +893,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         onAddExperience: _addExperience,
                         onDeleteExperience: (index) =>
                             _confirmDeleteExperience(index),
+                        onEditExperience: _editExperience,
                       ),
                       // Skills section.
                       buildSkillsSection(
@@ -683,6 +906,19 @@ class _ProfilePageState extends State<ProfilePage> {
                         },
                         onAddSkill: _addSkill,
                         onDeleteSkill: (index) => _confirmDeleteSkill(index),
+                      ),
+                      // Education section.
+                      buildEducationSection(
+                        isEditingEducation: isEditingEducation,
+                        educationItems: educationItems,
+                        onToggleEdit: () {
+                          setState(() {
+                            isEditingEducation = !isEditingEducation;
+                          });
+                        },
+                        onAddEducation: _addEducation,
+                        onDeleteEducation: (index) =>
+                            _confirmDeleteEducation(index),
                       ),
                     ],
                   ),

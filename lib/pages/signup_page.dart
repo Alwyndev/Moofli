@@ -368,50 +368,51 @@ class _SignupPageState extends State<SignupPage> {
               border: 20,
               padding: 12,
             ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    height: 4,
-                    decoration: const BoxDecoration(
-                      borderRadius:
-                          BorderRadius.only(topRight: Radius.circular(4)),
-                      color: Color.fromRGBO(167, 166, 166, 1),
-                    ),
-                  ),
-                ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8.0),
-                  child: Text(
-                    "OR",
-                    style: TextStyle(
-                      color: Color.fromRGBO(87, 87, 87, 1),
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Container(
-                    height: 4,
-                    decoration: const BoxDecoration(
-                      borderRadius:
-                          BorderRadius.only(topRight: Radius.circular(4)),
-                      color: Color.fromRGBO(167, 166, 166, 1),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 50),
-                child: GoogleLoginButton(
-                  onPressed: _handleGoogleLogin,
-                ),
-              ),
-            ),
+            // Uncomment when google sign in works
+            // const SizedBox(height: 10),
+            // Row(
+            //   children: [
+            //     Expanded(
+            //       child: Container(
+            //         height: 4,
+            //         decoration: const BoxDecoration(
+            //           borderRadius:
+            //               BorderRadius.only(topRight: Radius.circular(4)),
+            //           color: Color.fromRGBO(167, 166, 166, 1),
+            //         ),
+            //       ),
+            //     ),
+            //     const Padding(
+            //       padding: EdgeInsets.symmetric(horizontal: 8.0),
+            //       child: Text(
+            //         "OR",
+            //         style: TextStyle(
+            //           color: Color.fromRGBO(87, 87, 87, 1),
+            //           fontSize: 16,
+            //           fontWeight: FontWeight.bold,
+            //         ),
+            //       ),
+            //     ),
+            //     Expanded(
+            //       child: Container(
+            //         height: 4,
+            //         decoration: const BoxDecoration(
+            //           borderRadius:
+            //               BorderRadius.only(topRight: Radius.circular(4)),
+            //           color: Color.fromRGBO(167, 166, 166, 1),
+            //         ),
+            //       ),
+            //     ),
+            //   ],
+            // ),
+            // Center(
+            //   child: Padding(
+            //     padding: const EdgeInsets.symmetric(horizontal: 50),
+            //     child: GoogleLoginButton(
+            //       onPressed: _handleGoogleLogin,
+            //     ),
+            //   ),
+            // ),
             const SizedBox(height: 10),
           ],
         ),
