@@ -52,7 +52,7 @@ class MyApp extends StatelessWidget {
         '/settings': (context) => const SettingsPage(),
         '/profile': (context) => ProfilePage(),
       },
-      title: 'Moofli App',
+      title: 'Moofli Diary',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         fontFamily: 'Roboto',

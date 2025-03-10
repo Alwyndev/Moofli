@@ -2,9 +2,12 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'package:moofli_app/components/helper_functions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart' as url_launcher;
+
+import '../api/api_services.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -66,6 +69,9 @@ class _ProfilePageState extends State<ProfilePage> {
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
         if (responseData != null) {
+          // Create a date formatter for displaying dates as "MMM yyyy".
+          final DateFormat dateFormat = DateFormat("MMM yyyy");
+
           setState(() {
             name = responseData['result']['firstname'] ?? "";
             bio = responseData['result']['about'] ?? "";
@@ -98,19 +104,42 @@ class _ProfilePageState extends State<ProfilePage> {
             List<dynamic>? experenceData = responseData['result']['experence'];
             if (experenceData != null) {
               experienceItems = experenceData.map<Map<String, String>>((item) {
-                String startDate = item["startDate"] ?? "";
-                String endDate = item["endDate"] ?? "";
-                String duration = startDate.isNotEmpty
-                    ? (endDate.isNotEmpty
-                        ? "$startDate - $endDate"
-                        : "$startDate - Present")
-                    : "";
+                String formattedStart = "";
+                String formattedEnd = "";
+                // Parse and format start date if available.
+                if (item["startDate"] != null &&
+                    item["startDate"].toString().isNotEmpty) {
+                  try {
+                    DateTime parsedStart = DateTime.parse(item["startDate"]);
+                    formattedStart = dateFormat.format(parsedStart);
+                  } catch (e) {
+                    formattedStart = "";
+                  }
+                }
+                // Parse and format end date if available; if not, use "Present".
+                if (item["endDate"] != null &&
+                    item["endDate"].toString().isNotEmpty) {
+                  try {
+                    DateTime parsedEnd = DateTime.parse(item["endDate"]);
+                    formattedEnd = dateFormat.format(parsedEnd);
+                  } catch (e) {
+                    formattedEnd = "Present";
+                  }
+                } else {
+                  formattedEnd = "Present";
+                }
+                String duration = "";
+                if (formattedStart.isNotEmpty || formattedEnd.isNotEmpty) {
+                  duration = "$formattedStart - $formattedEnd";
+                }
                 return {
                   "title": item["title"] ?? "",
                   "company": item["company"] ?? "",
-                  "startDate": startDate,
-                  "endDate": endDate,
+                  "startDate": formattedStart,
+                  "endDate": formattedEnd,
                   "duration": duration,
+                  // Preserving _id if needed for future operations.
+                  "_id": item["_id"] ?? ""
                 };
               }).toList();
             }
@@ -227,7 +256,7 @@ class _ProfilePageState extends State<ProfilePage> {
     await _updateFieldInBackend(field, newValue);
   }
 
-  // Update a field on the backend.
+  // Update a field on the backend for simple text fields.
   Future<void> _updateFieldInBackend(String field, String value) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
@@ -263,8 +292,18 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  // Shows a dialog to add a new experience with Title, Company, Start Date,
-  // End Date and a "Current" checkbox.
+  // Helper function to update education details using the new API function.
+  Future<void> _updateEducationInBackend(
+      List<Map<String, dynamic>> educationItem) async {
+    bool success = await ApiService.updateEducationDetails(educationItem);
+    if (success) {
+      if (kDebugMode) print("Education updated successfully");
+    } else {
+      if (kDebugMode) print("Failed to update education");
+    }
+  }
+
+  // Shows a dialog to add a new experience.
   void _addExperience() async {
     final titleController = TextEditingController();
     final companyController = TextEditingController();
@@ -293,7 +332,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     TextField(
                       controller: startDateController,
                       decoration: const InputDecoration(
-                          hintText: "Start Date (e.g., Mar 2020)"),
+                          hintText: "Start Date (e.g., Mar 2022)"),
                     ),
                     Row(
                       children: [
@@ -330,8 +369,12 @@ class _ProfilePageState extends State<ProfilePage> {
                 TextButton(
                   onPressed: () {
                     String startDate = startDateController.text.trim();
-                    String endDate =
+                    // Force end date to "Present" if current or if user enters "present".
+                    String rawEndDate =
                         isCurrent ? "Present" : endDateController.text.trim();
+                    String endDate = rawEndDate.toLowerCase() == "present"
+                        ? "Present"
+                        : rawEndDate;
                     String duration = "$startDate - $endDate";
                     setState(() {
                       experienceItems.add({
@@ -393,7 +436,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     TextField(
                       controller: startDateController,
                       decoration: const InputDecoration(
-                          hintText: "Start Date (e.g., Mar 2020)"),
+                          hintText: "Start Date (e.g., Mar 2022)"),
                     ),
                     Row(
                       children: [
@@ -430,8 +473,11 @@ class _ProfilePageState extends State<ProfilePage> {
                 TextButton(
                   onPressed: () {
                     String startDate = startDateController.text.trim();
-                    String endDate =
+                    String rawEndDate =
                         isCurrent ? "Present" : endDateController.text.trim();
+                    String endDate = rawEndDate.toLowerCase() == "present"
+                        ? "Present"
+                        : rawEndDate;
                     String duration = "$startDate - $endDate";
                     setState(() {
                       experienceItems[index] = {
@@ -546,11 +592,12 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  // Functions for Education section.
+  // Updated Education dialog with separate fields for Degree, Institution, Start Year, and End Year.
   void _addEducation() async {
     final degreeController = TextEditingController();
     final institutionController = TextEditingController();
-    final durationController = TextEditingController();
+    final startYearController = TextEditingController();
+    final endYearController = TextEditingController();
     await showDialog(
       context: context,
       builder: (context) {
@@ -569,8 +616,12 @@ class _ProfilePageState extends State<ProfilePage> {
                   decoration: const InputDecoration(hintText: "Institution"),
                 ),
                 TextField(
-                  controller: durationController,
-                  decoration: const InputDecoration(hintText: "Duration"),
+                  controller: startYearController,
+                  decoration: const InputDecoration(hintText: "Start Year"),
+                ),
+                TextField(
+                  controller: endYearController,
+                  decoration: const InputDecoration(hintText: "End Year"),
                 ),
               ],
             ),
@@ -581,15 +632,18 @@ class _ProfilePageState extends State<ProfilePage> {
               child: const Text("Cancel"),
             ),
             TextButton(
-              onPressed: () {
+              onPressed: () async {
+                String startYear = startYearController.text.trim();
+                String endYear = endYearController.text.trim();
+                String duration = "$startYear - $endYear";
                 setState(() {
                   educationItems.add({
                     "degree": degreeController.text,
                     "institution": institutionController.text,
-                    "duration": durationController.text,
+                    "duration": duration,
                   });
                 });
-                _updateFieldInBackend("education", jsonEncode(educationItems));
+                await _updateEducationInBackend(educationItems);
                 Navigator.pop(context);
               },
               child: const Text("Add"),
@@ -625,7 +679,7 @@ class _ProfilePageState extends State<ProfilePage> {
       setState(() {
         educationItems.removeAt(index);
       });
-      _updateFieldInBackend("education", jsonEncode(educationItems));
+      await _updateEducationInBackend(educationItems);
     }
   }
 
@@ -685,7 +739,7 @@ class _ProfilePageState extends State<ProfilePage> {
         }
         if (isEditingBio) await _saveField("bio");
         if (isEditingEducation) {
-          await _updateFieldInBackend("education", jsonEncode(educationItems));
+          await _updateEducationInBackend(educationItems);
           setState(() {
             isEditingEducation = false;
           });
@@ -724,8 +778,7 @@ class _ProfilePageState extends State<ProfilePage> {
       onHorizontalDragEnd: _handleHorizontalSwipe,
       child: WillPopScope(
         onWillPop: () async {
-          Navigator.pushNamedAndRemoveUntil(
-              context, "/home", (Route<dynamic> route) => false);
+          await _handleSaveAndNavigate();
           return false;
         },
         child: Scaffold(

@@ -85,7 +85,7 @@ class _HomePageState extends State<HomePage> {
     if (token == null) return;
     try {
       final response = await http.get(
-        Uri.parse('http://93.127.172.217:2004/api/user/profile/me'),
+        Uri.parse('https://skillop.in/api/user/profile/me'),
         headers: {'Authorization': token},
       );
       if (response.statusCode == 200) {
@@ -113,7 +113,7 @@ class _HomePageState extends State<HomePage> {
     if (token == null) return;
     try {
       final response = await http.get(
-        Uri.parse('http://93.127.172.217:2004/api/diary/entries'),
+        Uri.parse('https://skillop.in/api/diary/entries'),
         headers: {'Content-Type': 'application/json', 'Authorization': token},
       );
       if (response.statusCode == 200) {
@@ -220,7 +220,6 @@ class _HomePageState extends State<HomePage> {
               ),
             ],
           ),
-          // Removed the refresh icon button from the actions
         ),
         drawer: Drawer(
           child: Container(
@@ -324,15 +323,15 @@ class _HomePageState extends State<HomePage> {
                                 alignment: Alignment.center,
                                 children: [
                                   Image.asset(
-                                    'assets/images/fire_background.png',
+                                    'assets/images/streak_bg_2.png',
                                     width: 30,
                                     height: 30,
-                                    fit: BoxFit.contain,
+                                    fit: BoxFit.scaleDown,
                                   ),
                                   Text(
                                     '${date.day}',
                                     style: const TextStyle(
-                                        color: Colors.white,
+                                        color: Colors.black,
                                         fontWeight: FontWeight.bold),
                                   ),
                                 ],
@@ -349,7 +348,7 @@ class _HomePageState extends State<HomePage> {
                                 alignment: Alignment.center,
                                 children: [
                                   Image.asset(
-                                    'assets/images/fire_background.png',
+                                    'assets/images/streak_bg_2.png',
                                     width: 30,
                                     height: 30,
                                     fit: BoxFit.contain,
@@ -357,7 +356,7 @@ class _HomePageState extends State<HomePage> {
                                   Text(
                                     '${date.day}',
                                     style: const TextStyle(
-                                        color: Colors.white,
+                                        color: Colors.black,
                                         fontWeight: FontWeight.bold),
                                   ),
                                 ],
@@ -387,7 +386,7 @@ class _HomePageState extends State<HomePage> {
                                 alignment: Alignment.center,
                                 children: [
                                   Image.asset(
-                                    'assets/images/fire_background.png',
+                                    'assets/images/streak_bg_2.png',
                                     width: 30,
                                     height: 30,
                                     fit: BoxFit.contain,
@@ -395,7 +394,7 @@ class _HomePageState extends State<HomePage> {
                                   Text(
                                     '${date.day}',
                                     style: const TextStyle(
-                                        color: Colors.white,
+                                        color: Colors.black,
                                         fontWeight: FontWeight.bold),
                                   ),
                                 ],

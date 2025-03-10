@@ -100,9 +100,9 @@ class _DiaryPageNewState extends State<DiaryPageNew> {
 
       if (isUpdating) {
         apiUrl = Uri.parse(
-            'http://93.127.172.217:2004/api/diary/dairyupdate/${widget.entryId}');
+            'https://skillop.in/api/diary/dairyupdate/${widget.entryId}');
       } else {
-        apiUrl = Uri.parse('http://93.127.172.217:2004/api/diary/dairyCreate');
+        apiUrl = Uri.parse('https://skillop.in/api/diary/dairyCreate');
       }
 
       final response = await (isUpdating

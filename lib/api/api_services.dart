@@ -3,7 +3,6 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  // Base URL can be updated if needed.
   static const String baseUrl = 'https://skillop.in/api';
 
   /// Registers a new user.
@@ -37,9 +36,9 @@ class ApiService {
     String? token = prefs.getString('token');
     if (token == null) return false;
 
-    // Map 'pastExperience' to the key expected by the API
+    // Map 'pastExperience' to the key expected by the API.
     String fieldKey = (field == 'pastExperience') ? 'pastExp' : field;
-    var uri = Uri.parse("$baseUrl/user/update/profile");
+    var uri = Uri.parse("$baseUrl/profile");
     var request = http.MultipartRequest("PUT", uri);
     request.headers['Authorization'] = token;
     request.fields[fieldKey] = value;
@@ -81,7 +80,7 @@ class ApiService {
         await http.MultipartFile.fromPath('profileBackgroundPic', photoPath),
       );
     } else if (type == 'profile') {
-      uri = Uri.parse('$baseUrl/user/update/profile');
+      uri = Uri.parse('$baseUrl/profile');
       request = http.MultipartRequest('PUT', uri);
       request.files.add(
         await http.MultipartFile.fromPath('profilePic', photoPath),
@@ -92,6 +91,71 @@ class ApiService {
 
     request.headers['Authorization'] = token;
     final response = await request.send();
+    return response.statusCode == 200;
+  }
+
+  /// Fetches the user profile.
+  static Future<Map<String, dynamic>> fetchProfile() async {
+    final response = await http.get(Uri.parse("$baseUrl/profile"));
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception("Failed to load profile");
+    }
+  }
+
+  /// Updates the entire profile.
+  static Future<bool> updateProfile(Map<String, dynamic> updatedData) async {
+    final response = await http.put(
+      Uri.parse("$baseUrl/profile"),
+      headers: {"Content-Type": "application/json"},
+      body: json.encode(updatedData),
+    );
+    return response.statusCode == 200;
+  }
+
+  /// Updates education details in the profile.
+  static Future<bool> updateEducationDetails(
+      List<Map<String, dynamic>> educationItems) async {
+    final response = await http.put(
+      Uri.parse("$baseUrl/profile"),
+      headers: {"Content-Type": "application/json"},
+      body: json.encode({"education": educationItems}),
+    );
+    return response.statusCode == 200;
+  }
+
+  /// Adds a new experience to the profile.
+  static Future<bool> addExperience(Map<String, String> experience) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/profile/experience"),
+      headers: {"Content-Type": "application/json"},
+      body: json.encode(experience),
+    );
+    return response.statusCode == 200;
+  }
+
+  /// Removes an experience from the profile.
+  static Future<bool> deleteExperience(int id) async {
+    final response =
+        await http.delete(Uri.parse("$baseUrl/profile/experience/$id"));
+    return response.statusCode == 200;
+  }
+
+  /// Adds a new skill to the profile.
+  static Future<bool> addSkill(String skill) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/profile/skills"),
+      headers: {"Content-Type": "application/json"},
+      body: json.encode({"skill": skill}),
+    );
+    return response.statusCode == 200;
+  }
+
+  /// Removes a skill from the profile.
+  static Future<bool> deleteSkill(int id) async {
+    final response =
+        await http.delete(Uri.parse("$baseUrl/profile/skills/$id"));
     return response.statusCode == 200;
   }
 }

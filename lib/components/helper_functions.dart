@@ -12,7 +12,8 @@ String toTitleCase(String text) {
 
 /// A widget that initially displays [initialLines] (default 3) of [text].
 /// If the text overflows, a “Read more” option appears which increases
-/// the number of displayed lines by 15 when tapped.
+/// the number of displayed lines by 15 when tapped. When expanded, a “Read less”
+/// option appears that resets the text to its original state.
 class ExpandableTextWidget extends StatefulWidget {
   final String text;
   final TextStyle? style;
@@ -56,7 +57,7 @@ class _ExpandableTextWidgetState extends State<ExpandableTextWidget> {
             maxLines: _currentMaxLines,
             overflow: TextOverflow.ellipsis,
           ),
-          if (didOverflow)
+          if (_currentMaxLines == widget.initialLines && didOverflow)
             GestureDetector(
               onTap: () {
                 setState(() {
@@ -67,6 +68,21 @@ class _ExpandableTextWidgetState extends State<ExpandableTextWidget> {
                 padding: EdgeInsets.only(top: 4.0),
                 child: Text(
                   "Read more",
+                  style: TextStyle(color: Colors.blue),
+                ),
+              ),
+            )
+          else if (_currentMaxLines != widget.initialLines)
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  _currentMaxLines = widget.initialLines;
+                });
+              },
+              child: const Padding(
+                padding: EdgeInsets.only(top: 4.0),
+                child: Text(
+                  "Read less",
                   style: TextStyle(color: Colors.blue),
                 ),
               ),

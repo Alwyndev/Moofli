@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:moofli_app/api/api_service.dart';
+// import 'package:moofli_app/api/api_service.dart';
 import 'package:moofli_app/components/nav_buttons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../api/api_services.dart';
 
 class SetupProfileContactInfo extends StatefulWidget {
   const SetupProfileContactInfo({super.key});
