@@ -1,9 +1,9 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
+
+import '../api/api_services.dart'; // Import the centralized API service
 
 class DiaryPageNew extends StatefulWidget {
   final String? existingEntry;
@@ -16,7 +16,7 @@ class DiaryPageNew extends StatefulWidget {
 }
 
 class _DiaryPageNewState extends State<DiaryPageNew> {
-  // Renamed for clarity
+  // Controller for diary entry text
   TextEditingController diaryEntryController = TextEditingController();
   late SharedPreferences prefs;
   String? token;
@@ -87,52 +87,43 @@ class _DiaryPageNewState extends State<DiaryPageNew> {
       return;
     }
 
-    Map<String, dynamic> data = {"content": textToSave};
-    String body = json.encode(data);
-    Map<String, String> headers = {
-      'Content-Type': 'application/json',
-      'Authorization': '$token',
-    };
+    if (token == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Authentication token missing.")),
+      );
+      return;
+    }
 
-    try {
-      final Uri apiUrl;
-      final bool isUpdating = widget.entryId != null;
+    // Use ApiService methods to create or update the diary entry
+    Map<String, dynamic> response;
+    if (widget.entryId != null) {
+      response = await ApiService.updateDiaryEntry(
+        token: token!,
+        entryId: widget.entryId!,
+        content: textToSave,
+      );
+    } else {
+      response = await ApiService.createDiaryEntry(
+        token: token!,
+        content: textToSave,
+      );
+    }
 
-      if (isUpdating) {
-        apiUrl = Uri.parse(
-            'https://skillop.in/api/diary/dairyupdate/${widget.entryId}');
-      } else {
-        apiUrl = Uri.parse('https://skillop.in/api/diary/dairyCreate');
-      }
-
-      final response = await (isUpdating
-          ? http.put(apiUrl, headers: headers, body: body)
-          : http.post(apiUrl, headers: headers, body: body));
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(isUpdating
-                ? "Entry updated successfully!"
-                : "Entry saved successfully!"),
-            shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(20))),
-          ),
-        );
-        Navigator.pop(context, true); // Indicate that a refresh is needed
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Failed: ${response.body}"),
-            shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(20))),
-          ),
-        );
-      }
-    } catch (e) {
+    if (response['success']) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Error: $e"),
+          content: Text(widget.entryId != null
+              ? "Entry updated successfully!"
+              : "Entry saved successfully!"),
+          shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(20))),
+        ),
+      );
+      Navigator.pop(context, true); // Indicate that a refresh is needed
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Failed: ${response['message']}"),
           shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(20))),
         ),
@@ -175,7 +166,7 @@ class _DiaryPageNewState extends State<DiaryPageNew> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(25.0),
                 ),
-                color: Color.fromRGBO(145, 185, 56, 0.85),
+                color: const Color.fromRGBO(145, 185, 56, 0.85),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: TextField(

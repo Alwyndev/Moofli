@@ -106,14 +106,6 @@ class _SetupProfileUploadPhotoState extends State<SetupProfileUploadPhoto> {
   /// then attempts to upload them, saves the local paths if successful,
   /// and navigates to the next screen.
   Future<void> savePhotos() async {
-    // Uncomment these if both the photos are to be compulsarily uploaded.
-    // if (coverPhoto == null || profilePhoto == null) {
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     const SnackBar(content: Text("Please select both photos.")),
-    //   );
-    //   return;
-    // }
-
     SharedPreferences prefs = await SharedPreferences.getInstance();
     bool uploadSuccess = await uploadPhotos();
     if (!uploadSuccess) {

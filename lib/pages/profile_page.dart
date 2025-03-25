@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:moofli_app/components/helper_functions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -43,126 +42,106 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _loadUserData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? userDataJson = prefs.getString('userDetails');
-    String? token = prefs.getString('token');
-
     if (userDataJson != null) {
       setState(() {
         userData = json.decode(userDataJson);
-        userData?['token'] = token;
       });
-      await _fetchProfile(token);
+      await _fetchProfile();
     } else {
       if (kDebugMode) print('User data not found in SharedPreferences');
     }
   }
 
-  Future<void> _fetchProfile(String? token) async {
-    if (token == null) {
-      if (kDebugMode) print("Token is null");
-      return;
-    }
+  Future<void> _fetchProfile() async {
     try {
-      final response = await http.get(
-        Uri.parse('https://skillop.in/api/user/profile/me'),
-        headers: {'Authorization': token},
-      );
-      if (response.statusCode == 200) {
-        final responseData = json.decode(response.body);
-        if (responseData != null) {
-          // Create a date formatter for displaying dates as "MMM yyyy".
-          final DateFormat dateFormat = DateFormat("MMM yyyy");
+      final responseData = await ApiService.fetchProfile();
+      final DateFormat dateFormat = DateFormat("MMM yyyy");
+      setState(() {
+        var result = responseData['result'] ?? responseData;
+        name = result['firstname'] ?? "";
+        bio = result['about'] ?? "";
+        linkedin = result['linkedinId'] ?? "";
+        about = result['about'] ?? "";
+        pastExperience = result['pastExp'] ?? "";
+        futurePlans = result['futurePlans'] ?? "";
+        profilepic = result['profilePicUrl'] ?? "";
+        bgPic = result['bgPicUrl'] ?? "";
 
-          setState(() {
-            name = responseData['result']['firstname'] ?? "";
-            bio = responseData['result']['about'] ?? "";
-            linkedin = responseData['result']['linkedinId'] ?? "";
-            about = responseData['result']['about'] ?? "";
-            pastExperience = responseData['result']['pastExp'] ?? "";
-            futurePlans = responseData['result']['futurePlans'] ?? "";
-            profilepic = responseData['result']['profilePicUrl'] ?? "";
-            bgPic = responseData['result']['bgPicUrl'] ?? "";
+        // Process skills data.
+        skills = [];
+        var skillsData = result['skills'];
+        if (skillsData != null) {
+          String skillsStr = skillsData
+              .toString()
+              .replaceAll(RegExp(r'[\[\]"]'), '')
+              .replaceAll('\\', '')
+              .trim();
+          if (skillsStr.isNotEmpty) {
+            skills = skillsStr
+                .split(',')
+                .map((s) => toTitleCase(s.trim()))
+                .where((s) => s.isNotEmpty)
+                .toList();
+          }
+        }
 
-            // Process skills data.
-            skills = [];
-            var skillsData = responseData['result']['skills'];
-            if (skillsData != null) {
-              String skillsStr = skillsData
-                  .toString()
-                  .replaceAll(RegExp(r'[\[\]"]'), '')
-                  .replaceAll('\\', '')
-                  .trim();
-              if (skillsStr.isNotEmpty) {
-                skills = skillsStr
-                    .split(',')
-                    .map((s) => toTitleCase(s.trim()))
-                    .where((s) => s.isNotEmpty)
-                    .toList();
+        // Process experience data.
+        List<dynamic>? experenceData = result['experence'];
+        if (experenceData != null) {
+          experienceItems = experenceData.map<Map<String, String>>((item) {
+            String formattedStart = "";
+            String formattedEnd = "";
+            if (item["startDate"] != null &&
+                item["startDate"].toString().isNotEmpty) {
+              try {
+                DateTime parsedStart = DateTime.parse(item["startDate"]);
+                formattedStart = dateFormat.format(parsedStart);
+              } catch (e) {
+                formattedStart = "";
               }
             }
-
-            // Process experience data.
-            List<dynamic>? experenceData = responseData['result']['experence'];
-            if (experenceData != null) {
-              experienceItems = experenceData.map<Map<String, String>>((item) {
-                String formattedStart = "";
-                String formattedEnd = "";
-                // Parse and format start date if available.
-                if (item["startDate"] != null &&
-                    item["startDate"].toString().isNotEmpty) {
-                  try {
-                    DateTime parsedStart = DateTime.parse(item["startDate"]);
-                    formattedStart = dateFormat.format(parsedStart);
-                  } catch (e) {
-                    formattedStart = "";
-                  }
-                }
-                // Parse and format end date if available; if not, use "Present".
-                if (item["endDate"] != null &&
-                    item["endDate"].toString().isNotEmpty) {
-                  try {
-                    DateTime parsedEnd = DateTime.parse(item["endDate"]);
-                    formattedEnd = dateFormat.format(parsedEnd);
-                  } catch (e) {
-                    formattedEnd = "Present";
-                  }
-                } else {
-                  formattedEnd = "Present";
-                }
-                String duration = "";
-                if (formattedStart.isNotEmpty || formattedEnd.isNotEmpty) {
-                  duration = "$formattedStart - $formattedEnd";
-                }
-                return {
-                  "title": item["title"] ?? "",
-                  "company": item["company"] ?? "",
-                  "startDate": formattedStart,
-                  "endDate": formattedEnd,
-                  "duration": duration,
-                  // Preserving _id if needed for future operations.
-                  "_id": item["_id"] ?? ""
-                };
-              }).toList();
+            if (item["endDate"] != null &&
+                item["endDate"].toString().isNotEmpty) {
+              try {
+                DateTime parsedEnd = DateTime.parse(item["endDate"]);
+                formattedEnd = dateFormat.format(parsedEnd);
+              } catch (e) {
+                formattedEnd = "Present";
+              }
+            } else {
+              formattedEnd = "Present";
             }
-
-            // Process education data.
-            List<dynamic>? educationData = responseData['result']['education'];
-            if (educationData != null) {
-              educationItems = educationData.map<Map<String, String>>((item) {
-                String degree = item["degree"] ?? "";
-                String institution = item["institution"] ?? "";
-                String duration = item["duration"] ?? "";
-                return {
-                  "degree": degree,
-                  "institution": institution,
-                  "duration": duration,
-                };
-              }).toList();
+            String duration = "";
+            if (formattedStart.isNotEmpty || formattedEnd.isNotEmpty) {
+              duration = "$formattedStart - $formattedEnd";
             }
-          });
+            return {
+              "title": item["title"] ?? "",
+              "company": item["company"] ?? "",
+              "startDate": formattedStart,
+              "endDate": formattedEnd,
+              "duration": duration,
+              "_id": item["_id"] ?? ""
+            };
+          }).toList();
         }
-      } else {
-        if (kDebugMode) print("Failed to fetch profile: ${response.body}");
-      }
+
+        // Process education data.
+        List<dynamic>? educationData = result['education'];
+        if (educationData != null) {
+          educationItems = educationData.map<Map<String, String>>((item) {
+            String degree = item["degree"] ?? "";
+            String institution = item["institution"] ?? "";
+            // For education, the backend might expect additional keys; adjust if needed.
+            String endDate = item["endDate"] ?? "";
+            return {
+              "degree": degree,
+              "institution": institution,
+              "endDate": endDate,
+            };
+          }).toList();
+        }
+      });
     } catch (e) {
       if (kDebugMode) print('Error fetching profile: $e');
     }
@@ -174,7 +153,6 @@ class _ProfilePageState extends State<ProfilePage> {
     _loadUserData();
   }
 
-  // Controllers for text fields.
   final TextEditingController _bioController = TextEditingController();
   final TextEditingController _linkedinController = TextEditingController();
   final TextEditingController _aboutController = TextEditingController();
@@ -192,7 +170,6 @@ class _ProfilePageState extends State<ProfilePage> {
     super.dispose();
   }
 
-  // Toggle editing mode for specific fields.
   void _toggleEdit(String field) {
     setState(() {
       switch (field) {
@@ -202,9 +179,8 @@ class _ProfilePageState extends State<ProfilePage> {
           break;
         case 'pastExperience':
           isEditingPastExperience = !isEditingPastExperience;
-          if (isEditingPastExperience) {
+          if (isEditingPastExperience)
             _pastExperienceController.text = pastExperience;
-          }
           break;
         case 'futurePlans':
           isEditingFuturePlans = !isEditingFuturePlans;
@@ -218,7 +194,6 @@ class _ProfilePageState extends State<ProfilePage> {
     });
   }
 
-  // Save the updated field locally and in the backend.
   Future<void> _saveField(String field) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String newValue = "";
@@ -256,50 +231,112 @@ class _ProfilePageState extends State<ProfilePage> {
     await _updateFieldInBackend(field, newValue);
   }
 
-  // Update a field on the backend for simple text fields.
-  Future<void> _updateFieldInBackend(String field, String value) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? token = prefs.getString('token');
-    if (token == null) {
-      if (kDebugMode) print("Token is null");
-      return;
-    }
-    if (field == "skills") {
-      try {
-        List<dynamic> skillsList = json.decode(value);
-        List<String> titleCaseSkills =
-            skillsList.map((skill) => toTitleCase(skill.toString())).toList();
-        value = json.encode(titleCaseSkills);
-      } catch (e) {
-        if (kDebugMode) print("Error processing skills for title case: $e");
-      }
-    }
-    var uri = Uri.parse("https://skillop.in/api/user/update/profile");
-    var request = http.MultipartRequest("PUT", uri);
-    request.headers['authorization'] = token;
-    String fieldKey = (field == 'pastExperience') ? 'pastExp' : field;
-    request.fields[fieldKey] = value;
-    try {
-      final streamedResponse = await request.send();
-      final response = await http.Response.fromStream(streamedResponse);
-      if (response.statusCode == 200) {
+  // Updated _updateFieldInBackend: For list/object fields ("experence", "skills", "education"),
+  // we use updateMultipleProfileFields.
+  Future<void> _updateFieldInBackend(String field, dynamic value) async {
+    if (field == "experence" || field == "skills" || field == "education") {
+      Map<String, dynamic> result =
+          await ApiService.updateMultipleProfileFields({
+        field: value,
+      });
+      if (result['success'] == true) {
         if (kDebugMode) print("$field updated successfully");
       } else {
-        if (kDebugMode) print("Failed to update $field: ${response.body}");
+        if (kDebugMode) print("Failed to update $field: ${result['message']}");
       }
-    } catch (e) {
-      if (kDebugMode) print("Error updating $field: $e");
+    } else {
+      bool success =
+          await ApiService.updateProfileField(field, value.toString());
+      if (kDebugMode) {
+        print(success
+            ? "$field updated successfully"
+            : "Failed to update $field");
+      }
     }
   }
 
-  // Helper function to update education details using the new API function.
-  Future<void> _updateEducationInBackend(
-      List<Map<String, dynamic>> educationItem) async {
-    bool success = await ApiService.updateEducationDetails(educationItem);
-    if (success) {
-      if (kDebugMode) print("Education updated successfully");
-    } else {
-      if (kDebugMode) print("Failed to update education");
+  // For deletion of experience: if an item has an _id, call the dedicated delete endpoint.
+  void _confirmDeleteExperience(int index) async {
+    bool? confirm = await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Delete Experience"),
+          content:
+              const Text("Are you sure you want to delete this experience?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text("Delete"),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirm == true) {
+      String id = experienceItems[index]["_id"] ?? "";
+      if (id.isNotEmpty) {
+        bool success = await ApiService.deleteExperience(id);
+        if (success) {
+          setState(() {
+            experienceItems.removeAt(index);
+          });
+        } else {
+          if (kDebugMode) print("Failed to delete experience via API");
+        }
+      } else {
+        // Fallback: update entire list.
+        setState(() {
+          experienceItems.removeAt(index);
+        });
+        await _updateFieldInBackend("experence", experienceItems);
+      }
+    }
+  }
+
+  // For deletion of education.
+  void _confirmDeleteEducation(int index) async {
+    bool? confirm = await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Delete Education"),
+          content: const Text(
+              "Are you sure you want to delete this education entry?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text("Delete"),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirm == true) {
+      String id = educationItems[index]["_id"] ?? "";
+      if (id.isNotEmpty) {
+        bool success = await ApiService.deleteEducation(id);
+        if (success) {
+          setState(() {
+            educationItems.removeAt(index);
+          });
+        } else {
+          if (kDebugMode) print("Failed to delete education via API");
+        }
+      } else {
+        setState(() {
+          educationItems.removeAt(index);
+        });
+        await _updateFieldInBackend("education", educationItems);
+      }
     }
   }
 
@@ -369,24 +406,24 @@ class _ProfilePageState extends State<ProfilePage> {
                 TextButton(
                   onPressed: () {
                     String startDate = startDateController.text.trim();
-                    // Force end date to "Present" if current or if user enters "present".
                     String rawEndDate =
                         isCurrent ? "Present" : endDateController.text.trim();
                     String endDate = rawEndDate.toLowerCase() == "present"
                         ? "Present"
                         : rawEndDate;
-                    String duration = "$startDate - $endDate";
+                    // For experience, use keys expected by the backend.
                     setState(() {
                       experienceItems.add({
                         "title": titleController.text,
                         "company": companyController.text,
                         "startDate": startDate,
                         "endDate": endDate,
-                        "duration": duration,
+                        // Optionally include "location" and "description" as empty strings if required.
+                        "location": "",
+                        "description": ""
                       });
                     });
-                    _updateFieldInBackend(
-                        "experence", jsonEncode(experienceItems));
+                    _updateFieldInBackend("experence", experienceItems);
                     Navigator.pop(context);
                   },
                   child: const Text("Add"),
@@ -478,18 +515,17 @@ class _ProfilePageState extends State<ProfilePage> {
                     String endDate = rawEndDate.toLowerCase() == "present"
                         ? "Present"
                         : rawEndDate;
-                    String duration = "$startDate - $endDate";
                     setState(() {
                       experienceItems[index] = {
                         "title": titleController.text,
                         "company": companyController.text,
                         "startDate": startDate,
                         "endDate": endDate,
-                        "duration": duration,
+                        "location": "",
+                        "description": ""
                       };
                     });
-                    _updateFieldInBackend(
-                        "experence", jsonEncode(experienceItems));
+                    _updateFieldInBackend("experence", experienceItems);
                     Navigator.pop(context);
                   },
                   child: const Text("Save"),
@@ -525,7 +561,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   skills.add(toTitleCase(skillController.text));
                 });
                 Navigator.pop(context);
-                _updateFieldInBackend("skills", jsonEncode(skills));
+                _updateFieldInBackend("skills", skills);
               },
               child: const Text("Add"),
             ),
@@ -533,35 +569,6 @@ class _ProfilePageState extends State<ProfilePage> {
         );
       },
     );
-  }
-
-  void _confirmDeleteExperience(int index) async {
-    bool? confirm = await showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("Delete Experience"),
-          content:
-              const Text("Are you sure you want to delete this experience?"),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text("Cancel"),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text("Delete"),
-            ),
-          ],
-        );
-      },
-    );
-    if (confirm == true) {
-      setState(() {
-        experienceItems.removeAt(index);
-      });
-      _updateFieldInBackend("experence", jsonEncode(experienceItems));
-    }
   }
 
   void _confirmDeleteSkill(int index) async {
@@ -588,15 +595,14 @@ class _ProfilePageState extends State<ProfilePage> {
       setState(() {
         skills.removeAt(index);
       });
-      _updateFieldInBackend("skills", jsonEncode(skills));
+      _updateFieldInBackend("skills", skills);
     }
   }
 
-  // Updated Education dialog with separate fields for Degree, Institution, Start Year, and End Year.
+  // Education: For simplicity, we update education via updateMultipleProfileFields.
   void _addEducation() async {
     final degreeController = TextEditingController();
     final institutionController = TextEditingController();
-    final startYearController = TextEditingController();
     final endYearController = TextEditingController();
     await showDialog(
       context: context,
@@ -616,10 +622,6 @@ class _ProfilePageState extends State<ProfilePage> {
                   decoration: const InputDecoration(hintText: "Institution"),
                 ),
                 TextField(
-                  controller: startYearController,
-                  decoration: const InputDecoration(hintText: "Start Year"),
-                ),
-                TextField(
                   controller: endYearController,
                   decoration: const InputDecoration(hintText: "End Year"),
                 ),
@@ -633,17 +635,15 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             TextButton(
               onPressed: () async {
-                String startYear = startYearController.text.trim();
-                String endYear = endYearController.text.trim();
-                String duration = "$startYear - $endYear";
                 setState(() {
+                  // For education, we use keys expected by the backend.
                   educationItems.add({
                     "degree": degreeController.text,
                     "institution": institutionController.text,
-                    "duration": duration,
+                    "endDate": endYearController.text,
                   });
                 });
-                await _updateEducationInBackend(educationItems);
+                await _updateFieldInBackend("education", educationItems);
                 Navigator.pop(context);
               },
               child: const Text("Add"),
@@ -652,35 +652,6 @@ class _ProfilePageState extends State<ProfilePage> {
         );
       },
     );
-  }
-
-  void _confirmDeleteEducation(int index) async {
-    bool? confirm = await showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("Delete Education"),
-          content: const Text(
-              "Are you sure you want to delete this education entry?"),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text("Cancel"),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text("Delete"),
-            ),
-          ],
-        );
-      },
-    );
-    if (confirm == true) {
-      setState(() {
-        educationItems.removeAt(index);
-      });
-      await _updateEducationInBackend(educationItems);
-    }
   }
 
   bool _hasUnsavedChanges() {
@@ -726,20 +697,19 @@ class _ProfilePageState extends State<ProfilePage> {
         if (isEditingPastExperience) await _saveField("pastExperience");
         if (isEditingFuturePlans) await _saveField("futurePlans");
         if (isEditingExperience) {
-          await _updateFieldInBackend("experence", jsonEncode(experienceItems));
+          await _updateFieldInBackend("experence", experienceItems);
           setState(() {
             isEditingExperience = false;
           });
         }
         if (isEditingSkills) {
-          await _updateFieldInBackend("skills", jsonEncode(skills));
+          await _updateFieldInBackend("skills", skills);
           setState(() {
             isEditingSkills = false;
           });
         }
         if (isEditingBio) await _saveField("bio");
         if (isEditingEducation) {
-          await _updateEducationInBackend(educationItems);
           setState(() {
             isEditingEducation = false;
           });
@@ -756,8 +726,6 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  /// Returns the combined bio which includes only the summary of the first experience
-  /// and first education item, removing the about section.
   String _combinedBio() {
     String combined = "";
     if (experienceItems.isNotEmpty) {
@@ -772,237 +740,292 @@ class _ProfilePageState extends State<ProfilePage> {
     return combined;
   }
 
+  Future<void> _refreshProfilePage() async {
+    if (_hasUnsavedChanges()) {
+      final result = await showDialog<String>(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text("Unsaved Changes"),
+            content: const Text(
+                "You have unsaved changes. Would you like to save them before refreshing?"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, "cancel"),
+                child: const Text("Cancel"),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, "discard"),
+                child: const Text("Discard"),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, "save"),
+                child: const Text("Save"),
+              ),
+            ],
+          );
+        },
+      );
+      if (result == "cancel") {
+        return;
+      } else if (result == "save") {
+        if (isEditingAbout) await _saveField("about");
+        if (isEditingPastExperience) await _saveField("pastExperience");
+        if (isEditingFuturePlans) await _saveField("futurePlans");
+        if (isEditingExperience) {
+          await _updateFieldInBackend("experence", experienceItems);
+          setState(() {
+            isEditingExperience = false;
+          });
+        }
+        if (isEditingSkills) {
+          await _updateFieldInBackend("skills", skills);
+          setState(() {
+            isEditingSkills = false;
+          });
+        }
+        if (isEditingBio) await _saveField("bio");
+        if (isEditingEducation) {
+          setState(() {
+            isEditingEducation = false;
+          });
+        }
+      }
+    }
+    await _fetchProfile();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onHorizontalDragEnd: _handleHorizontalSwipe,
-      child: WillPopScope(
-        onWillPop: () async {
-          await _handleSaveAndNavigate();
-          return false;
-        },
-        child: Scaffold(
-          body: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Background image with edit button.
-                Stack(
-                  children: [
-                    Container(
-                      height: 150,
-                      decoration: BoxDecoration(
-                        image: DecorationImage(
-                          image: bgPic.isNotEmpty
-                              ? NetworkImage(bgPic)
-                              : const AssetImage('assets/images/default_bg.png')
-                                  as ImageProvider,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 8,
-                      right: 8,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          shape: const CircleBorder(),
-                          padding: const EdgeInsets.all(8),
-                          backgroundColor: Colors.white.withOpacity(0.7),
-                        ),
-                        onPressed: () => Navigator.pushNamed(
-                            context, '/setup_profile_photo'),
-                        child: const Icon(Icons.edit, color: Colors.black),
-                      ),
-                    ),
-                  ],
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+    return RefreshIndicator(
+      onRefresh: _refreshProfilePage,
+      child: GestureDetector(
+        onHorizontalDragEnd: _handleHorizontalSwipe,
+        child: WillPopScope(
+          onWillPop: () async {
+            await _handleSaveAndNavigate();
+            return false;
+          },
+          child: Scaffold(
+            body: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Stack(
                     children: [
-                      // Profile picture, name, and bio.
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 40,
-                            backgroundImage: profilepic.isNotEmpty
-                                ? NetworkImage(profilepic)
+                      Container(
+                        height: 150,
+                        decoration: BoxDecoration(
+                          image: DecorationImage(
+                            image: bgPic.isNotEmpty
+                                ? NetworkImage(bgPic)
                                 : const AssetImage(
-                                        'assets/images/default_profile_pic.png')
+                                        'assets/images/default_bg.png')
                                     as ImageProvider,
+                            fit: BoxFit.cover,
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(name,
-                                    style: const TextStyle(
-                                        fontSize: 22,
-                                        fontWeight: FontWeight.bold)),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: isEditingBio
-                                          ? TextField(
-                                              controller: _bioController,
-                                              decoration: const InputDecoration(
-                                                  hintText: "Enter your bio"),
-                                            )
-                                          : (_combinedBio().trim().isEmpty
-                                              ? const Text("No bio provided.",
-                                                  style: TextStyle(
-                                                      fontSize: 14,
-                                                      fontStyle:
-                                                          FontStyle.italic))
-                                              : Text(_combinedBio(),
-                                                  style: const TextStyle(
-                                                      fontSize: 14,
-                                                      color: Colors.grey))),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 8,
+                        right: 8,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            shape: const CircleBorder(),
+                            padding: const EdgeInsets.all(8),
+                            backgroundColor: Colors.white.withOpacity(0.7),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      // LinkedIn row.
-                      Row(
-                        children: [
-                          const Icon(Icons.link),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: isEditingLinkedIn
-                                ? TextField(
-                                    controller: _linkedinController,
-                                    decoration: const InputDecoration(
-                                        hintText: "Enter LinkedIn URL"),
-                                  )
-                                : (linkedin.trim().isEmpty
-                                    ? const Text("No LinkedIn URL provided.",
-                                        style: TextStyle(
-                                            fontSize: 14,
-                                            fontStyle: FontStyle.italic))
-                                    : InkWell(
-                                        onTap: () async {
-                                          final uri = Uri.parse(linkedin);
-                                          if (await url_launcher
-                                              .canLaunchUrl(uri)) {
-                                            await url_launcher.launchUrl(uri);
-                                          }
-                                        },
-                                        child: Text(linkedin,
-                                            style: TextStyle(
-                                              color: Colors.blue.shade800,
-                                              decoration:
-                                                  TextDecoration.underline,
-                                            )),
-                                      )),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      // Editable sections.
-                      buildEditableSection(
-                        title: "ABOUT",
-                        content: about,
-                        isEditing: isEditingAbout,
-                        controller: _aboutController,
-                        field: "about",
-                        onToggleEdit: () => _toggleEdit("about"),
-                        onSave: () => _saveField("about"),
-                      ),
-                      buildEditableSection(
-                        title: "Past Experience",
-                        content: pastExperience,
-                        isEditing: isEditingPastExperience,
-                        controller: _pastExperienceController,
-                        field: "pastExperience",
-                        onToggleEdit: () => _toggleEdit("pastExperience"),
-                        onSave: () => _saveField("pastExperience"),
-                      ),
-                      buildEditableSection(
-                        title: "Future Plans",
-                        content: futurePlans,
-                        isEditing: isEditingFuturePlans,
-                        controller: _futurePlansController,
-                        field: "futurePlans",
-                        onToggleEdit: () => _toggleEdit("futurePlans"),
-                        onSave: () => _saveField("futurePlans"),
-                      ),
-                      // Experience section.
-                      buildExperienceSection(
-                        isEditingExperience: isEditingExperience,
-                        experienceItems: experienceItems,
-                        onToggleEdit: () {
-                          setState(() {
-                            isEditingExperience = !isEditingExperience;
-                          });
-                        },
-                        onAddExperience: _addExperience,
-                        onDeleteExperience: (index) =>
-                            _confirmDeleteExperience(index),
-                        onEditExperience: _editExperience,
-                      ),
-                      // Skills section.
-                      buildSkillsSection(
-                        isEditingSkills: isEditingSkills,
-                        skills: skills,
-                        onToggleEdit: () {
-                          setState(() {
-                            isEditingSkills = !isEditingSkills;
-                          });
-                        },
-                        onAddSkill: _addSkill,
-                        onDeleteSkill: (index) => _confirmDeleteSkill(index),
-                      ),
-                      // Education section.
-                      buildEducationSection(
-                        isEditingEducation: isEditingEducation,
-                        educationItems: educationItems,
-                        onToggleEdit: () {
-                          setState(() {
-                            isEditingEducation = !isEditingEducation;
-                          });
-                        },
-                        onAddEducation: _addEducation,
-                        onDeleteEducation: (index) =>
-                            _confirmDeleteEducation(index),
+                          onPressed: () => Navigator.pushNamed(
+                              context, '/setup_profile_photo'),
+                          child: const Icon(Icons.edit, color: Colors.black),
+                        ),
                       ),
                     ],
                   ),
-                )
-              ],
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 40,
+                              backgroundImage: profilepic.isNotEmpty
+                                  ? NetworkImage(profilepic)
+                                  : const AssetImage(
+                                          'assets/images/default_profile_pic.png')
+                                      as ImageProvider,
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(name,
+                                      style: const TextStyle(
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.bold)),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: isEditingBio
+                                            ? TextField(
+                                                controller: _bioController,
+                                                decoration:
+                                                    const InputDecoration(
+                                                        hintText:
+                                                            "Enter your bio"),
+                                              )
+                                            : (_combinedBio().trim().isEmpty
+                                                ? const Text("No bio provided.",
+                                                    style: TextStyle(
+                                                        fontSize: 14,
+                                                        fontStyle:
+                                                            FontStyle.italic))
+                                                : Text(_combinedBio(),
+                                                    style: const TextStyle(
+                                                        fontSize: 14,
+                                                        color: Colors.grey))),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            const Icon(Icons.link),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: isEditingLinkedIn
+                                  ? TextField(
+                                      controller: _linkedinController,
+                                      decoration: const InputDecoration(
+                                          hintText: "Enter LinkedIn URL"),
+                                    )
+                                  : (linkedin.trim().isEmpty
+                                      ? const Text("No LinkedIn URL provided.",
+                                          style: TextStyle(
+                                              fontSize: 14,
+                                              fontStyle: FontStyle.italic))
+                                      : InkWell(
+                                          onTap: () async {
+                                            final uri = Uri.parse(linkedin);
+                                            if (await url_launcher
+                                                .canLaunchUrl(uri)) {
+                                              await url_launcher.launchUrl(uri,
+                                                  mode: url_launcher.LaunchMode
+                                                      .externalApplication);
+                                            }
+                                          },
+                                          child: Text(linkedin,
+                                              style: TextStyle(
+                                                  color: Colors.blue.shade800,
+                                                  decoration: TextDecoration
+                                                      .underline)),
+                                        )),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        buildEditableSection(
+                          title: "ABOUT",
+                          content: about,
+                          isEditing: isEditingAbout,
+                          controller: _aboutController,
+                          field: "about",
+                          onToggleEdit: () => _toggleEdit("about"),
+                          onSave: () => _saveField("about"),
+                        ),
+                        buildEditableSection(
+                          title: "Past Experience",
+                          content: pastExperience,
+                          isEditing: isEditingPastExperience,
+                          controller: _pastExperienceController,
+                          field: "pastExperience",
+                          onToggleEdit: () => _toggleEdit("pastExperience"),
+                          onSave: () => _saveField("pastExperience"),
+                        ),
+                        buildEditableSection(
+                          title: "Future Plans",
+                          content: futurePlans,
+                          isEditing: isEditingFuturePlans,
+                          controller: _futurePlansController,
+                          field: "futurePlans",
+                          onToggleEdit: () => _toggleEdit("futurePlans"),
+                          onSave: () => _saveField("futurePlans"),
+                        ),
+                        buildExperienceSection(
+                          isEditingExperience: isEditingExperience,
+                          experienceItems: experienceItems,
+                          onToggleEdit: () {
+                            setState(() {
+                              isEditingExperience = !isEditingExperience;
+                            });
+                          },
+                          onAddExperience: _addExperience,
+                          onDeleteExperience: (index) =>
+                              _confirmDeleteExperience(index),
+                          onEditExperience: _editExperience,
+                        ),
+                        buildSkillsSection(
+                          isEditingSkills: isEditingSkills,
+                          skills: skills,
+                          onToggleEdit: () {
+                            setState(() {
+                              isEditingSkills = !isEditingSkills;
+                            });
+                          },
+                          onAddSkill: _addSkill,
+                          onDeleteSkill: (index) => _confirmDeleteSkill(index),
+                        ),
+                        buildEducationSection(
+                          isEditingEducation: isEditingEducation,
+                          educationItems: educationItems,
+                          onToggleEdit: () {
+                            setState(() {
+                              isEditingEducation = !isEditingEducation;
+                            });
+                          },
+                          onAddEducation: _addEducation,
+                          onDeleteEducation: (index) =>
+                              _confirmDeleteEducation(index),
+                        ),
+                      ],
+                    ),
+                  )
+                ],
+              ),
             ),
-          ),
-          bottomNavigationBar: BottomNavigationBar(
-            items: [
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.home, color: Colors.black, size: 40),
-                label: '',
-              ),
-              BottomNavigationBarItem(
-                icon: CircleAvatar(
-                  backgroundImage: profilepic.isNotEmpty
-                      ? NetworkImage(profilepic)
-                      : const AssetImage(
-                              'assets/images/default_profile_pic.png')
-                          as ImageProvider,
+            bottomNavigationBar: BottomNavigationBar(
+              items: [
+                BottomNavigationBarItem(
+                  icon: const Icon(Icons.home, color: Colors.black, size: 40),
+                  label: '',
                 ),
-                label: '',
-              ),
-            ],
-            currentIndex: 1,
-            onTap: (index) {
-              if (index == 0) {
-                Navigator.pushNamedAndRemoveUntil(
-                    context, "/home", (Route<dynamic> route) => false);
-              }
-            },
+                BottomNavigationBarItem(
+                  icon: CircleAvatar(
+                    backgroundImage: profilepic.isNotEmpty
+                        ? NetworkImage(profilepic)
+                        : const AssetImage(
+                                'assets/images/default_profile_pic.png')
+                            as ImageProvider,
+                  ),
+                  label: '',
+                ),
+              ],
+              currentIndex: 1,
+              onTap: (index) {
+                if (index == 0) {
+                  Navigator.pushNamedAndRemoveUntil(
+                      context, "/home", (Route<dynamic> route) => false);
+                }
+              },
+            ),
           ),
         ),
       ),

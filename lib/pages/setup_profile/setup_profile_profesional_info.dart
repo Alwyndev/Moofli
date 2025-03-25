@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:moofli_app/components/nav_buttons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../../api/api_services.dart';
 
 class SetupProfileProfesionalInfo extends StatefulWidget {
@@ -81,7 +80,7 @@ class _SetupProfileProfesionalInfoState
     }
 
     // Update backend with professional info.
-    bool success = await ApiService.updateMultipleProfileFields({
+    Map<String, dynamic> result = await ApiService.updateMultipleProfileFields({
       'Profession': isSelected[0] ? 'Student' : 'Professional',
       'College': collegeController.text,
       'Degree': degreeController.text,
@@ -98,7 +97,7 @@ class _SetupProfileProfesionalInfoState
       }
     });
 
-    if (success) {
+    if (result['success']) {
       Navigator.pushNamed(context, '/setup_profile_skills');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(

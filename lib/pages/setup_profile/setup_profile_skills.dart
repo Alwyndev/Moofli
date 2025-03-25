@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:moofli_app/components/gradient_button.dart';
 import 'package:moofli_app/components/nav_buttons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../../api/api_services.dart';
 
 class SetupProfileSkills extends StatefulWidget {
@@ -106,12 +105,12 @@ class _SetupProfileSkillsState extends State<SetupProfileSkills> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setStringList('selectedSkills', selectedSkills);
 
-    // Convert skills list to JSON (or a comma-separated string based on your API design)
-    String skillsJson = jsonEncode(selectedSkills);
+    // Use updateMultipleProfileFields to update skills.
+    Map<String, dynamic> result = await ApiService.updateMultipleProfileFields({
+      'skills': selectedSkills,
+    });
 
-    bool success = await ApiService.updateProfileField('skills', skillsJson);
-
-    if (success) {
+    if (result['success']) {
       Navigator.pushNamed(context, '/setup_profile_photo');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(

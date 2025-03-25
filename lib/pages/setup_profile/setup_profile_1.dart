@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:moofli_app/components/nav_buttons.dart';
-// import 'package:moofli_app/pages/setup_profile/setup_profile_contact_info.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SetupProfile1 extends StatefulWidget {

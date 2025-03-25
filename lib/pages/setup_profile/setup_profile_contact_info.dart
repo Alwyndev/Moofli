@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-// import 'package:moofli_app/api/api_service.dart';
 import 'package:moofli_app/components/nav_buttons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../../api/api_services.dart';
 
 class SetupProfileContactInfo extends StatefulWidget {
@@ -26,16 +24,15 @@ class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
     await prefs.setString('mobile', phoneController.text);
     await prefs.setString('city', cityController.text);
 
-    // Update backend: You can use the same update endpoint if your API expects a combined profile update.
-    bool success = await ApiService.updateMultipleProfileFields({
+    // Update backend using updateMultipleProfileFields
+    Map<String, dynamic> result = await ApiService.updateMultipleProfileFields({
       'mobile': phoneController.text,
       'city': cityController.text,
     });
 
-    if (success) {
+    if (result['success']) {
       Navigator.pushNamed(context, '/setup_profile_professional_info');
     } else {
-      // Show an error message if needed.
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Failed to update contact info")));
     }

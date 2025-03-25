@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:moofli_app/components/nav_buttons.dart';
-// import 'package:moofli_app/components/submit_to_backend.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import '../../api/api_services.dart'; // Import the backend submission function
+import '../../api/api_services.dart';
 
 class SetupProfileSocials extends StatefulWidget {
   const SetupProfileSocials({super.key});
@@ -21,26 +19,18 @@ class _SetupProfileSocialsState extends State<SetupProfileSocials> {
     await prefs.setString('linkedIn', linkedInController.text);
     await prefs.setString('upi', upiController.text);
 
-    bool success = await ApiService.updateMultipleProfileFields({
+    Map<String, dynamic> result = await ApiService.updateMultipleProfileFields({
       'linkedIn': linkedInController.text,
       'upi': upiController.text,
     });
 
-    if (success) {
+    if (result['success']) {
       Navigator.pushReplacementNamed(context, '/home');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Failed to update socials")));
     }
   }
-
-  //    else {
-  //     // Show an error message if submission fails.
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text('Submission failed! Please try again.')),
-  //     );
-  //   }
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -147,7 +137,6 @@ class _SetupProfileSocialsState extends State<SetupProfileSocials> {
               ),
             ),
             const SizedBox(height: 20),
-            // NavButtons widget calls saveSocials() when "Next" is pressed.
             NavButtons(prev: '/setup_profile_photo', next: saveSocials)
           ],
         ),
