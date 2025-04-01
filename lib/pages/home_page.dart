@@ -245,6 +245,15 @@ class _HomePageState extends State<HomePage> {
                     Navigator.pushNamed(context, '/profile');
                   },
                 ),
+                ListTile(
+                  leading: const Icon(Icons.info, color: Colors.grey),
+                  title: const Text(
+                    'Account Info',
+                  ),
+                  onTap: () {
+                    Navigator.pushNamed(context, '/account_info');
+                  },
+                ),
                 const Spacer(),
                 ListTile(
                   leading: const Icon(Icons.logout, color: Colors.red),

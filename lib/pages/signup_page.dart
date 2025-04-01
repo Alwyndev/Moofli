@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:moofli_app/components/google_login_button.dart';
+// import 'package:google_sign_in/google_sign_in.dart';
+// import 'package:moofli_app/components/google_login_button.dart';
 import 'package:moofli_app/components/gradient_button.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -15,7 +15,7 @@ class SignupPage extends StatefulWidget {
 }
 
 class _SignupPageState extends State<SignupPage> {
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  // final GoogleSignIn _googleSignIn = GoogleSignIn();
 
   bool status1 = true;
   bool status2 = true;
@@ -23,21 +23,21 @@ class _SignupPageState extends State<SignupPage> {
       false; // To track if Terms and Privacy Policy are accepted
   bool rememberMe = false;
 
-  Future<void> _handleGoogleLogin() async {
-    try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser != null) {
-        print("Google User: ${googleUser.displayName}");
-        print("Email: ${googleUser.email}");
-        print("Photo URL: ${googleUser.photoUrl}");
-        // Additional actions can be performed here
-      } else {
-        print("User canceled the sign-in process.");
-      }
-    } catch (error) {
-      print("Error during Google Sign-In: $error");
-    }
-  }
+  // Future<void> _handleGoogleLogin() async {
+  //   try {
+  //     final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+  //     if (googleUser != null) {
+  //       print("Google User: ${googleUser.displayName}");
+  //       print("Email: ${googleUser.email}");
+  //       print("Photo URL: ${googleUser.photoUrl}");
+  //       // Additional actions can be performed here
+  //     } else {
+  //       print("User canceled the sign-in process.");
+  //     }
+  //   } catch (error) {
+  //     print("Error during Google Sign-In: $error");
+  //   }
+  // }
 
   // Text Editing Controllers
   final TextEditingController fNameController = TextEditingController();

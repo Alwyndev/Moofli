@@ -240,7 +240,7 @@ class ApiService {
     String? token = prefs.getString('token');
     if (token == null) return false;
     final response = await http.put(
-      Uri.parse("$baseUrl/profile"),
+      Uri.parse("$baseUrl/user/update/profile"),
       headers: {
         "Content-Type": "application/json",
         "Authorization": token,

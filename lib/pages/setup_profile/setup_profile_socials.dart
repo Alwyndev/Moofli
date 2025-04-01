@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:moofli_app/components/nav_buttons.dart';
+import 'package:moofli_app/components/progress_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../api/api_services.dart';
 
@@ -11,6 +12,7 @@ class SetupProfileSocials extends StatefulWidget {
 }
 
 class _SetupProfileSocialsState extends State<SetupProfileSocials> {
+  double progressPercentage = 0.99;
   final TextEditingController linkedInController = TextEditingController();
   final TextEditingController upiController = TextEditingController();
 
@@ -49,63 +51,7 @@ class _SetupProfileSocialsState extends State<SetupProfileSocials> {
           scrollDirection: Axis.vertical,
           children: [
             const SizedBox(height: 20),
-            const Text(
-              'Complete your',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.w500,
-                color: Colors.black,
-              ),
-            ),
-            const Text(
-              'Profile',
-              style: TextStyle(
-                fontSize: 48,
-                fontWeight: FontWeight.w900,
-                color: Colors.black,
-              ),
-            ),
-            Container(
-              height: 8,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [
-                    Colors.red,
-                    Colors.yellow,
-                    Colors.green,
-                    Colors.blue,
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(4),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Center(
-              child: RichText(
-                text: const TextSpan(
-                  text: 'You are ',
-                  style: TextStyle(
-                    fontSize: 20,
-                    color: Color.fromARGB(255, 109, 108, 108),
-                  ),
-                  children: [
-                    TextSpan(
-                      text: '99%',
-                      style: TextStyle(
-                        color: Color.fromARGB(255, 90, 90, 90),
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    TextSpan(
-                      text: ' there',
-                      style: TextStyle(fontSize: 20),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            ProgressBar(progress: progressPercentage),
             const SizedBox(height: 20),
             const Text(
               'Social Handles',
@@ -137,8 +83,14 @@ class _SetupProfileSocialsState extends State<SetupProfileSocials> {
               ),
             ),
             const SizedBox(height: 20),
-            NavButtons(prev: '/setup_profile_photo', next: saveSocials)
           ],
+        ),
+      ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+        child: NavButtons(
+          prev: '/setup_profile_photo',
+          next: saveSocials,
         ),
       ),
     );

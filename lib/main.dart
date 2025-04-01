@@ -11,7 +11,7 @@ import 'pages/home_page.dart';
 import 'pages/login_page.dart';
 import 'pages/signup_page.dart';
 import 'pages/reset_password_page.dart';
-import 'pages/settings_page.dart';
+import 'pages/account_info_page.dart';
 import 'pages/diary_page_new.dart';
 
 void main() async {
@@ -49,13 +49,13 @@ class MyApp extends StatelessWidget {
         '/setup_profile_skills': (context) => const SetupProfileSkills(),
         '/setup_profile_photo': (context) => const SetupProfileUploadPhoto(),
         '/setup_profile_socials': (context) => const SetupProfileSocials(),
-        '/settings': (context) => const SettingsPage(),
+        '/account_info': (context) => AccountInfoPage(),
         '/profile': (context) => ProfilePage(),
       },
       title: 'Moofli Diary',
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        fontFamily: 'Roboto',
+        fontFamily: 'Product Sans',
         useMaterial3: true,
       ),
     );

@@ -1,0 +1,326 @@
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../api/api_services.dart';
+import 'dart:convert';
+
+class AccountInfoPage extends StatefulWidget {
+  @override
+  _AccountInfoPageState createState() => _AccountInfoPageState();
+}
+
+class _AccountInfoPageState extends State<AccountInfoPage> {
+  Map<String, dynamic>? userDetails;
+  bool isEditing = false;
+  final TextEditingController firstNameController = TextEditingController();
+  final TextEditingController lastNameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUserProfile();
+  }
+
+  Future<void> fetchUserProfile() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? userDetailsString = prefs.getString('userDetails');
+
+      if (userDetailsString != null) {
+        setState(() {
+          userDetails = jsonDecode(userDetailsString);
+          _initializeControllers();
+        });
+        print("User profile loaded from SharedPreferences");
+      } else {
+        var profile = await ApiService.fetchProfile();
+        setState(() {
+          userDetails = profile;
+          _initializeControllers();
+        });
+        print("User profile loaded from API");
+      }
+    } catch (e) {
+      print("Error loading profile: $e");
+    }
+  }
+
+  void _initializeControllers() {
+    if (userDetails != null) {
+      firstNameController.text = userDetails!['firstname'] ?? '';
+      lastNameController.text = userDetails!['lastname'] ?? '';
+      emailController.text = userDetails!['email'] ?? '';
+      print("Controllers initialized with: "
+          "firstname=${firstNameController.text}, "
+          "lastname=${lastNameController.text}, "
+          "email=${emailController.text}");
+    }
+  }
+
+  Future<void> saveChanges() async {
+    // Create an updated data map from the controllers
+    Map<String, dynamic> updatedData = {
+      'firstname': firstNameController.text,
+      'lastname': lastNameController.text,
+      'email': emailController.text,
+    };
+    print("Attempting to save changes: $updatedData");
+
+    try {
+      bool success = await ApiService.updateProfile(updatedData);
+      if (success) {
+        setState(() {
+          userDetails!['firstname'] = firstNameController.text;
+          userDetails!['lastname'] = lastNameController.text;
+          userDetails!['email'] = emailController.text;
+          isEditing = false;
+        });
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setString('userDetails', jsonEncode(userDetails));
+        print("Profile updated successfully on server.");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Profile updated successfully!")),
+        );
+      } else {
+        print("API call to update profile failed.");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text("Failed to update profile. Please try again.")),
+        );
+      }
+    } catch (e) {
+      print("Error while saving changes: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    }
+  }
+
+  Future<bool> _onWillPop() async {
+    if (isEditing) {
+      return await showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text("Discard Changes?"),
+              content: Text(
+                  "You have unsaved changes. Do you want to save or discard them?"),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    print("User chose to cancel leaving page.");
+                    Navigator.of(context).pop(false);
+                  },
+                  child: Text("Cancel"),
+                ),
+                TextButton(
+                  onPressed: () {
+                    print("User chose to discard changes.");
+                    Navigator.of(context).pop(true);
+                    setState(() => isEditing = false);
+                  },
+                  child: Text("Discard", style: TextStyle(color: Colors.red)),
+                ),
+                TextButton(
+                  onPressed: () {
+                    print("User chose to save changes before leaving.");
+                    saveChanges();
+                    Navigator.of(context).pop(false);
+                  },
+                  child: Text("Save"),
+                ),
+              ],
+            ),
+          ) ??
+          false;
+    }
+    return true;
+  }
+
+  Future<void> logout() async {
+    await ApiService.logout();
+    print("User logged out.");
+    Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+  }
+
+  void _deleteAccount() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Delete Account"),
+        content: Text("Are you sure you want to delete your account?"),
+        actions: [
+          TextButton(
+            onPressed: () {
+              print("User canceled account deletion.");
+              Navigator.pop(context);
+            },
+            child: Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              // TODO: Add your delete account API call here.
+              print("Account deletion triggered.");
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text("Account deleted.")),
+              );
+            },
+            child: Text("Delete", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoTile({
+    required IconData icon,
+    required String title,
+    required String value,
+    required TextEditingController controller,
+  }) {
+    return ListTile(
+      leading: Icon(icon),
+      title: Text(title),
+      subtitle: isEditing
+          ? TextField(
+              controller: controller,
+              decoration: InputDecoration(
+                hintText: title,
+                border: InputBorder.none,
+              ),
+            )
+          : Text(value),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final String bgImage =
+        userDetails?['bgPicUrl'] ?? 'https://via.placeholder.com/300';
+    final String profilePic = userDetails?['profilePicUrl'] ?? '';
+    final String firstName = userDetails?['firstname'] ?? '';
+    final String email = userDetails?['email'] ?? '';
+
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text("Account Info"),
+          centerTitle: true,
+          actions: [
+            IconButton(
+              icon: Icon(isEditing ? Icons.save : Icons.edit),
+              onPressed: () {
+                if (isEditing) {
+                  saveChanges();
+                }
+                setState(() {
+                  isEditing = !isEditing;
+                });
+              },
+            ),
+          ],
+        ),
+        body: RefreshIndicator(
+          onRefresh: fetchUserProfile,
+          child: userDetails == null
+              ? Center(child: CircularProgressIndicator())
+              : ListView(
+                  children: [
+                    // Header styled like the drawer header.
+                    Container(
+                      height: 200,
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: NetworkImage(bgImage),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      child: Container(
+                        color: Colors.black.withOpacity(0.4),
+                        padding: EdgeInsets.all(16),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            CircleAvatar(
+                              radius: 40,
+                              backgroundImage: profilePic.isNotEmpty
+                                  ? NetworkImage(profilePic)
+                                  : AssetImage(
+                                          'assets/images/default_profile_pic.png')
+                                      as ImageProvider,
+                            ),
+                            SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    firstName,
+                                    style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white),
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    email,
+                                    style: TextStyle(
+                                        fontSize: 16, color: Colors.white70),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    // Display user information as ListTiles.
+                    _buildInfoTile(
+                      icon: Icons.person,
+                      title: "First Name",
+                      value: firstNameController.text,
+                      controller: firstNameController,
+                    ),
+                    Divider(),
+                    _buildInfoTile(
+                      icon: Icons.person_outline,
+                      title: "Last Name",
+                      value: lastNameController.text,
+                      controller: lastNameController,
+                    ),
+                    Divider(),
+                    _buildInfoTile(
+                      icon: Icons.email,
+                      title: "Email",
+                      value: emailController.text,
+                      controller: emailController,
+                    ),
+                    Divider(),
+                    ListTile(
+                      leading: Icon(Icons.logout, color: Colors.red),
+                      title: Text(
+                        'Logout Account',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                      onTap: logout,
+                    ),
+
+                    Divider(),
+                    ListTile(
+                      leading: Icon(Icons.delete, color: Colors.red),
+                      title: Text(
+                        'Delete Account',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                      onTap: _deleteAccount,
+                    ),
+                  ],
+                ),
+        ),
+      ),
+    );
+  }
+}
