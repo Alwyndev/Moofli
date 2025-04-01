@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:moofli_app/components/nav_buttons.dart';
 import 'package:moofli_app/components/progress_bar.dart';
+import 'package:moofli_app/gradient_button.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
@@ -96,7 +97,7 @@ class _SetupProfileUploadPhotoState extends State<SetupProfileUploadPhoto> {
     return coverUploadSuccess && profileUploadSuccess;
   }
 
-  /// Called when the Next button is pressed.
+  /// Called when the Next button is pressed (when showProgress is true).
   /// If no photo is selected, it navigates to the next page.
   /// Otherwise, it uploads only the selected photos before navigating.
   Future<void> savePhotos() async {
@@ -127,6 +128,35 @@ class _SetupProfileUploadPhotoState extends State<SetupProfileUploadPhoto> {
     Navigator.pushNamed(context, '/setup_profile_socials');
   }
 
+  /// Called when showProgress is false.
+  /// Saves the changes and pops the page to reveal the caller.
+  Future<void> saveAndPop() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // If no photo is selected, simply pop.
+    if (coverPhoto == null && profilePhoto == null) {
+      Navigator.pop(context);
+      return;
+    }
+
+    bool uploadSuccess = await uploadPhotos();
+    if (!uploadSuccess) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Photo upload failed.")),
+      );
+      return;
+    }
+
+    if (profilePhoto != null) {
+      await prefs.setString('profilePic', profilePhoto!.path);
+    }
+    if (coverPhoto != null) {
+      await prefs.setString('coverPic', coverPhoto!.path);
+    }
+
+    Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     // Build the main content for the page.
@@ -152,7 +182,6 @@ class _SetupProfileUploadPhotoState extends State<SetupProfileUploadPhoto> {
             decoration: BoxDecoration(
               border: Border.all(color: Colors.grey),
               borderRadius: BorderRadius.circular(16),
-              // Removed boxShadow for a flat appearance.
               color: Colors.grey[200],
             ),
             child: coverPhoto == null
@@ -194,7 +223,6 @@ class _SetupProfileUploadPhotoState extends State<SetupProfileUploadPhoto> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.grey, width: 2),
-                // Removed boxShadow for a flat appearance.
                 color: Colors.grey[200],
               ),
               child: profilePhoto == null
@@ -229,15 +257,28 @@ class _SetupProfileUploadPhotoState extends State<SetupProfileUploadPhoto> {
         centerTitle: true,
       ),
       backgroundColor: Colors.white,
-      // Navigation buttons are fixed at the bottom.
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-        child: NavButtons(
-          prev: '/setup_profile_skills',
-          next: savePhotos,
-        ),
-      ),
-      // If showProgress is true, use a scrollable ListView; otherwise, center content.
+      bottomNavigationBar: widget.showProgress
+          ? Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+              child: NavButtons(
+                prev: '/setup_profile_skills',
+                next: savePhotos,
+              ),
+            )
+          : Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+              child: SizedBox(
+                height: 50, // Set a fixed height for the button
+                child: GradientButton(
+                  onPressed: saveAndPop,
+                  text: 'Save',
+                  border: 16,
+                  padding: 2,
+                ),
+              ),
+            ),
       body: widget.showProgress
           ? ListView(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),

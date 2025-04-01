@@ -13,7 +13,10 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
   bool isEditing = false;
   final TextEditingController firstNameController = TextEditingController();
   final TextEditingController lastNameController = TextEditingController();
+  final TextEditingController usernameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
+  // final TextEditingController cityController = TextEditingController();
 
   @override
   void initState() {
@@ -62,7 +65,10 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
     Map<String, dynamic> updatedData = {
       'firstname': firstNameController.text,
       'lastname': lastNameController.text,
+      'username': usernameController.text,
       'email': emailController.text,
+      'whatsappNumber': phoneController.text,
+      // 'city': cityController.text,
     };
     print("Attempting to save changes: $updatedData");
 
@@ -72,7 +78,10 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
         setState(() {
           userDetails!['firstname'] = firstNameController.text;
           userDetails!['lastname'] = lastNameController.text;
+          userDetails!['username'] = usernameController.text;
           userDetails!['email'] = emailController.text;
+          userDetails!['whatsappNumber'] = phoneController.text;
+          // userDetails!['city'] = cityController.text;
           isEditing = false;
         });
         SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -200,6 +209,10 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
     final String profilePic = userDetails?['profilePicUrl'] ?? '';
     final String firstName = userDetails?['firstname'] ?? '';
     final String email = userDetails?['email'] ?? '';
+    // final String lastName = userDetails?['lastname'] ?? '';
+    // final String city = userDetails?['city'] ?? '';
+    final String username = userDetails?['username'] ?? '';
+    final String phoneNumber = userDetails?['whatsappNumber'] ?? '';
 
     return WillPopScope(
       onWillPop: _onWillPop,
@@ -293,10 +306,24 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
                     ),
                     Divider(),
                     _buildInfoTile(
+                      icon: Icons.person_4,
+                      title: "Username",
+                      value: username,
+                      controller: usernameController,
+                    ),
+                    Divider(),
+                    _buildInfoTile(
                       icon: Icons.email,
                       title: "Email",
                       value: emailController.text,
                       controller: emailController,
+                    ),
+                    Divider(),
+                    _buildInfoTile(
+                      icon: Icons.phone,
+                      title: "Phone Number",
+                      value: phoneNumber,
+                      controller: phoneController,
                     ),
                     Divider(),
                     ListTile(

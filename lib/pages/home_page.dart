@@ -215,13 +215,13 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     accountName: Text(
-                      userData['firstname'] ?? '',
+                      userData['username'] ?? '',
                       style: const TextStyle(
-                          fontWeight: FontWeight.bold, color: Colors.black),
+                          fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                     accountEmail: Text(
                       userData['email'] ?? '',
-                      style: const TextStyle(color: Colors.black),
+                      style: const TextStyle(color: Colors.white),
                     ),
                     currentAccountPicture: userData['profilePic'] != null
                         ? const CircleAvatar(
@@ -245,8 +245,9 @@ class _HomePageState extends State<HomePage> {
                     Navigator.pushNamed(context, '/profile');
                   },
                 ),
+                Divider(),
                 ListTile(
-                  leading: const Icon(Icons.info, color: Colors.grey),
+                  leading: const Icon(Icons.info_outline, color: Colors.grey),
                   title: const Text(
                     'Account Info',
                   ),
@@ -254,7 +255,9 @@ class _HomePageState extends State<HomePage> {
                     Navigator.pushNamed(context, '/account_info');
                   },
                 ),
+                Divider(),
                 const Spacer(),
+                Divider(),
                 ListTile(
                   leading: const Icon(Icons.logout, color: Colors.red),
                   title: const Text(

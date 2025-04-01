@@ -264,7 +264,7 @@ class ApiService {
         await http.MultipartFile.fromPath('profileBackgroundPic', photoPath),
       );
     } else if (type == 'profile') {
-      uri = Uri.parse('$baseUrl/profile');
+      uri = Uri.parse('$baseUrl/user/update/profile');
       request = http.MultipartRequest('PUT', uri);
       request.files.add(
         await http.MultipartFile.fromPath('profilePic', photoPath),

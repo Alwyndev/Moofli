@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:moofli_app/components/helper_functions.dart';
+import 'package:moofli_app/pages/setup_profile/setup_profile_upload_photo.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart' as url_launcher;
 
@@ -835,8 +836,17 @@ class _ProfilePageState extends State<ProfilePage> {
                             padding: const EdgeInsets.all(8),
                             backgroundColor: Colors.white.withOpacity(0.7),
                           ),
-                          onPressed: () => Navigator.pushNamed(
-                              context, '/setup_profile_photo'),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const SetupProfileUploadPhoto(
+                                  showProgress: false,
+                                ),
+                              ),
+                            );
+                          },
                           child: const Icon(Icons.edit, color: Colors.black),
                         ),
                       ),
