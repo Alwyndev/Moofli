@@ -16,6 +16,7 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
+  final TextEditingController linkedinController = TextEditingController();
   // final TextEditingController cityController = TextEditingController();
 
   @override
@@ -53,6 +54,9 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
       firstNameController.text = userDetails!['firstname'] ?? '';
       lastNameController.text = userDetails!['lastname'] ?? '';
       emailController.text = userDetails!['email'] ?? '';
+      usernameController.text = userDetails!['username'] ?? '';
+      phoneController.text = userDetails!['whatsappNumber'] ?? '';
+      linkedinController.text = userDetails!['linkedinId'] ?? '';
       print("Controllers initialized with: "
           "firstname=${firstNameController.text}, "
           "lastname=${lastNameController.text}, "
@@ -61,6 +65,24 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
   }
 
   Future<void> saveChanges() async {
+    // Check if any field has changed
+    if (userDetails != null &&
+        firstNameController.text == (userDetails!['firstname'] ?? '') &&
+        lastNameController.text == (userDetails!['lastname'] ?? '') &&
+        usernameController.text == (userDetails!['username'] ?? '') &&
+        emailController.text == (userDetails!['email'] ?? '') &&
+        phoneController.text == (userDetails!['whatsappNumber'] ?? '') &&
+        linkedinController.text == (userDetails!['linkedinId'] ?? '')) {
+      print("No changes detected; skipping API update.");
+      setState(() {
+        isEditing = false; // Exit editing mode
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("No changes to update.")),
+      );
+      return;
+    }
+
     // Create an updated data map from the controllers
     Map<String, dynamic> updatedData = {
       'firstname': firstNameController.text,
@@ -68,7 +90,7 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
       'username': usernameController.text,
       'email': emailController.text,
       'whatsappNumber': phoneController.text,
-      // 'city': cityController.text,
+      'linkedinId': linkedinController.text,
     };
     print("Attempting to save changes: $updatedData");
 
@@ -81,12 +103,12 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
           userDetails!['username'] = usernameController.text;
           userDetails!['email'] = emailController.text;
           userDetails!['whatsappNumber'] = phoneController.text;
-          // userDetails!['city'] = cityController.text;
-          isEditing = false;
+          userDetails!['linkedinId'] = linkedinController.text;
+          isEditing = false; // Exit editing mode on success
         });
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString('userDetails', jsonEncode(userDetails));
-        print("Profile updated successfully on server.");
+        print("Account info updated successfully on server.");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Profile updated successfully!")),
         );
@@ -211,8 +233,9 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
     final String email = userDetails?['email'] ?? '';
     // final String lastName = userDetails?['lastname'] ?? '';
     // final String city = userDetails?['city'] ?? '';
-    final String username = userDetails?['username'] ?? '';
-    final String phoneNumber = userDetails?['whatsappNumber'] ?? '';
+    final String username = userDetails?['username'] ?? 'Not Provided';
+    final String phoneNumber = userDetails?['whatsappNumber'] ?? 'Not Provided';
+    final String linkedinId = userDetails?['linkedinId'] ?? 'Not Provided';
 
     return WillPopScope(
       onWillPop: _onWillPop,
@@ -223,13 +246,16 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
           actions: [
             IconButton(
               icon: Icon(isEditing ? Icons.save : Icons.edit),
-              onPressed: () {
+              onPressed: () async {
                 if (isEditing) {
-                  saveChanges();
+                  // Attempt to save and let saveChanges handle the state update.
+                  await saveChanges();
+                } else {
+                  // If not editing, just toggle to editing mode.
+                  setState(() {
+                    isEditing = true;
+                  });
                 }
-                setState(() {
-                  isEditing = !isEditing;
-                });
               },
             ),
           ],
@@ -313,11 +339,19 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
                     ),
                     Divider(),
                     _buildInfoTile(
-                      icon: Icons.email,
+                      icon: Icons.link,
+                      title: "LinkedIn ID",
+                      value: linkedinId,
+                      controller: linkedinController,
+                    ),
+                    Divider(),
+                    _buildInfoTile(
+                      icon: Icons.mail,
                       title: "Email",
-                      value: emailController.text,
+                      value: email,
                       controller: emailController,
                     ),
+
                     Divider(),
                     _buildInfoTile(
                       icon: Icons.phone,
