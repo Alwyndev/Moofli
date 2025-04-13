@@ -5,7 +5,10 @@ import 'dart:convert';
 
 class AccountInfoPage extends StatefulWidget {
   @override
-  _AccountInfoPageState createState() => _AccountInfoPageState();
+  _AccountInfoPageState createState() {
+    debugPrint("AccountInfoPage: createState called");
+    return _AccountInfoPageState();
+  }
 }
 
 class _AccountInfoPageState extends State<AccountInfoPage> {
@@ -17,117 +20,112 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController linkedinController = TextEditingController();
-  // final TextEditingController cityController = TextEditingController();
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    debugPrint("AccountInfoPage: didChangeDependencies called");
     fetchUserProfile();
   }
 
   Future<void> fetchUserProfile() async {
+    debugPrint("Fetching user profile...");
     try {
+      var profile = await ApiService.fetchProfile();
+      setState(() {
+        userDetails = profile;
+        isEditing = false;
+        _initializeControllers();
+      });
+      debugPrint("User profile fetched: $profile");
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? userDetailsString = prefs.getString('userDetails');
-
-      if (userDetailsString != null) {
-        setState(() {
-          userDetails = jsonDecode(userDetailsString);
-          _initializeControllers();
-        });
-        print("User profile loaded from SharedPreferences");
-      } else {
-        var profile = await ApiService.fetchProfile();
-        setState(() {
-          userDetails = profile;
-          _initializeControllers();
-        });
-        print("User profile loaded from API");
-      }
+      await prefs.setString('userDetails', jsonEncode(profile));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Profile refreshed!")),
+      );
     } catch (e) {
-      print("Error loading profile: $e");
+      debugPrint("Error fetching profile: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to fetch profile: $e")),
+      );
     }
   }
 
   void _initializeControllers() {
+    debugPrint("Initializing text controllers with user data...");
     if (userDetails != null) {
-      firstNameController.text = userDetails!['firstname'] ?? '';
-      lastNameController.text = userDetails!['lastname'] ?? '';
-      emailController.text = userDetails!['email'] ?? '';
-      usernameController.text = userDetails!['username'] ?? '';
-      phoneController.text = userDetails!['whatsappNumber'] ?? '';
-      linkedinController.text = userDetails!['linkedinId'] ?? '';
-      print("Controllers initialized with: "
-          "firstname=${firstNameController.text}, "
-          "lastname=${lastNameController.text}, "
-          "email=${emailController.text}");
+      firstNameController.text = userDetails!['result']['firstname'] ?? '';
+      lastNameController.text = userDetails!['result']['lastname'] ?? '';
+      usernameController.text = userDetails!['result']['username'] ?? '';
+      emailController.text = userDetails!['result']['email'] ?? '';
+      phoneController.text = userDetails!['result']['whatsappNumber'] ?? '';
+      linkedinController.text = userDetails!['result']['linkedinId'] ?? '';
     }
   }
 
   Future<void> saveChanges() async {
-    // Check if any field has changed
-    if (userDetails != null &&
-        firstNameController.text == (userDetails!['firstname'] ?? '') &&
-        lastNameController.text == (userDetails!['lastname'] ?? '') &&
-        usernameController.text == (userDetails!['username'] ?? '') &&
-        emailController.text == (userDetails!['email'] ?? '') &&
-        phoneController.text == (userDetails!['whatsappNumber'] ?? '') &&
-        linkedinController.text == (userDetails!['linkedinId'] ?? '')) {
-      print("No changes detected; skipping API update.");
-      setState(() {
-        isEditing = false; // Exit editing mode
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("No changes to update.")),
-      );
-      return;
+    debugPrint("Save changes clicked.");
+    if (userDetails != null) {
+      if (firstNameController.text ==
+              (userDetails!['result']['firstname'] ?? '') &&
+          lastNameController.text ==
+              (userDetails!['result']['lastname'] ?? '') &&
+          usernameController.text ==
+              (userDetails!['result']['username'] ?? '') &&
+          emailController.text == (userDetails!['result']['email'] ?? '') &&
+          phoneController.text ==
+              (userDetails!['result']['whatsappNumber'] ?? '') &&
+          linkedinController.text ==
+              (userDetails!['result']['linkedinId'] ?? '')) {
+        setState(() => isEditing = false);
+        debugPrint("No changes detected — exiting edit mode.");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("No changes to update.")),
+        );
+        return;
+      }
     }
 
-    // Create an updated data map from the controllers
     Map<String, dynamic> updatedData = {
-      'firstname': firstNameController.text,
-      'lastname': lastNameController.text,
-      'username': usernameController.text,
-      'email': emailController.text,
-      'whatsappNumber': phoneController.text,
-      'linkedinId': linkedinController.text,
+      'firstname': firstNameController.text.trim(),
+      'lastname': lastNameController.text.trim(),
+      'username': usernameController.text.trim(),
+      'email': emailController.text.trim(),
+      'whatsappNumber': phoneController.text.trim(),
+      'linkedinId': linkedinController.text.trim(),
     };
-    print("Attempting to save changes: $updatedData");
 
     try {
+      debugPrint("Attempting to update profile: $updatedData");
       bool success = await ApiService.updateProfile(updatedData);
       if (success) {
         setState(() {
-          userDetails!['firstname'] = firstNameController.text;
-          userDetails!['lastname'] = lastNameController.text;
-          userDetails!['username'] = usernameController.text;
-          userDetails!['email'] = emailController.text;
-          userDetails!['whatsappNumber'] = phoneController.text;
-          userDetails!['linkedinId'] = linkedinController.text;
-          isEditing = false; // Exit editing mode on success
+          userDetails!.addAll(updatedData);
+          isEditing = false;
         });
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString('userDetails', jsonEncode(userDetails));
-        print("Account info updated successfully on server.");
+        debugPrint("Profile updated successfully.");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Profile updated successfully!")),
         );
       } else {
-        print("API call to update profile failed.");
+        debugPrint("Profile update failed.");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content: Text("Failed to update profile. Please try again.")),
         );
       }
     } catch (e) {
-      print("Error while saving changes: $e");
+      debugPrint("Error during profile update: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
+        SnackBar(content: Text("Error occurred: $e")),
       );
     }
   }
 
   Future<bool> _onWillPop() async {
+    debugPrint("Back button pressed.");
     if (isEditing) {
       return await showDialog(
             context: context,
@@ -137,15 +135,11 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
                   "You have unsaved changes. Do you want to save or discard them?"),
               actions: [
                 TextButton(
-                  onPressed: () {
-                    print("User chose to cancel leaving page.");
-                    Navigator.of(context).pop(false);
-                  },
+                  onPressed: () => Navigator.of(context).pop(false),
                   child: Text("Cancel"),
                 ),
                 TextButton(
                   onPressed: () {
-                    print("User chose to discard changes.");
                     Navigator.of(context).pop(true);
                     setState(() => isEditing = false);
                   },
@@ -153,7 +147,6 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
                 ),
                 TextButton(
                   onPressed: () {
-                    print("User chose to save changes before leaving.");
                     saveChanges();
                     Navigator.of(context).pop(false);
                   },
@@ -168,12 +161,13 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
   }
 
   Future<void> logout() async {
-    await ApiService.logout();
-    print("User logged out.");
+    debugPrint("Logging out...");
+    await ApiService.logout(context);
     Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
   }
 
   void _deleteAccount() {
+    debugPrint("Delete account clicked.");
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -181,17 +175,13 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
         content: Text("Are you sure you want to delete your account?"),
         actions: [
           TextButton(
-            onPressed: () {
-              print("User canceled account deletion.");
-              Navigator.pop(context);
-            },
+            onPressed: () => Navigator.pop(context),
             child: Text("Cancel"),
           ),
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
-              // TODO: Add your delete account API call here.
-              print("Account deletion triggered.");
+              debugPrint("Account deleted.");
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text("Account deleted.")),
               );
@@ -209,6 +199,9 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
     required String value,
     required TextEditingController controller,
   }) {
+    debugPrint("Building tile for $title");
+    debugPrint("current value: $value");
+    debugPrint("current controller value: ${controller.text}");
     return ListTile(
       leading: Icon(icon),
       title: Text(title),
@@ -226,16 +219,9 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
 
   @override
   Widget build(BuildContext context) {
-    final String bgImage =
-        userDetails?['bgPicUrl'] ?? 'https://via.placeholder.com/300';
-    final String profilePic = userDetails?['profilePicUrl'] ?? '';
-    final String firstName = userDetails?['firstname'] ?? '';
-    final String email = userDetails?['email'] ?? '';
-    // final String lastName = userDetails?['lastname'] ?? '';
-    // final String city = userDetails?['city'] ?? '';
-    final String username = userDetails?['username'] ?? 'Not Provided';
-    final String phoneNumber = userDetails?['whatsappNumber'] ?? 'Not Provided';
-    final String linkedinId = userDetails?['linkedinId'] ?? 'Not Provided';
+    debugPrint("AccountInfoPage: build method called.");
+    final String profilePic = userDetails?['result']['profilePicUrl'] ?? '';
+    final String bgPicUrl = userDetails?['result']['bgPicUrl'] ?? '';
 
     return WillPopScope(
       onWillPop: _onWillPop,
@@ -248,13 +234,9 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
               icon: Icon(isEditing ? Icons.save : Icons.edit),
               onPressed: () async {
                 if (isEditing) {
-                  // Attempt to save and let saveChanges handle the state update.
                   await saveChanges();
                 } else {
-                  // If not editing, just toggle to editing mode.
-                  setState(() {
-                    isEditing = true;
-                  });
+                  setState(() => isEditing = true);
                 }
               },
             ),
@@ -266,12 +248,14 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
               ? Center(child: CircularProgressIndicator())
               : ListView(
                   children: [
-                    // Header styled like the drawer header.
                     Container(
                       height: 200,
                       decoration: BoxDecoration(
                         image: DecorationImage(
-                          image: NetworkImage(bgImage),
+                          image: bgPicUrl.isNotEmpty
+                              ? NetworkImage(bgPicUrl)
+                              : AssetImage('assets/images/default_bg.png')
+                                  as ImageProvider,
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -296,17 +280,20 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    firstName,
+                                    userDetails?['firstname'] ?? '',
                                     style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white),
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
                                   ),
                                   SizedBox(height: 4),
                                   Text(
-                                    email,
+                                    userDetails?['email'] ?? '',
                                     style: TextStyle(
-                                        fontSize: 16, color: Colors.white70),
+                                      fontSize: 16,
+                                      color: Colors.white70,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -316,66 +303,62 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
                       ),
                     ),
                     SizedBox(height: 20),
-                    // Display user information as ListTiles.
                     _buildInfoTile(
                       icon: Icons.person,
                       title: "First Name",
-                      value: firstNameController.text,
+                      value: userDetails?['result']['firstname'] ?? '',
                       controller: firstNameController,
                     ),
                     Divider(),
                     _buildInfoTile(
                       icon: Icons.person_outline,
                       title: "Last Name",
-                      value: lastNameController.text,
+                      value: userDetails?['result']['lastname'] ?? '',
                       controller: lastNameController,
                     ),
                     Divider(),
                     _buildInfoTile(
                       icon: Icons.person_4,
                       title: "Username",
-                      value: username,
+                      value:
+                          userDetails?['result']['username'] ?? 'Not Provided',
                       controller: usernameController,
                     ),
                     Divider(),
                     _buildInfoTile(
                       icon: Icons.link,
                       title: "LinkedIn ID",
-                      value: linkedinId,
+                      value: userDetails?['result']['linkedinId'] ??
+                          'Not Provided',
                       controller: linkedinController,
                     ),
                     Divider(),
                     _buildInfoTile(
                       icon: Icons.mail,
                       title: "Email",
-                      value: email,
+                      value: userDetails?['result']['email'] ?? 'Not Provided',
                       controller: emailController,
                     ),
-
                     Divider(),
                     _buildInfoTile(
                       icon: Icons.phone,
                       title: "Phone Number",
-                      value: phoneNumber,
+                      value: userDetails?['result']['whatsappNumber'] ??
+                          'Not Provided',
                       controller: phoneController,
                     ),
                     Divider(),
                     ListTile(
                       leading: Icon(Icons.logout, color: Colors.red),
-                      title: Text(
-                        'Logout Account',
-                        style: TextStyle(color: Colors.red),
-                      ),
+                      title: Text('Logout Account',
+                          style: TextStyle(color: Colors.red)),
                       onTap: logout,
                     ),
-
                     Divider(),
                     ListTile(
                       leading: Icon(Icons.delete, color: Colors.red),
-                      title: Text(
-                        'Delete Account',
-                        style: TextStyle(color: Colors.red),
-                      ),
+                      title: Text('Delete Account',
+                          style: TextStyle(color: Colors.red)),
                       onTap: _deleteAccount,
                     ),
                   ],

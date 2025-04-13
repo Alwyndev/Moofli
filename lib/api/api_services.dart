@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -133,14 +134,37 @@ class ApiService {
   }
 
   /// Logout method to clear user authentication.
-  static Future<void> logout() async {
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.remove('token');
-      await prefs.remove('userDetails');
-      await prefs.setBool('isLoggedIn', false);
-    } catch (error) {
-      if (kDebugMode) print('Logout error: $error');
+  static Future<void> logout(BuildContext context) async {
+    bool confirmLogout = await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Confirm Logout'),
+              content: Text('Are you sure you want to log out?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: Text('Logout'),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false;
+
+    if (confirmLogout) {
+      try {
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.remove('token');
+        await prefs.remove('userDetails');
+        await prefs.setBool('isLoggedIn', false);
+      } catch (error) {
+        if (kDebugMode) print('Logout error: $error');
+      }
     }
   }
 

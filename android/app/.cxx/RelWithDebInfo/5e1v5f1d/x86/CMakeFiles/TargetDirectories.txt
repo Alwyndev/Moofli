@@ -1,0 +1,2 @@
+C:/Users/alwyn/OneDrive/Desktop/Moofli/android/app/.cxx/RelWithDebInfo/5e1v5f1d/x86/CMakeFiles/edit_cache.dir
+C:/Users/alwyn/OneDrive/Desktop/Moofli/android/app/.cxx/RelWithDebInfo/5e1v5f1d/x86/CMakeFiles/rebuild_cache.dir

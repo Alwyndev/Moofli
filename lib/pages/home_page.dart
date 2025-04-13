@@ -109,19 +109,19 @@ class _HomePageState extends State<HomePage> {
   }
 
   /// Logs the user out.
-  Future<void> logout(BuildContext context) async {
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.remove('token');
-      await prefs.remove('userDetails');
-      await prefs.setBool('isLoggedIn', false);
-    } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred: $error')),
-      );
-    }
-    Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
-  }
+  // Future<void> logout(BuildContext context) async {
+  //   try {
+  //     SharedPreferences prefs = await SharedPreferences.getInstance();
+  //     await prefs.remove('token');
+  //     await prefs.remove('userDetails');
+  //     await prefs.setBool('isLoggedIn', false);
+  //   } catch (error) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text('An error occurred: $error')),
+  //     );
+  //   }
+  //   Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+  // }
 
   /// Toggles the calendar view between week and month.
   void _toggleCalendarFormat() {
@@ -264,7 +264,7 @@ class _HomePageState extends State<HomePage> {
                     'Logout Account',
                     style: TextStyle(color: Colors.red),
                   ),
-                  onTap: () => logout(context),
+                  onTap: () => ApiService.logout(context),
                 ),
               ],
             ),

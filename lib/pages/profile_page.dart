@@ -1041,7 +1041,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                                 .canLaunchUrl(uri)) {
                                               await url_launcher.launchUrl(uri,
                                                   mode: url_launcher.LaunchMode
-                                                      .externalApplication);
+                                                      .platformDefault);
                                             }
                                           },
                                           child: Text(linkedin,
