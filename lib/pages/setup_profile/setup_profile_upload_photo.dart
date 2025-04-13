@@ -4,9 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:moofli_app/components/nav_buttons.dart';
 import 'package:moofli_app/components/progress_bar.dart';
-import 'package:moofli_app/gradient_button.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+
+import '../../components/gradient_button.dart';
 
 class SetupProfileUploadPhoto extends StatefulWidget {
   final bool showProgress;
