@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:moofli_app/components/helper_functions.dart';
 import 'package:moofli_app/pages/setup_profile/setup_profile_upload_photo.dart';
@@ -366,16 +367,19 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  void _addExperience() async {
+  Future<void> _addExperience() async {
     final titleController = TextEditingController();
     final companyController = TextEditingController();
     final startDateController = TextEditingController();
     final endDateController = TextEditingController();
+    DateTime? startDate;
+    DateTime? endDate;
     bool isCurrent = false;
+    final inputFormat = DateFormat("MMM yyyy", "en_US");
+
     await showDialog(
       context: context,
       builder: (context) {
-        // Use a StatefulBuilder to update the dialog UI.
         return StatefulBuilder(
           builder: (context, setStateDialog) {
             return AlertDialog(
@@ -392,22 +396,62 @@ class _ProfilePageState extends State<ProfilePage> {
                       controller: companyController,
                       decoration: const InputDecoration(hintText: "Company"),
                     ),
-                    TextField(
-                      controller: startDateController,
-                      decoration: const InputDecoration(
-                          hintText: "Start Date (e.g., Mar 2022)"),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: startDateController,
+                            readOnly: true,
+                            decoration: InputDecoration(
+                              hintText: "Start Date",
+                              suffixIcon: Icon(Icons.calendar_today),
+                            ),
+                            onTap: () async {
+                              final pickedDate = await showDatePicker(
+                                context: context,
+                                initialDate: DateTime.now(),
+                                firstDate: DateTime(1900),
+                                lastDate: DateTime.now(),
+                              );
+                              if (pickedDate != null) {
+                                setStateDialog(() {
+                                  startDate = pickedDate;
+                                  startDateController.text =
+                                      inputFormat.format(pickedDate);
+                                });
+                              }
+                            },
+                          ),
+                        ),
+                      ],
                     ),
                     Row(
                       children: [
                         Expanded(
                           child: TextField(
                             controller: endDateController,
+                            readOnly: true,
                             decoration: InputDecoration(
-                              hintText: isCurrent
-                                  ? "Present"
-                                  : "End Date (e.g., Dec 2023)",
+                              hintText: "End Date",
+                              suffixIcon: Icon(Icons.calendar_today),
                             ),
-                            enabled: !isCurrent,
+                            onTap: isCurrent
+                                ? null
+                                : () async {
+                                    final pickedDate = await showDatePicker(
+                                      context: context,
+                                      initialDate: DateTime.now(),
+                                      firstDate: DateTime(1900),
+                                      lastDate: DateTime.now(),
+                                    );
+                                    if (pickedDate != null) {
+                                      setStateDialog(() {
+                                        endDate = pickedDate;
+                                        endDateController.text =
+                                            inputFormat.format(pickedDate);
+                                      });
+                                    }
+                                  },
                           ),
                         ),
                         Checkbox(
@@ -415,10 +459,16 @@ class _ProfilePageState extends State<ProfilePage> {
                           onChanged: (bool? value) {
                             setStateDialog(() {
                               isCurrent = value ?? false;
+                              if (isCurrent) {
+                                endDateController.text = "Present";
+                                endDate = null;
+                              } else {
+                                endDateController.clear();
+                              }
                             });
                           },
                         ),
-                        const Text("Current")
+                        const Text("Current"),
                       ],
                     ),
                   ],
@@ -430,49 +480,23 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: const Text("Cancel"),
                 ),
                 TextButton(
-                  onPressed: () {
-                    final inputFormat = DateFormat("MMM yyyy", "en_US");
-                    String startInput = startDateController.text
-                        .trim()
-                        .replaceAll("Sept", "Sep");
-                    String endInput = isCurrent
+                  onPressed: () async {
+                    String isoStart =
+                        startDate != null ? startDate!.toIso8601String() : "";
+                    String isoEnd = isCurrent
                         ? "Present"
-                        : endDateController.text
-                            .trim()
-                            .replaceAll("Sept", "Sep");
-                    String isoStart = "";
-                    String isoEnd = "";
-                    try {
-                      DateTime parsedStart = inputFormat.parse(startInput);
-                      isoStart = parsedStart.toIso8601String();
-                    } catch (e) {
-                      isoStart = startInput;
-                    }
-                    if (!isCurrent) {
-                      try {
-                        DateTime parsedEnd = inputFormat.parse(endInput);
-                        isoEnd = parsedEnd.toIso8601String();
-                      } catch (e) {
-                        isoEnd = endInput;
-                      }
-                    } else {
-                      isoEnd = "Present";
-                    }
-                    // Build a duration string for display.
+                        : endDate != null
+                            ? endDate!.toIso8601String()
+                            : "";
+
                     String duration = "";
                     try {
-                      DateTime parsedStart = DateTime.parse(isoStart);
-                      String formattedStart =
-                          DateFormat("MMM yyyy", "en_US").format(parsedStart);
-                      if (!isCurrent) {
-                        DateTime parsedEnd = DateTime.parse(isoEnd);
-                        String formattedEnd =
-                            DateFormat("MMM yyyy", "en_US").format(parsedEnd);
-                        duration = "$formattedStart - $formattedEnd";
-                      } else {
-                        duration = "$formattedStart - Present";
-                      }
+                      String formattedStart = startDateController.text;
+                      duration = isCurrent
+                          ? "$formattedStart - Present"
+                          : "$formattedStart - ${endDateController.text}";
                     } catch (_) {}
+
                     setState(() {
                       experienceItems.add({
                         "title": titleController.text.trim(),
@@ -485,7 +509,9 @@ class _ProfilePageState extends State<ProfilePage> {
                         "duration": duration,
                       });
                     });
-                    _updateFieldInBackend("experence", experienceItems);
+
+                    // Call the function to update the backend (make sure to use the correct API endpoint)
+                    await _updateExperienceInBackend(experienceItems);
                     Navigator.pop(context);
                   },
                   child: const Text("Add"),
@@ -498,28 +524,54 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  Future<void> _updateExperienceInBackend(
+      List<Map<String, dynamic>> experienceItems) async {
+    final url =
+        'https://your-api-endpoint.com/updateExperience'; // Replace with your actual backend endpoint
+    final response = await http.put(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'experence': experienceItems,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      // Successfully updated
+      print("Experience updated successfully!");
+    } else {
+      // Error
+      print("Failed to update experience: ${response.body}");
+    }
+  }
+
   void _editExperience(int index) async {
     final titleController =
         TextEditingController(text: experienceItems[index]["title"]);
     final companyController =
         TextEditingController(text: experienceItems[index]["company"]);
-    final inputFormat = DateFormat("MMM yyyy", "en_US");
+    final startDateController = TextEditingController();
+    final endDateController = TextEditingController();
     DateTime? startDate;
     DateTime? endDate;
+    final inputFormat = DateFormat("MMM yyyy", "en_US");
+
     try {
       startDate = DateTime.parse(experienceItems[index]["startDate"]!);
+      startDateController.text = inputFormat.format(startDate);
     } catch (_) {}
-    try {
-      if (experienceItems[index]["endDate"]!.toLowerCase() != "present") {
-        endDate = DateTime.parse(experienceItems[index]["endDate"]!);
-      }
-    } catch (_) {}
-    final startDateController = TextEditingController(
-        text: startDate != null ? inputFormat.format(startDate) : "");
-    final endDateController = TextEditingController(
-        text: endDate != null ? inputFormat.format(endDate) : "");
+
     bool isCurrent =
-        (experienceItems[index]["endDate"]?.toLowerCase() ?? "") == "present";
+        experienceItems[index]["endDate"]?.toLowerCase() == "present";
+    if (!isCurrent) {
+      try {
+        endDate = DateTime.parse(experienceItems[index]["endDate"]!);
+        endDateController.text = inputFormat.format(endDate);
+      } catch (_) {}
+    } else {
+      endDateController.text = "Present";
+    }
+
     await showDialog(
       context: context,
       builder: (context) {
@@ -539,22 +591,62 @@ class _ProfilePageState extends State<ProfilePage> {
                       controller: companyController,
                       decoration: const InputDecoration(hintText: "Company"),
                     ),
-                    TextField(
-                      controller: startDateController,
-                      decoration: const InputDecoration(
-                          hintText: "Start Date (e.g., Mar 2022)"),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: startDateController,
+                            readOnly: true,
+                            decoration: InputDecoration(
+                              hintText: "Start Date",
+                              suffixIcon: Icon(Icons.calendar_today),
+                            ),
+                            onTap: () async {
+                              final pickedDate = await showDatePicker(
+                                context: context,
+                                initialDate: startDate ?? DateTime.now(),
+                                firstDate: DateTime(1900),
+                                lastDate: DateTime.now(),
+                              );
+                              if (pickedDate != null) {
+                                setStateDialog(() {
+                                  startDate = pickedDate;
+                                  startDateController.text =
+                                      inputFormat.format(pickedDate);
+                                });
+                              }
+                            },
+                          ),
+                        ),
+                      ],
                     ),
                     Row(
                       children: [
                         Expanded(
                           child: TextField(
                             controller: endDateController,
+                            readOnly: true,
                             decoration: InputDecoration(
-                              hintText: isCurrent
-                                  ? "Present"
-                                  : "End Date (e.g., Dec 2023)",
+                              hintText: "End Date",
+                              suffixIcon: Icon(Icons.calendar_today),
                             ),
-                            enabled: !isCurrent,
+                            onTap: isCurrent
+                                ? null
+                                : () async {
+                                    final pickedDate = await showDatePicker(
+                                      context: context,
+                                      initialDate: endDate ?? DateTime.now(),
+                                      firstDate: DateTime(1900),
+                                      lastDate: DateTime.now(),
+                                    );
+                                    if (pickedDate != null) {
+                                      setStateDialog(() {
+                                        endDate = pickedDate;
+                                        endDateController.text =
+                                            inputFormat.format(pickedDate);
+                                      });
+                                    }
+                                  },
                           ),
                         ),
                         Checkbox(
@@ -562,10 +654,16 @@ class _ProfilePageState extends State<ProfilePage> {
                           onChanged: (bool? value) {
                             setStateDialog(() {
                               isCurrent = value ?? false;
+                              if (isCurrent) {
+                                endDateController.text = "Present";
+                                endDate = null;
+                              } else {
+                                endDateController.clear();
+                              }
                             });
                           },
                         ),
-                        const Text("Current")
+                        const Text("Current"),
                       ],
                     ),
                   ],
@@ -578,46 +676,22 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 TextButton(
                   onPressed: () {
-                    String startInput = startDateController.text
-                        .trim()
-                        .replaceAll("Sept", "Sep");
-                    String endInput = isCurrent
+                    String isoStart =
+                        startDate != null ? startDate!.toIso8601String() : "";
+                    String isoEnd = isCurrent
                         ? "Present"
-                        : endDateController.text
-                            .trim()
-                            .replaceAll("Sept", "Sep");
-                    String isoStart = "";
-                    String isoEnd = "";
-                    try {
-                      DateTime parsedStart = inputFormat.parse(startInput);
-                      isoStart = parsedStart.toIso8601String();
-                    } catch (e) {
-                      isoStart = startInput;
-                    }
-                    if (!isCurrent) {
-                      try {
-                        DateTime parsedEnd = inputFormat.parse(endInput);
-                        isoEnd = parsedEnd.toIso8601String();
-                      } catch (e) {
-                        isoEnd = endInput;
-                      }
-                    } else {
-                      isoEnd = "Present";
-                    }
+                        : endDate != null
+                            ? endDate!.toIso8601String()
+                            : "";
+
                     String duration = "";
                     try {
-                      DateTime parsedStart = DateTime.parse(isoStart);
-                      String formattedStart =
-                          DateFormat("MMM yyyy", "en_US").format(parsedStart);
-                      if (!isCurrent) {
-                        DateTime parsedEnd = DateTime.parse(isoEnd);
-                        String formattedEnd =
-                            DateFormat("MMM yyyy", "en_US").format(parsedEnd);
-                        duration = "$formattedStart - $formattedEnd";
-                      } else {
-                        duration = "$formattedStart - Present";
-                      }
+                      String formattedStart = startDateController.text;
+                      duration = isCurrent
+                          ? "$formattedStart - Present"
+                          : "$formattedStart - ${endDateController.text}";
                     } catch (_) {}
+
                     setState(() {
                       experienceItems[index] = {
                         "title": titleController.text.trim(),
@@ -631,7 +705,9 @@ class _ProfilePageState extends State<ProfilePage> {
                         "duration": duration,
                       };
                     });
-                    _updateFieldInBackend("experence", experienceItems);
+
+                    // Update the backend with the latest data
+                    _updateExperienceInBackend(experienceItems);
                     Navigator.pop(context);
                   },
                   child: const Text("Save"),

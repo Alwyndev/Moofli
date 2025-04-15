@@ -54,7 +54,7 @@ class MyApp extends StatelessWidget {
       },
       title: 'Moofli Diary',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.green,
         fontFamily: 'Product Sans',
         useMaterial3: true,
       ),

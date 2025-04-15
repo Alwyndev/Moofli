@@ -243,15 +243,14 @@ class ApiService {
     }
   }
 
-  /// Updates a single field on the profile.
   static Future<bool> updateProfileField(String field, String value) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
     if (token == null) return false;
     String fieldKey = (field == 'pastExperience') ? 'pastExp' : field;
-    var uri = Uri.parse("$baseUrl/profile");
+    var uri = Uri.parse("$baseUrl/user/update/profile");
     var request = http.MultipartRequest("PUT", uri);
-    request.headers['Authorization'] = token;
+    request.headers['authorization'] = token;
     request.fields[fieldKey] = value;
     try {
       final streamedResponse = await request.send();
@@ -262,13 +261,6 @@ class ApiService {
     }
   }
 
-  /// Updates multiple profile fields using a multipart PUT request.
-  /// Pass only the fields you want to update. For example:
-  /// {
-  ///   "isMentor": true,
-  ///   "skills": ["c++", "java", "node"]
-  /// }
-  /// For list fields, the function will JSON-encode the value.
   static Future<Map<String, dynamic>> updateMultipleProfileFields(
       Map<String, dynamic> updatedData) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -284,9 +276,16 @@ class ApiService {
     var request = http.MultipartRequest("PUT", uri);
     request.headers['authorization'] = token;
     for (var entry in updatedData.entries) {
-      final key = entry.key;
-      final value = entry.value;
-      if (key == 'profilePic') {
+      var key = entry.key;
+      var value = entry.value;
+
+      if (key == 'pastExperience') {
+        key = 'pastExp';
+        request.fields[key] = value.toString();
+      } else if (key == 'experience') {
+        key = 'experence';
+        request.fields[key] = jsonEncode(value);
+      } else if (key == 'profilePic') {
         try {
           request.files.add(
             await http.MultipartFile.fromPath('profilePic', value),
@@ -294,10 +293,7 @@ class ApiService {
         } catch (e) {
           if (kDebugMode) print('Error attaching profilePic: $e');
         }
-      } else if ((key == 'skills' ||
-              key == 'experence' ||
-              key == 'education') &&
-          value is List) {
+      } else if ((key == 'skills' || key == 'education') && value is List) {
         request.fields[key] = jsonEncode(value);
       } else {
         request.fields[key] = value.toString();
@@ -312,19 +308,29 @@ class ApiService {
     };
   }
 
-  /// Updates multiple profile fields with a JSON body.
-  /// (Alternate method if file uploads are not needed.)
   static Future<bool> updateProfile(Map<String, dynamic> updatedData) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
     if (token == null) return false;
+
+    Map<String, dynamic> dataToSend = {};
+    updatedData.forEach((key, value) {
+      if (key == 'pastExperience') {
+        dataToSend['pastExp'] = value.toString();
+      } else if (key == 'experience') {
+        dataToSend['experence'] = value;
+      } else {
+        dataToSend[key] = value;
+      }
+    });
+
     final response = await http.put(
       Uri.parse("$baseUrl/user/update/profile"),
       headers: {
         "Content-Type": "application/json",
         "Authorization": token,
       },
-      body: json.encode(updatedData),
+      body: json.encode(dataToSend),
     );
     return response.statusCode == 200;
   }

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../api/api_services.dart';
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 
 class AccountInfoPage extends StatefulWidget {
   @override
