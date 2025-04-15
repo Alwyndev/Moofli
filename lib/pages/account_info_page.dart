@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../api/api_services.dart';
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class AccountInfoPage extends StatefulWidget {
   @override
@@ -164,33 +165,6 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
     debugPrint("Logging out...");
     await ApiService.logout(context);
     Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
-  }
-
-  void _deleteAccount() {
-    debugPrint("Delete account clicked.");
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text("Delete Account"),
-        content: Text("Are you sure you want to delete your account?"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text("Cancel"),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              debugPrint("Account deleted.");
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text("Account deleted.")),
-              );
-            },
-            child: Text("Delete", style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
   }
 
   Widget _buildInfoTile({
@@ -356,11 +330,12 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
                     ),
                     Divider(),
                     ListTile(
-                      leading: Icon(Icons.delete, color: Colors.red),
-                      title: Text('Delete Account',
-                          style: TextStyle(color: Colors.red)),
-                      onTap: _deleteAccount,
-                    ),
+                        leading: Icon(Icons.delete, color: Colors.red),
+                        title: Text('Delete Account',
+                            style: TextStyle(color: Colors.red)),
+                        onTap: () {
+                          ApiService.deleteAccount(context);
+                        }),
                   ],
                 ),
         ),

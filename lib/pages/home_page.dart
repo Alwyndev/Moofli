@@ -6,6 +6,7 @@ import 'package:moofli_app/pages/diary_page_new.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'dart:convert';
+
 import '../api/api_services.dart';
 
 class HomePage extends StatefulWidget {
@@ -217,11 +218,11 @@ class _HomePageState extends State<HomePage> {
                     accountName: Text(
                       userData['username'] ?? '',
                       style: const TextStyle(
-                          fontWeight: FontWeight.bold, color: Colors.white),
+                          fontWeight: FontWeight.bold, color: Colors.black),
                     ),
                     accountEmail: Text(
                       userData['email'] ?? '',
-                      style: const TextStyle(color: Colors.white),
+                      style: const TextStyle(color: Colors.black),
                     ),
                     currentAccountPicture: userData['profilePic'] != null
                         ? const CircleAvatar(

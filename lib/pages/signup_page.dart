@@ -113,7 +113,7 @@ class _SignupPageState extends State<SignupPage> {
     }
 
     // Prepare the registration API call
-    final url = Uri.parse('http://93.127.172.217:2004/api/user/register');
+    final url = Uri.parse('http://skillop.in/api/user/register');
     try {
       final response = await http.post(
         url,
@@ -139,7 +139,7 @@ class _SignupPageState extends State<SignupPage> {
 
         _showSnackBar(responseData['message']);
         // Navigate directly to profile setup page without showing a dialog
-        Navigator.pushNamed(context, '/setup_profile_1');
+        Navigator.pushNamed(context, '/home');
       } else {
         // Registration failed (e.g. user already exists)
         _showDialog('Error', '${responseData['message']}');

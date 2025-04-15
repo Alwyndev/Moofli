@@ -133,7 +133,6 @@ class ApiService {
     }
   }
 
-  /// Logout method to clear user authentication.
   static Future<void> logout(BuildContext context) async {
     bool confirmLogout = await showDialog(
           context: context,
@@ -159,12 +158,68 @@ class ApiService {
     if (confirmLogout) {
       try {
         SharedPreferences prefs = await SharedPreferences.getInstance();
-        await prefs.remove('token');
-        await prefs.remove('userDetails');
-        await prefs.setBool('isLoggedIn', false);
+        await prefs.clear();
+
+        Navigator.of(context)
+            .pushNamedAndRemoveUntil('/', (Route<dynamic> route) => false);
       } catch (error) {
         if (kDebugMode) print('Logout error: $error');
       }
+    }
+  }
+
+  static Future<void> deleteAccount(BuildContext context) async {
+    bool confirmDelete = await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text("Delete Account"),
+            content: Text("Are you sure you want to delete your account?"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text("Cancel"),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text("Delete", style: TextStyle(color: Colors.red)),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+
+    if (!confirmDelete) return;
+
+    final url = Uri.parse("https://skillop.in/api/delete");
+
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token') ?? '';
+
+      final response = await http.delete(
+        url,
+        headers: {
+          'Authorization': token,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        await prefs.clear();
+        Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text("Your account has been successfully deleted.")),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text("Failed to delete account. Please try again.")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("An error occurred. Please try again.")),
+      );
     }
   }
 
