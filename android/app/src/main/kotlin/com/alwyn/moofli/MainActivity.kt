@@ -1,4 +1,4 @@
-package com.example.moofli_app
+package com.alwyn.moofli
 
 import io.flutter.embedding.android.FlutterActivity
 

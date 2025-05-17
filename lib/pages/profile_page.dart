@@ -367,6 +367,7 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  // --- ADD EXPERIENCE ---
   Future<void> _addExperience() async {
     final titleController = TextEditingController();
     final companyController = TextEditingController();
@@ -418,6 +419,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                   startDate = pickedDate;
                                   startDateController.text =
                                       inputFormat.format(pickedDate);
+                                  print("Selected startDate: $pickedDate");
                                 });
                               }
                             },
@@ -449,6 +451,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                         endDate = pickedDate;
                                         endDateController.text =
                                             inputFormat.format(pickedDate);
+                                        print("Selected endDate: $pickedDate");
                                       });
                                     }
                                   },
@@ -462,8 +465,10 @@ class _ProfilePageState extends State<ProfilePage> {
                               if (isCurrent) {
                                 endDateController.text = "Present";
                                 endDate = null;
+                                print("Marked as current: endDate = Present");
                               } else {
                                 endDateController.clear();
+                                print("Unmarked current: endDate cleared");
                               }
                             });
                           },
@@ -495,23 +500,34 @@ class _ProfilePageState extends State<ProfilePage> {
                       duration = isCurrent
                           ? "$formattedStart - Present"
                           : "$formattedStart - ${endDateController.text}";
-                    } catch (_) {}
+                    } catch (e) {
+                      print("Error formatting duration: $e");
+                    }
+
+                    // Debug: show the experience item about to be added.
+                    Map<String, String> newExpItem = {
+                      "title": titleController.text.trim(),
+                      "company": companyController.text.trim(),
+                      "startDate": isoStart,
+                      "endDate": isoEnd,
+                      "location": "",
+                      "description": "",
+                      "_id": UniqueKey().toString(),
+                      "duration": duration,
+                    };
+                    print("New experience item: $newExpItem");
 
                     setState(() {
-                      experienceItems.add({
-                        "title": titleController.text.trim(),
-                        "company": companyController.text.trim(),
-                        "startDate": isoStart,
-                        "endDate": isoEnd,
-                        "location": "",
-                        "description": "",
-                        "_id": UniqueKey().toString(),
-                        "duration": duration,
-                      });
+                      experienceItems.add(newExpItem);
                     });
 
-                    // Call the function to update the backend (make sure to use the correct API endpoint)
+                    // Debug: show full list before update.
+                    print(
+                        "Experience items before backend update: $experienceItems");
+
+                    // Call the function to update the backend (ensure the endpoint is correct)
                     await _updateExperienceInBackend(experienceItems);
+
                     Navigator.pop(context);
                   },
                   child: const Text("Add"),
@@ -526,25 +542,47 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _updateExperienceInBackend(
       List<Map<String, dynamic>> experienceItems) async {
-    final url =
-        'https://your-api-endpoint.com/updateExperience'; // Replace with your actual backend endpoint
+    final url = 'https://skillop.in/api/user/update/profile';
+
+    // Prepare cleaned experience list
+    List<Map<String, dynamic>> cleanedList = experienceItems.map((item) {
+      return {
+        "title": item["title"] ?? "",
+        "company": item["company"] ?? "",
+        "location": item["location"] ?? "",
+        "startDate": "1995", //item["startDate"] ?? ""
+        "endDate": "2025", //item["endDate"] ?? ""
+        "description": item["description"] ?? "",
+      };
+    }).toList();
+
+    Map<String, dynamic> payload = {
+      'experence': cleanedList,
+    };
+
+    print("Cleaned Payload being sent to backend: ${jsonEncode(payload)}");
+
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+
     final response = await http.put(
       Uri.parse(url),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'experence': experienceItems,
-      }),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': token,
+      },
+      body: jsonEncode(payload),
     );
 
     if (response.statusCode == 200) {
-      // Successfully updated
-      print("Experience updated successfully!");
+      print("Experience updated successfully! Response: ${response.body}");
     } else {
-      // Error
-      print("Failed to update experience: ${response.body}");
+      print("Failed to update experience. Status code: ${response.statusCode}");
+      print("Backend error: ${response.body}");
     }
   }
 
+// --- EDIT EXPERIENCE ---
   void _editExperience(int index) async {
     final titleController =
         TextEditingController(text: experienceItems[index]["title"]);
@@ -559,7 +597,9 @@ class _ProfilePageState extends State<ProfilePage> {
     try {
       startDate = DateTime.parse(experienceItems[index]["startDate"]!);
       startDateController.text = inputFormat.format(startDate);
-    } catch (_) {}
+    } catch (e) {
+      print("Error parsing startDate: $e");
+    }
 
     bool isCurrent =
         experienceItems[index]["endDate"]?.toLowerCase() == "present";
@@ -567,7 +607,9 @@ class _ProfilePageState extends State<ProfilePage> {
       try {
         endDate = DateTime.parse(experienceItems[index]["endDate"]!);
         endDateController.text = inputFormat.format(endDate);
-      } catch (_) {}
+      } catch (e) {
+        print("Error parsing endDate: $e");
+      }
     } else {
       endDateController.text = "Present";
     }
@@ -613,6 +655,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                   startDate = pickedDate;
                                   startDateController.text =
                                       inputFormat.format(pickedDate);
+                                  print("New startDate selected: $pickedDate");
                                 });
                               }
                             },
@@ -644,6 +687,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                         endDate = pickedDate;
                                         endDateController.text =
                                             inputFormat.format(pickedDate);
+                                        print(
+                                            "New endDate selected: $pickedDate");
                                       });
                                     }
                                   },
@@ -657,8 +702,10 @@ class _ProfilePageState extends State<ProfilePage> {
                               if (isCurrent) {
                                 endDateController.text = "Present";
                                 endDate = null;
+                                print("Set to current: endDate = Present");
                               } else {
                                 endDateController.clear();
+                                print("Unset current: endDate cleared");
                               }
                             });
                           },
@@ -690,7 +737,9 @@ class _ProfilePageState extends State<ProfilePage> {
                       duration = isCurrent
                           ? "$formattedStart - Present"
                           : "$formattedStart - ${endDateController.text}";
-                    } catch (_) {}
+                    } catch (e) {
+                      print("Error formatting duration during edit: $e");
+                    }
 
                     setState(() {
                       experienceItems[index] = {
@@ -706,7 +755,13 @@ class _ProfilePageState extends State<ProfilePage> {
                       };
                     });
 
-                    // Update the backend with the latest data
+                    // Debug: Print updated experience item and full list
+                    print(
+                        "Updated experience item at index $index: ${experienceItems[index]}");
+                    print(
+                        "Experience items before backend update: $experienceItems");
+
+                    // Update the backend with the new data.
                     _updateExperienceInBackend(experienceItems);
                     Navigator.pop(context);
                   },

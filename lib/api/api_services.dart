@@ -247,11 +247,13 @@ class ApiService {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
     if (token == null) return false;
+
     String fieldKey = (field == 'pastExperience') ? 'pastExp' : field;
     var uri = Uri.parse("$baseUrl/user/update/profile");
     var request = http.MultipartRequest("PUT", uri);
     request.headers['authorization'] = token;
     request.fields[fieldKey] = value;
+
     try {
       final streamedResponse = await request.send();
       return streamedResponse.statusCode == 200;
@@ -272,9 +274,11 @@ class ApiService {
         'statusCode': 401,
       };
     }
+
     var uri = Uri.parse("$baseUrl/user/update/profile");
     var request = http.MultipartRequest("PUT", uri);
     request.headers['authorization'] = token;
+
     for (var entry in updatedData.entries) {
       var key = entry.key;
       var value = entry.value;
@@ -287,9 +291,11 @@ class ApiService {
         request.fields[key] = jsonEncode(value);
       } else if (key == 'profilePic') {
         try {
-          request.files.add(
-            await http.MultipartFile.fromPath('profilePic', value),
-          );
+          if (value is String && value.isNotEmpty) {
+            request.files.add(
+              await http.MultipartFile.fromPath('profilePic', value),
+            );
+          }
         } catch (e) {
           if (kDebugMode) print('Error attaching profilePic: $e');
         }
@@ -299,13 +305,22 @@ class ApiService {
         request.fields[key] = value.toString();
       }
     }
-    final response = await request.send();
-    String responseString = await response.stream.bytesToString();
-    return {
-      'success': response.statusCode == 200,
-      'message': responseString,
-      'statusCode': response.statusCode,
-    };
+
+    try {
+      final response = await request.send();
+      String responseString = await response.stream.bytesToString();
+      return {
+        'success': response.statusCode == 200,
+        'message': responseString,
+        'statusCode': response.statusCode,
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Exception: $e',
+        'statusCode': 500,
+      };
+    }
   }
 
   static Future<bool> updateProfile(Map<String, dynamic> updatedData) async {
@@ -324,15 +339,20 @@ class ApiService {
       }
     });
 
-    final response = await http.put(
-      Uri.parse("$baseUrl/user/update/profile"),
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": token,
-      },
-      body: json.encode(dataToSend),
-    );
-    return response.statusCode == 200;
+    try {
+      final response = await http.put(
+        Uri.parse("$baseUrl/user/update/profile"),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": token,
+        },
+        body: json.encode(dataToSend),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      if (kDebugMode) print('Error sending profile update: $e');
+      return false;
+    }
   }
 
   /// Uploads a photo (cover or profile).

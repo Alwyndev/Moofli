@@ -19,6 +19,7 @@ class SetupProfileUploadPhoto extends StatefulWidget {
 }
 
 class _SetupProfileUploadPhotoState extends State<SetupProfileUploadPhoto> {
+  bool isLoading = false;
   double progressPrecentage = 0.8;
   XFile? coverPhoto;
   XFile? profilePhoto;
@@ -104,6 +105,10 @@ class _SetupProfileUploadPhotoState extends State<SetupProfileUploadPhoto> {
   Future<void> savePhotos() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
+    setState(() {
+      isLoading = true;
+    });
+
     // If no photo is selected, skip uploading.
     if (coverPhoto == null && profilePhoto == null) {
       Navigator.pushNamed(context, '/setup_profile_socials');
@@ -126,6 +131,9 @@ class _SetupProfileUploadPhotoState extends State<SetupProfileUploadPhoto> {
       await prefs.setString('coverPic', coverPhoto!.path);
     }
 
+    setState(() {
+      isLoading = false;
+    });
     Navigator.pushNamed(context, '/setup_profile_socials');
   }
 
