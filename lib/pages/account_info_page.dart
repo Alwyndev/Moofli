@@ -1,168 +1,144 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:moofli_app/auth_providers.dart';
 import '../api/api_services.dart';
-import 'dart:convert';
+// import '../components/helper_functions.dart';
 
-class AccountInfoPage extends StatefulWidget {
+class AccountInfoPage extends ConsumerStatefulWidget {
+  const AccountInfoPage({Key? key}) : super(key: key);
+
   @override
-  _AccountInfoPageState createState() {
-    debugPrint("AccountInfoPage: createState called");
-    return _AccountInfoPageState();
-  }
+  ConsumerState<AccountInfoPage> createState() => _AccountInfoPageState();
 }
 
-class _AccountInfoPageState extends State<AccountInfoPage> {
-  Map<String, dynamic>? userDetails;
-  bool isEditing = false;
-  final TextEditingController firstNameController = TextEditingController();
-  final TextEditingController lastNameController = TextEditingController();
-  final TextEditingController usernameController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController phoneController = TextEditingController();
-  final TextEditingController linkedinController = TextEditingController();
+class _AccountInfoPageState extends ConsumerState<AccountInfoPage> {
+  final Map<String, TextEditingController> _controllers = {
+    'firstname': TextEditingController(),
+    'lastname': TextEditingController(),
+    'username': TextEditingController(),
+    'email': TextEditingController(),
+    'whatsappNumber': TextEditingController(),
+    'linkedinId': TextEditingController(),
+  };
+  bool _isEditing = false;
+  bool _isLoading = false;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    debugPrint("AccountInfoPage: didChangeDependencies called");
-    fetchUserProfile();
+  void initState() {
+    super.initState();
+    _loadUserData();
   }
 
-  Future<void> fetchUserProfile() async {
-    debugPrint("Fetching user profile...");
-    try {
-      var profile = await ApiService.fetchProfile();
-      setState(() {
-        userDetails = profile;
-        isEditing = false;
-        _initializeControllers();
-      });
-      debugPrint("User profile fetched: $profile");
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString('userDetails', jsonEncode(profile));
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Profile refreshed!")),
-      );
-    } catch (e) {
-      debugPrint("Error fetching profile: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to fetch profile: $e")),
-      );
+  @override
+  void dispose() {
+    _controllers.forEach((_, controller) => controller.dispose());
+    super.dispose();
+  }
+
+  void _loadUserData() {
+    final authState = ref.read(authProvider);
+    final userData = authState.userDetails;
+    if (userData != null) {
+      _updateControllers(userData);
     }
   }
 
-  void _initializeControllers() {
-    debugPrint("Initializing text controllers with user data...");
-    if (userDetails != null) {
-      firstNameController.text = userDetails!['result']['firstname'] ?? '';
-      lastNameController.text = userDetails!['result']['lastname'] ?? '';
-      usernameController.text = userDetails!['result']['username'] ?? '';
-      emailController.text = userDetails!['result']['email'] ?? '';
-      phoneController.text = userDetails!['result']['whatsappNumber'] ?? '';
-      linkedinController.text = userDetails!['result']['linkedinId'] ?? '';
-    }
+  void _updateControllers(Map<String, dynamic> userData) {
+    _controllers['firstname']?.text = userData['firstname'] ?? '';
+    _controllers['lastname']?.text = userData['lastname'] ?? '';
+    _controllers['username']?.text = userData['username'] ?? '';
+    _controllers['email']?.text = userData['email'] ?? '';
+    _controllers['whatsappNumber']?.text = userData['whatsappNumber'] ?? '';
+    _controllers['linkedinId']?.text = userData['linkedinId'] ?? '';
   }
 
-  Future<void> saveChanges() async {
-    debugPrint("Save changes clicked.");
-    if (userDetails != null) {
-      if (firstNameController.text ==
-              (userDetails!['result']['firstname'] ?? '') &&
-          lastNameController.text ==
-              (userDetails!['result']['lastname'] ?? '') &&
-          usernameController.text ==
-              (userDetails!['result']['username'] ?? '') &&
-          emailController.text == (userDetails!['result']['email'] ?? '') &&
-          phoneController.text ==
-              (userDetails!['result']['whatsappNumber'] ?? '') &&
-          linkedinController.text ==
-              (userDetails!['result']['linkedinId'] ?? '')) {
-        setState(() => isEditing = false);
-        debugPrint("No changes detected — exiting edit mode.");
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("No changes to update.")),
-        );
-        return;
+  Future<void> _refreshProfile() async {
+    setState(() => _isLoading = true);
+    final token = ref.read(authProvider).token;
+    final updatedProfile = await ApiService.fetchProfile(token);
+
+    if (updatedProfile != null) {
+      await ref.read(authProvider.notifier).updateUserDetails(updatedProfile);
+      _updateControllers(updatedProfile);
+    }
+
+    setState(() => _isLoading = false);
+  }
+
+  Future<void> _saveChanges() async {
+    if (!_isEditing) {
+      setState(() => _isEditing = true);
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    final token = ref.read(authProvider).token;
+    final updatedData = <String, dynamic>{};
+
+    _controllers.forEach((key, controller) {
+      if (controller.text.trim().isNotEmpty) {
+        updatedData[key] = controller.text.trim();
       }
-    }
+    });
 
-    Map<String, dynamic> updatedData = {
-      'firstname': firstNameController.text.trim(),
-      'lastname': lastNameController.text.trim(),
-      'username': usernameController.text.trim(),
-      'email': emailController.text.trim(),
-      'whatsappNumber': phoneController.text.trim(),
-      'linkedinId': linkedinController.text.trim(),
-    };
+    final success =
+        await ApiService.updateMultipleProfileFields(token, updatedData);
 
-    try {
-      debugPrint("Attempting to update profile: $updatedData");
-      bool success = await ApiService.updateProfile(updatedData);
-      if (success) {
-        setState(() {
-          userDetails!.addAll(updatedData);
-          isEditing = false;
-        });
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        await prefs.setString('userDetails', jsonEncode(userDetails));
-        debugPrint("Profile updated successfully.");
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Profile updated successfully!")),
-        );
-      } else {
-        debugPrint("Profile update failed.");
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text("Failed to update profile. Please try again.")),
-        );
-      }
-    } catch (e) {
-      debugPrint("Error during profile update: $e");
+    if (success == true) {
+      await _refreshProfile();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error occurred: $e")),
+        const SnackBar(content: Text('Profile updated successfully')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to update profile')),
       );
     }
+
+    setState(() {
+      _isEditing = false;
+      _isLoading = false;
+    });
   }
 
   Future<bool> _onWillPop() async {
-    debugPrint("Back button pressed.");
-    if (isEditing) {
-      return await showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: Text("Discard Changes?"),
-              content: Text(
-                  "You have unsaved changes. Do you want to save or discard them?"),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: Text("Cancel"),
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop(true);
-                    setState(() => isEditing = false);
-                  },
-                  child: Text("Discard", style: TextStyle(color: Colors.red)),
-                ),
-                TextButton(
-                  onPressed: () {
-                    saveChanges();
-                    Navigator.of(context).pop(false);
-                  },
-                  child: Text("Save"),
-                ),
-              ],
-            ),
-          ) ??
-          false;
-    }
-    return true;
+    if (!_isEditing) return true;
+
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Discard Changes?'),
+            content: const Text(
+                'You have unsaved changes. Do you want to save or discard them?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context, true);
+                  setState(() => _isEditing = false);
+                },
+                child:
+                    const Text('Discard', style: TextStyle(color: Colors.red)),
+              ),
+              TextButton(
+                onPressed: () {
+                  _saveChanges();
+                  Navigator.pop(context, false);
+                },
+                child: const Text('Save'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
   }
 
-  Future<void> logout() async {
-    debugPrint("Logging out...");
-    await ApiService.logout(context);
+  Future<void> _logout() async {
+    await ref.read(authProvider.notifier).logout();
+    if (!mounted) return;
     Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
   }
 
@@ -172,13 +148,10 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
     required String value,
     required TextEditingController controller,
   }) {
-    debugPrint("Building tile for $title");
-    debugPrint("current value: $value");
-    debugPrint("current controller value: ${controller.text}");
     return ListTile(
       leading: Icon(icon),
       title: Text(title),
-      subtitle: isEditing
+      subtitle: _isEditing
           ? TextField(
               controller: controller,
               decoration: InputDecoration(
@@ -186,40 +159,44 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
                 border: InputBorder.none,
               ),
             )
-          : Text(value),
+          : Text(value.isEmpty ? 'Not provided' : value),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    debugPrint("AccountInfoPage: build method called.");
-    final String profilePic = userDetails?['result']['profilePicUrl'] ?? '';
-    final String bgPicUrl = userDetails?['result']['bgPicUrl'] ?? '';
+    final authState = ref.watch(authProvider);
+    final userData = authState.userDetails;
+
+    if (userData == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    final profilePic = userData['profilePicUrl'] ?? '';
+    final bgPicUrl = userData['bgPicUrl'] ?? '';
 
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
         appBar: AppBar(
-          title: Text("Account Info"),
+          title: const Text('Account Info'),
           centerTitle: true,
           actions: [
             IconButton(
-              icon: Icon(isEditing ? Icons.save : Icons.edit),
-              onPressed: () async {
-                if (isEditing) {
-                  await saveChanges();
-                } else {
-                  setState(() => isEditing = true);
-                }
-              },
+              icon: const Icon(Icons.refresh),
+              onPressed: _isLoading ? null : _refreshProfile,
+            ),
+            IconButton(
+              icon: Icon(_isEditing ? Icons.save : Icons.edit),
+              onPressed: _isLoading ? null : _saveChanges,
             ),
           ],
         ),
-        body: RefreshIndicator(
-          onRefresh: fetchUserProfile,
-          child: userDetails == null
-              ? Center(child: CircularProgressIndicator())
-              : ListView(
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : RefreshIndicator(
+                onRefresh: _refreshProfile,
+                child: ListView(
                   children: [
                     Container(
                       height: 200,
@@ -227,14 +204,14 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
                         image: DecorationImage(
                           image: bgPicUrl.isNotEmpty
                               ? NetworkImage(bgPicUrl)
-                              : AssetImage('assets/images/default_bg.png')
+                              : const AssetImage('assets/images/default_bg.png')
                                   as ImageProvider,
                           fit: BoxFit.cover,
                         ),
                       ),
                       child: Container(
                         color: Colors.black.withOpacity(0.4),
-                        padding: EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(16),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
@@ -242,28 +219,28 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
                               radius: 40,
                               backgroundImage: profilePic.isNotEmpty
                                   ? NetworkImage(profilePic)
-                                  : AssetImage(
+                                  : const AssetImage(
                                           'assets/images/default_profile_pic.png')
                                       as ImageProvider,
                             ),
-                            SizedBox(width: 16),
+                            const SizedBox(width: 16),
                             Expanded(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    userDetails?['firstname'] ?? '',
-                                    style: TextStyle(
+                                    '${userData['firstname'] ?? ''} ${userData['lastname'] ?? ''}',
+                                    style: const TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.white,
                                     ),
                                   ),
-                                  SizedBox(height: 4),
+                                  const SizedBox(height: 4),
                                   Text(
-                                    userDetails?['email'] ?? '',
-                                    style: TextStyle(
+                                    userData['email'] ?? '',
+                                    style: const TextStyle(
                                       fontSize: 16,
                                       color: Colors.white70,
                                     ),
@@ -275,69 +252,59 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
                         ),
                       ),
                     ),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
                     _buildInfoTile(
                       icon: Icons.person,
-                      title: "First Name",
-                      value: userDetails?['result']['firstname'] ?? '',
-                      controller: firstNameController,
+                      title: 'First Name',
+                      value: userData['firstname'] ?? '',
+                      controller: _controllers['firstname']!,
                     ),
-                    Divider(),
+                    const Divider(),
                     _buildInfoTile(
                       icon: Icons.person_outline,
-                      title: "Last Name",
-                      value: userDetails?['result']['lastname'] ?? '',
-                      controller: lastNameController,
+                      title: 'Last Name',
+                      value: userData['lastname'] ?? '',
+                      controller: _controllers['lastname']!,
                     ),
-                    Divider(),
+                    const Divider(),
                     _buildInfoTile(
                       icon: Icons.person_4,
-                      title: "Username",
-                      value:
-                          userDetails?['result']['username'] ?? 'Not Provided',
-                      controller: usernameController,
+                      title: 'Username',
+                      value: userData['username'] ?? '',
+                      controller: _controllers['username']!,
                     ),
-                    Divider(),
+                    const Divider(),
                     _buildInfoTile(
                       icon: Icons.link,
-                      title: "LinkedIn ID",
-                      value: userDetails?['result']['linkedinId'] ??
-                          'Not Provided',
-                      controller: linkedinController,
+                      title: 'LinkedIn ID',
+                      value: userData['linkedinId'] ?? '',
+                      controller: _controllers['linkedinId']!,
                     ),
-                    Divider(),
+                    const Divider(),
                     _buildInfoTile(
                       icon: Icons.mail,
-                      title: "Email",
-                      value: userDetails?['result']['email'] ?? 'Not Provided',
-                      controller: emailController,
+                      title: 'Email',
+                      value: userData['email'] ?? '',
+                      controller: _controllers['email']!,
                     ),
-                    Divider(),
+                    const Divider(),
                     _buildInfoTile(
                       icon: Icons.phone,
-                      title: "Phone Number",
-                      value: userDetails?['result']['whatsappNumber'] ??
-                          'Not Provided',
-                      controller: phoneController,
+                      title: 'Phone Number',
+                      value: userData['whatsappNumber'] ?? '',
+                      controller: _controllers['whatsappNumber']!,
                     ),
-                    Divider(),
+                    const Divider(),
                     ListTile(
-                      leading: Icon(Icons.logout, color: Colors.red),
-                      title: Text('Logout Account',
+                      leading: const Icon(Icons.logout, color: Colors.red),
+                      title: const Text('Logout Account',
                           style: TextStyle(color: Colors.red)),
-                      onTap: logout,
+                      onTap: _logout,
                     ),
-                    Divider(),
-                    ListTile(
-                        leading: Icon(Icons.delete, color: Colors.red),
-                        title: Text('Delete Account',
-                            style: TextStyle(color: Colors.red)),
-                        onTap: () {
-                          ApiService.deleteAccount(context);
-                        }),
+                    const Divider(),
                   ],
                 ),
-        ),
+              ),
       ),
     );
   }

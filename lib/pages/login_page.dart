@@ -8,6 +8,7 @@ import 'package:moofli_app/components/gradient_button.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'home_page.dart';
+import 'package:moofli_app/api/api_services.dart';
 
 /// Create a GoogleSignIn instance. For mobile apps, you generally don't need
 /// to specify a clientId. (For web you might need to.)
@@ -141,19 +142,12 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     setState(() => _isLoading = true);
-    final Uri url = Uri.parse('https://skillop.in/api/user/login');
-
     try {
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'password': password}),
-      );
-
+      final responseData =
+          await ApiService.userLogin(email: email, password: password);
       setState(() => _isLoading = false);
 
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> responseData = jsonDecode(response.body);
+      if (responseData != null && responseData['token'] != null) {
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setBool('isLoggedIn', true);
         await prefs.setString('token', responseData['token']);
@@ -165,8 +159,7 @@ class _LoginPageState extends State<LoginPage> {
           MaterialPageRoute(builder: (context) => const HomePage()),
         );
       } else {
-        final errorData = jsonDecode(response.body);
-        _showErrorDialog(errorData['message'] ?? 'Login failed');
+        _showErrorDialog(responseData?['message'] ?? 'Login failed');
       }
     } catch (error) {
       setState(() => _isLoading = false);

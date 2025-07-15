@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:moofli_app/components/nav_buttons.dart';
 import 'package:moofli_app/components/progress_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../api/api_services.dart';
 
 class SetupProfileContactInfo extends StatefulWidget {
   const SetupProfileContactInfo({super.key});
@@ -22,8 +23,25 @@ class _SetupProfileContactInfoState extends State<SetupProfileContactInfo> {
     await prefs.setString('phone', phoneController.text);
     // await prefs.setString('email', emailController.text); // Uncomment if needed
 
+    String? token = prefs.getString('token');
+    bool allSuccess = true;
+    if (token != null) {
+      allSuccess &= await ApiService.updateProfileField(
+          token, 'phone', phoneController.text);
+      if (emailController.text.isNotEmpty) {
+        allSuccess &= await ApiService.updateProfileField(
+            token, 'secondary_email', emailController.text);
+      }
+    }
+    if (!allSuccess) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Failed to update contact info on server.')),
+      );
+      return;
+    }
     if (!mounted) return;
-
     Navigator.pushNamed(context, '/setup_profile_professional_info');
   }
 

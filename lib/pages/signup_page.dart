@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:moofli_app/components/gradient_button.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:moofli_app/api/api_services.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -112,37 +113,25 @@ class _SignupPageState extends State<SignupPage> {
       return;
     }
 
-    // Prepare the registration API call
-    final url = Uri.parse('http://skillop.in/api/user/register');
     try {
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          "email": emailController.text,
-          "password": passwdController.text,
-          "firstname": fNameController.text,
-          "lastname": lNameController.text,
-        }),
+      final responseData = await ApiService.registerUser(
+        email: emailController.text,
+        password: passwdController.text,
+        firstname: fNameController.text,
+        lastname: lNameController.text,
       );
 
-      final responseData = jsonDecode(response.body);
-
-      if (response.statusCode == 201) {
-        // Registration successful; save details in SharedPreferences
+      if (responseData != null && responseData['token'] != null) {
         final SharedPreferences prefs = await SharedPreferences.getInstance();
-        final Map<String, dynamic> responseData = jsonDecode(response.body);
         await prefs.setString('token', responseData['token']);
         await prefs.setBool('isLoggedIn', true);
         await prefs.setString(
             'userDetails', jsonEncode(responseData['result']));
 
-        _showSnackBar(responseData['message']);
-        // Navigate directly to profile setup page without showing a dialog
+        _showSnackBar(responseData['message'] ?? 'Registration successful!');
         Navigator.pushNamed(context, '/home');
       } else {
-        // Registration failed (e.g. user already exists)
-        _showDialog('Error', '${responseData['message']}');
+        _showDialog('Error', responseData?['message'] ?? 'Registration failed');
       }
     } catch (error) {
       _showDialog('Network error', 'Please try again later');

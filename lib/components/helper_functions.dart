@@ -196,54 +196,54 @@ Widget buildExperienceItem({
 }
 
 /// Builds the complete Experience section.
-Widget buildExperienceSection({
-  required bool isEditingExperience,
-  required List<Map<String, String>> experienceItems,
-  required VoidCallback onToggleEdit,
-  required VoidCallback onAddExperience,
-  required Function(int) onDeleteExperience,
-  required Function(int) onEditExperience,
-}) {
-  return Padding(
-    padding: const EdgeInsets.only(top: 16),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const Text("Experience",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(width: 8),
-            IconButton(
-              icon:
-                  Icon(isEditingExperience ? Icons.save : Icons.edit, size: 16),
-              onPressed: onToggleEdit,
-            ),
-            if (isEditingExperience)
-              IconButton(
-                icon: const Icon(Icons.add, color: Colors.blue, size: 16),
-                onPressed: onAddExperience,
-              ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Column(
-          children: List.generate(experienceItems.length, (index) {
-            return buildExperienceItem(
-              index: index,
-              title: experienceItems[index]["title"] ?? "",
-              company: experienceItems[index]["company"] ?? "",
-              duration: experienceItems[index]["duration"] ?? "",
-              onDelete: () => onDeleteExperience(index),
-              isEditing: isEditingExperience,
-              onEdit: () => onEditExperience(index),
-            );
-          }),
-        ),
-      ],
-    ),
-  );
-}
+// Widget buildExperienceSection({
+//   required bool isEditingExperience,
+//   required List<Map<String, String>> experienceItems,
+//   required VoidCallback onToggleEdit,
+//   required VoidCallback onAddExperience,
+//   required Function(int) onDeleteExperience,
+//   required Function(int) onEditExperience,
+// }) {
+//   return Padding(
+//     padding: const EdgeInsets.only(top: 16),
+//     child: Column(
+//       crossAxisAlignment: CrossAxisAlignment.start,
+//       children: [
+//         Row(
+//           children: [
+//             const Text("Experience",
+//                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+//             const SizedBox(width: 8),
+//             IconButton(
+//               icon:
+//                   Icon(isEditingExperience ? Icons.save : Icons.edit, size: 16),
+//               onPressed: onToggleEdit,
+//             ),
+//             if (isEditingExperience)
+//               IconButton(
+//                 icon: const Icon(Icons.add, color: Colors.blue, size: 16),
+//                 onPressed: onAddExperience,
+//               ),
+//           ],
+//         ),
+//         const SizedBox(height: 8),
+//         Column(
+//           children: List.generate(experienceItems.length, (index) {
+//             return buildExperienceItem(
+//               index: index,
+//               title: experienceItems[index]["title"] ?? "",
+//               company: experienceItems[index]["company"] ?? "",
+//               duration: experienceItems[index]["duration"] ?? "",
+//               onDelete: () => onDeleteExperience(index),
+//               isEditing: isEditingExperience,
+//               onEdit: () => onEditExperience(index),
+//             );
+//           }),
+//         ),
+//       ],
+//     ),
+//   );
+// }
 
 /// Builds a skill chip widget.
 Widget buildSkillChip({
@@ -314,6 +314,123 @@ Widget buildSkillsSection({
 }
 
 /// Builds the complete Education section.
+// Widget buildEducationSection({
+//   required bool isEditingEducation,
+//   required List<Map<String, String>> educationItems,
+//   required VoidCallback onToggleEdit,
+//   required VoidCallback onAddEducation,
+//   required Function(int) onDeleteEducation,
+// }) {
+//   return Padding(
+//     padding: const EdgeInsets.only(top: 16),
+//     child: Column(
+//       crossAxisAlignment: CrossAxisAlignment.start,
+//       children: [
+//         Row(
+//           children: [
+//             const Text("Education",
+//                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+//             const SizedBox(width: 8),
+//             IconButton(
+//               icon:
+//                   Icon(isEditingEducation ? Icons.save : Icons.edit, size: 16),
+//               onPressed: onToggleEdit,
+//             ),
+//             if (isEditingEducation)
+//               IconButton(
+//                 icon: const Icon(Icons.add, color: Colors.blue, size: 16),
+//                 onPressed: onAddEducation,
+//               ),
+//           ],
+//         ),
+//         const SizedBox(height: 8),
+//         Column(
+//           children: List.generate(educationItems.length, (index) {
+//             return Padding(
+//               padding: const EdgeInsets.only(bottom: 8),
+//               child: Row(
+//                 children: [
+//                   Expanded(
+//                     child: Column(
+//                       crossAxisAlignment: CrossAxisAlignment.start,
+//                       children: [
+//                         Text(educationItems[index]["degree"] ?? "",
+//                             style: const TextStyle(
+//                                 fontSize: 16, fontWeight: FontWeight.bold)),
+//                         Text(educationItems[index]["institution"] ?? "",
+//                             style: const TextStyle(
+//                                 fontSize: 14, color: Colors.grey)),
+//                         Text(educationItems[index]["duration"] ?? "",
+//                             style: const TextStyle(
+//                                 fontSize: 14, color: Colors.grey)),
+//                       ],
+//                     ),
+//                   ),
+//                   if (isEditingEducation)
+//                     IconButton(
+//                       icon: const Icon(Icons.delete, color: Colors.red),
+//                       onPressed: () => onDeleteEducation(index),
+//                     ),
+//                 ],
+//               ),
+//             );
+//           }),
+//         ),
+//       ],
+//     ),
+//   );
+// }
+// Update the buildExperienceSection to match the parameters used in profile_page.dart
+Widget buildExperienceSection({
+  required bool isEditingExperience,
+  required List<Map<String, String>> experienceItems,
+  required VoidCallback onToggleEdit,
+  required VoidCallback onAddExperience,
+  required Function(int) onDeleteExperience,
+  required Function(int) onEditExperience,
+}) {
+  return Padding(
+    padding: const EdgeInsets.only(top: 16),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Text("Experience",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(width: 8),
+            IconButton(
+              icon:
+                  Icon(isEditingExperience ? Icons.save : Icons.edit, size: 16),
+              onPressed: onToggleEdit,
+            ),
+            if (isEditingExperience)
+              IconButton(
+                icon: const Icon(Icons.add, color: Colors.blue, size: 16),
+                onPressed: onAddExperience,
+              ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Column(
+          children: List.generate(experienceItems.length, (index) {
+            return buildExperienceItem(
+              index: index,
+              title: experienceItems[index]["title"] ?? "",
+              company: experienceItems[index]["company"] ?? "",
+              duration: experienceItems[index]["duration"] ?? "",
+              onDelete: () => onDeleteExperience(index),
+              isEditing: isEditingExperience,
+              onEdit: () => onEditExperience(index),
+            );
+          }),
+        ),
+      ],
+    ),
+  );
+}
+
+// Update buildEducationSection similarly
 Widget buildEducationSection({
   required bool isEditingEducation,
   required List<Map<String, String>> educationItems,

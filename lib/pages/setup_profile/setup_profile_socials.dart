@@ -18,15 +18,18 @@ class _SetupProfileSocialsState extends State<SetupProfileSocials> {
 
   Future<void> saveSocials() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('linkedIn', linkedInController.text);
-    await prefs.setString('upi', upiController.text);
-
-    Map<String, dynamic> result = await ApiService.updateMultipleProfileFields({
-      'linkedIn': linkedInController.text,
-      'upi': upiController.text,
-    });
-
-    if (result['success']) {
+    String? token = prefs.getString('token');
+    bool result = false;
+    if (token != null) {
+      result = await ApiService.updateMultipleProfileFields(
+        token,
+        {
+          'linkedIn': linkedInController.text,
+          'upi': upiController.text,
+        },
+      );
+    }
+    if (result) {
       Navigator.pushReplacementNamed(context, '/home');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(

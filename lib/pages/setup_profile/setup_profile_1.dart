@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:moofli_app/components/nav_buttons.dart';
 import 'package:moofli_app/components/progress_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../api/api_services.dart';
 
 class SetupProfile1 extends StatefulWidget {
   const SetupProfile1({super.key});
@@ -24,8 +25,25 @@ class _SetupProfile1State extends State<SetupProfile1> {
     await prefs.setString('dob', dobController.text);
     await prefs.setString('gender', gender);
 
+    String? token = prefs.getString('token');
+    bool allSuccess = true;
+    if (token != null) {
+      allSuccess &= await ApiService.updateProfileField(
+          token, 'username', nameController.text);
+      allSuccess &=
+          await ApiService.updateProfileField(token, 'dob', dobController.text);
+      allSuccess &=
+          await ApiService.updateProfileField(token, 'gender', gender);
+    }
+    if (!allSuccess) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Failed to update personal info on server.')),
+      );
+      return;
+    }
     if (!mounted) return;
-
     Navigator.pushNamed(context, '/setup_profile_contact_info');
   }
 

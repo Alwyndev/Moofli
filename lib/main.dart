@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moofli_app/pages/profile_page.dart';
 import 'package:moofli_app/pages/setup_profile/setup_profile_1.dart';
 import 'package:moofli_app/pages/setup_profile/setup_profile_contact_info.dart';
@@ -14,16 +15,16 @@ import 'pages/reset_password_page.dart';
 import 'pages/account_info_page.dart';
 import 'pages/diary_page_new.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  bool isLoggedIn = await getLoginStatus();
-  runApp(MyApp(isLoggedIn: isLoggedIn));
-}
-
 // Function to check login status from SharedPreferences
 Future<bool> getLoginStatus() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   return prefs.getBool('isLoggedIn') ?? false;
+}
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  bool isLoggedIn = await getLoginStatus();
+  runApp(ProviderScope(child: MyApp(isLoggedIn: isLoggedIn)));
 }
 
 class MyApp extends StatelessWidget {

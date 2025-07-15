@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
 import '../../components/gradient_button.dart';
+import '../../api/api_services.dart';
 
 class SetupProfileUploadPhoto extends StatefulWidget {
   final bool showProgress;
@@ -52,49 +53,18 @@ class _SetupProfileUploadPhotoState extends State<SetupProfileUploadPhoto> {
   Future<bool> uploadPhotos() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
-
     bool coverUploadSuccess = true;
     bool profileUploadSuccess = true;
-
+    if (token == null) return false;
     // --- Upload Cover Photo if selected ---
     if (coverPhoto != null) {
-      final uriCoverPhoto =
-          Uri.parse('https://skillop.in/api/user/add/boackgroundPic');
-      final coverRequest = http.MultipartRequest('POST', uriCoverPhoto);
-      coverRequest.files.add(
-        await http.MultipartFile.fromPath(
-            'profileBackgroundPic', coverPhoto!.path),
-      );
-      if (token != null) {
-        coverRequest.headers['Authorization'] = token;
-      }
-      final coverResponse = await coverRequest.send();
-      coverUploadSuccess = coverResponse.statusCode == 200;
-      if (kDebugMode) {
-        print(coverUploadSuccess
-            ? "Cover photo uploaded successfully."
-            : "Cover photo upload failed with status: ${coverResponse.statusCode}");
-      }
+      coverUploadSuccess =
+          await ApiService.uploadPhoto(token, coverPhoto!.path, 'cover');
     }
-
     // --- Upload Profile Photo if selected ---
     if (profilePhoto != null) {
-      final uriProfilePic =
-          Uri.parse('https://skillop.in/api/user/update/profile');
-      final profileRequest = http.MultipartRequest('PUT', uriProfilePic);
-      profileRequest.files.add(
-        await http.MultipartFile.fromPath('profilePic', profilePhoto!.path),
-      );
-      if (token != null) {
-        profileRequest.headers['Authorization'] = token;
-      }
-      final profileResponse = await profileRequest.send();
-      profileUploadSuccess = profileResponse.statusCode == 200;
-      if (kDebugMode) {
-        print(profileUploadSuccess
-            ? "Profile photo uploaded successfully."
-            : "Profile photo upload failed with status: ${profileResponse.statusCode}");
-      }
+      profileUploadSuccess =
+          await ApiService.uploadPhoto(token, profilePhoto!.path, 'profile');
     }
     return coverUploadSuccess && profileUploadSuccess;
   }

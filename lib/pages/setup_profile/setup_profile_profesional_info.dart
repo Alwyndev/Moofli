@@ -60,21 +60,19 @@ class _SetupProfileProfesionalInfoState
 
   Future<void> saveProfessionalInfo() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-
+    String? token = prefs.getString('token');
     // Save the profession
     if (isSelected[0]) {
       await prefs.setString('Profession', 'Student');
     } else if (isSelected[1]) {
       await prefs.setString('Profession', 'Professional');
     }
-
     // Save other professional info locally
     await prefs.setString('College', collegeController.text);
     await prefs.setString('Degree', degreeController.text);
     await prefs.setString('fieldOfStudy', fieldOfStudyController.text);
     await prefs.setString('startCollege', startYearController.text);
     await prefs.setString('endCollege', endYearController.text);
-
     // If Professional is selected, save job info
     if (isSelected[1]) {
       await prefs.setString('JobTitle', jobTitleController.text);
@@ -83,26 +81,29 @@ class _SetupProfileProfesionalInfoState
       await prefs.setString('startJob', jobStartYearController.text);
       await prefs.setString('endJob', jobEndYearController.text);
     }
-
     // Update backend with professional info
-    Map<String, dynamic> result = await ApiService.updateMultipleProfileFields({
-      'Profession': isSelected[0] ? 'Student' : 'Professional',
-      'College': collegeController.text,
-      'Degree': degreeController.text,
-      'fieldOfStudy': fieldOfStudyController.text,
-      'startCollege': startYearController.text,
-      'endCollege': endYearController.text,
-      // Include job details if Professional
-      if (isSelected[1]) ...{
-        'JobTitle': jobTitleController.text,
-        'Company': companyNameController.text,
-        'Description': jobDescriptionController.text,
-        'startJob': jobStartYearController.text,
-        'endJob': jobEndYearController.text,
-      }
-    });
-
-    if (result['success']) {
+    bool result = false;
+    if (token != null) {
+      result = await ApiService.updateMultipleProfileFields(
+        token,
+        {
+          'Profession': isSelected[0] ? 'Student' : 'Professional',
+          'College': collegeController.text,
+          'Degree': degreeController.text,
+          'fieldOfStudy': fieldOfStudyController.text,
+          'startCollege': startYearController.text,
+          'endCollege': endYearController.text,
+          if (isSelected[1]) ...{
+            'JobTitle': jobTitleController.text,
+            'Company': companyNameController.text,
+            'Description': jobDescriptionController.text,
+            'startJob': jobStartYearController.text,
+            'endJob': jobEndYearController.text,
+          }
+        },
+      );
+    }
+    if (result) {
       Navigator.pushNamed(context, '/setup_profile_skills');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(

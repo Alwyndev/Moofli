@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moofli_app/components/gradient_button.dart';
 import 'package:moofli_app/components/nav_buttons.dart';
 import 'package:moofli_app/components/progress_bar.dart';
@@ -6,14 +7,14 @@ import 'package:moofli_app/pages/setup_profile/setup_profile_upload_photo.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../api/api_services.dart';
 
-class SetupProfileSkills extends StatefulWidget {
+class SetupProfileSkills extends ConsumerStatefulWidget {
   const SetupProfileSkills({super.key});
 
   @override
-  State<SetupProfileSkills> createState() => _SetupProfileSkillsState();
+  ConsumerState<SetupProfileSkills> createState() => _SetupProfileSkillsState();
 }
 
-class _SetupProfileSkillsState extends State<SetupProfileSkills> {
+class _SetupProfileSkillsState extends ConsumerState<SetupProfileSkills> {
   double progressPercentage = 0.6;
   List<String> skills = [
     "Web Development",
@@ -53,13 +54,15 @@ class _SetupProfileSkillsState extends State<SetupProfileSkills> {
   Future<void> saveSkillDetails() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setStringList('selectedSkills', selectedSkills);
-
-    // Use updateMultipleProfileFields to update skills.
-    Map<String, dynamic> result = await ApiService.updateMultipleProfileFields({
-      'skills': selectedSkills,
-    });
-
-    if (result['success']) {
+    String? token = prefs.getString('token');
+    bool result = false;
+    if (token != null) {
+      result = await ApiService.updateMultipleProfileFields(
+        token,
+        {'skills': selectedSkills.join(',')},
+      );
+    }
+    if (result) {
       Navigator.push(
         context,
         MaterialPageRoute(

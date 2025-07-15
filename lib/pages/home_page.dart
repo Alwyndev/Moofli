@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:moofli_app/auth_providers.dart';
 import 'package:moofli_app/components/diary_chips.dart';
 import 'package:moofli_app/pages/diary_page_new.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,21 +11,25 @@ import 'dart:convert';
 
 import '../api/api_services.dart';
 
-class HomePage extends StatefulWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  ConsumerState<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
-  // Calendar states
+class _HomePageState extends ConsumerState<HomePage> {
+  // Calendar state
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
 
-  // Control whether the calendar is expanded (month view) or compact (week view)
+  // Controls whether we show two‐week or month view
+  CalendarFormat _calendarFormat = CalendarFormat.twoWeeks;
   bool _isCalendarExpanded = false;
 
+  // Diary entries loaded from API
+  List<dynamic> _diaryEntries = [];
+  bool _isLoadingEntries = false;
   // User and profile data variables
   Map<String, dynamic> userData = {};
   String profilePic = "";
@@ -31,13 +37,15 @@ class _HomePageState extends State<HomePage> {
   String streak = "";
 
   // List to hold diary entries fetched from the API
-  List<dynamic> _diaryEntries = [];
 
   @override
   void initState() {
     super.initState();
-    _loadUserData();
-    _fetchDiaryEntries();
+    // Delay these calls until after first build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchProfile();
+      _fetchDiaryEntries();
+    });
   }
 
   /// Returns a list of diary entries for a given day based on the "createdAt" field.
@@ -76,37 +84,39 @@ class _HomePageState extends State<HomePage> {
         userData = json.decode(userDataJson);
         userData['token'] = token;
       });
-      await _fetchProfile(token);
+      await _fetchProfile();
     } else {
       if (kDebugMode) print('User data not found in SharedPreferences');
     }
   }
 
   /// Fetches the user profile details from the API via ApiService.
-  Future<void> _fetchProfile(String? token) async {
-    if (token == null) return;
-    try {
-      final responseData = await ApiService.fetchProfile();
-      setState(() {
-        profilePic = responseData['result']['profilePicUrl'] ?? "";
-        bgPic = responseData['result']['bgPicUrl'] ?? "";
-        streak = (responseData['result']['streak'] ?? 0).toString();
-      });
-    } catch (e) {
-      if (kDebugMode) print("Failed to fetch profile: $e");
+  Future<void> _fetchProfile() async {
+    final token = ref.read(authProvider).token;
+    print("Fetching profile with token: $token");
+    if (token.isEmpty) return;
+
+    final fetchedProfile = await ApiService.fetchProfile(token);
+    if (fetchedProfile != null) {
+      await ref.read(authProvider.notifier).updateUserDetails(fetchedProfile);
     }
   }
 
   /// Fetches diary entries using ApiService.
   Future<void> _fetchDiaryEntries() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? token = prefs.getString('token');
-    if (token != null) {
-      List<dynamic> entries = await ApiService.fetchDiaryEntries(token);
-      setState(() {
-        _diaryEntries = entries;
-      });
-    }
+    final token = ref.read(authProvider).token;
+    print("Fetching diary entries with token: $token");
+    if (token.isEmpty) return;
+
+    setState(() {
+      _isLoadingEntries = true;
+    });
+
+    final entries = await ApiService.fetchDiaryEntries(token);
+    setState(() {
+      _diaryEntries = entries;
+      _isLoadingEntries = false;
+    });
   }
 
   /// Logs the user out.
@@ -140,6 +150,14 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    // If the user logs out elsewhere, this listener will navigate back to login
+    ref.listen<AuthState>(authProvider, (_, next) {
+      if (!next.isLoggedIn && mounted) {
+        Navigator.pushReplacementNamed(context, '/');
+      }
+    });
+
+    final localUser = ref.watch(authProvider).userDetails;
     // Filter diary entries based on the selected day.
     List<dynamic> filteredEntries = _selectedDay != null
         ? _diaryEntries.where((entry) {
@@ -260,12 +278,14 @@ class _HomePageState extends State<HomePage> {
                 const Spacer(),
                 Divider(),
                 ListTile(
-                  leading: const Icon(Icons.logout, color: Colors.red),
-                  title: const Text(
-                    'Logout Account',
-                    style: TextStyle(color: Colors.red),
-                  ),
-                  onTap: () => ApiService.logout(context),
+                  leading: const Icon(Icons.logout),
+                  title: const Text("Logout"),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await ref.read(authProvider.notifier).logout();
+                    if (!mounted) return;
+                    Navigator.pushReplacementNamed(context, '/');
+                  },
                 ),
               ],
             ),
